@@ -30,4 +30,10 @@ class Speak(commands.Cog):
         
         return hook
 
-    
+'''
+    async def cog_command_error(self,ctx,error):
+        if isinstance(error.original,discord.errors.Forbidden):
+            halp = discord.Embed(title='Missing permissions!',description="Please give me permissions senpai",color=discord.Color.red())
+            halp.set_thumbnail(url="https://media1.tenor.com/images/9eff85aac8f21da39246ef40787864c8/tenor.gif?itemid=7357054")
+            await ctx.send(embed=halp)  
+'''
