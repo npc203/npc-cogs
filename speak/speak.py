@@ -1,17 +1,18 @@
-from redbot.core import commands
+from redbot.core import commands,checks,data_manager
 import discord
 from random import choice
-from pathlib import Path
 class Speak(commands.Cog):
-    """Set of commands to talk as others"""
+    """Set of commands to talk as others or 
+    Say stuff for you when you don't have the right words!"""
     def __init__(self, bot):
         self.bot = bot
         self.cache = {}
-        with open(Path(__file__).parent/"data/insult.pot",encoding="utf8") as fp:
+        with open(data_manager.bundled_data_path(self)/"insult.txt",encoding="utf8") as fp:
             self.insult_list = fp.read().splitlines()
-        with open(Path(__file__).parent/"data/sadme.pot",encoding="utf8") as fp:
+        with open(data_manager.bundled_data_path(self)/"sadme.txt",encoding="utf8") as fp:
             self.sadme_list = fp.read().splitlines()
-        
+    
+    @checks.bot_has_permissions(manage_webhooks=True, manage_messages=True)
     @commands.command()
     async def tell(self,ctx,*,sentence:str):
         """Tells the given text as the yourself but with a bot tag"""
@@ -19,6 +20,7 @@ class Speak(commands.Cog):
         await ctx.message.delete()
         await hook.send(username=ctx.author.display_name,avatar_url=ctx.author.avatar_url,content=sentence)
     
+    @checks.bot_has_permissions(manage_webhooks=True, manage_messages=True)
     @commands.command()
     async def tellas(self, ctx,mention:discord.Member,*,sentence:str):
         """Tells the given text as the mentioned users"""
@@ -26,6 +28,7 @@ class Speak(commands.Cog):
         await ctx.message.delete()
         await hook.send(username=mention.display_name,avatar_url=mention.avatar_url,content=sentence)
 
+    @checks.bot_has_permissions(manage_webhooks=True, manage_messages=True)
     @commands.group(invoke_without_command=False)
     async def say(self,ctx):
         """Says Stuff for the user"""
@@ -34,12 +37,12 @@ class Speak(commands.Cog):
         
     @say.command()
     async def insult(self,ctx):
-        """Says lame insults, use at your own precaution"""
+        """says lame insults, use at your own precaution"""
         await self.print_it(ctx,choice(self.insult_list))
         
     @say.command()
     async def sadme(self,ctx):
-        """Says depressing stuff about you"""
+        """says depressing stuff about you"""
         await self.print_it(ctx,choice(self.sadme_list))
     
     async def print_it(self,ctx,stuff:str):
@@ -62,13 +65,6 @@ class Speak(commands.Cog):
             hook = await ctx.channel.create_webhook(name='red_bot_hook_'+str(ctx.channel.id))
             
         return hook
-
-
-    async def cog_command_error(self,ctx,error):
-        if hasattr(error,'original') and isinstance(error.original,discord.errors.Forbidden):
-            await ctx.send("Ensure that I have `Manage webhook` and `Manage messages` permissions from the server settings pls.") 
-        else: 
-            await self.bot.on_command_error(ctx, error, unhandled_by_cog=True)
     
     async def red_get_data_for_user(self, *, user_id: int):
         # this cog does not store any data
