@@ -8,9 +8,9 @@ class Speak(commands.Cog):
         self.bot = bot
         self.cache = {}
         with open(Path(__file__).parent/"data/insult.pot",encoding="utf8") as fp:
-            self.insult = fp.read().splitlines()
+            self.insult_list = fp.read().splitlines()
         with open(Path(__file__).parent/"data/sadme.pot",encoding="utf8") as fp:
-            self.sadme = fp.read().splitlines()
+            self.sadme_list = fp.read().splitlines()
         
     @commands.command()
     async def tell(self,ctx,*,sentence:str):
@@ -29,16 +29,22 @@ class Speak(commands.Cog):
     @commands.group(invoke_without_command=False)
     async def say(self,ctx):
         """Says Stuff for the user"""
+        if ctx.invoked_subcommand is not None:
+            await ctx.message.delete()
         
-
     @say.command()
     async def insult(self,ctx):
         """Says lame insults, use at your own precaution"""
-        return choice(self.insult)
+        await self.print_it(ctx,choice(self.insult_list))
         
+    @say.command()
     async def sadme(self,ctx):
         """Says depressing stuff about you"""
-        await ctx.invoke(choice(self.sadme))
+        await self.print_it(ctx,choice(self.sadme_list))
+    
+    async def print_it(self,ctx,stuff:str):
+        hook = await self.get_hook(ctx)
+        await hook.send(username=ctx.message.author.display_name,avatar_url=ctx.message.author.avatar_url,content=stuff)
 
     async def get_hook(self,ctx):
         try:
