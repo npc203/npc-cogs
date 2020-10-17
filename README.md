@@ -9,4 +9,5 @@ To add cogs from this repo to your instance, do these steps:
 | Cog | Description |
 | --- | ----------- |
 | Speak | <details><summary>Speak as others or for yourself</summary>This uses webhooks to mimic the person's identity and speak what you type, it also can speak stuff for you (insults and sadme)</details>
+| Weeb | <details><summary>Bunch of Otaku emoticons</summary>Expwess youw weebness using the bunch of wandom weeb emoticons UwU</details>
                                                                                                                                                                                                                           
