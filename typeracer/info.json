@@ -1,0 +1,11 @@
+{
+    "author": ["epic guy#0715"],
+    "name": "TypeRacer",
+    "short": "A fun typing speed test cog",
+    "description": "This cog can be used to check your typing speed, it isnt that accurate cause of ping issues, otherwise it's a decent one",
+    "tags": [
+        "utility",
+        "fun"
+    ],
+    "end_user_data_statement": "This cog stores data about the created custom api commands"
+}
