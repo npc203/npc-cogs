@@ -1,7 +1,9 @@
 from redbot.core import commands, data_manager,checks
-import aiohttp,asyncio
+import asyncio
 from html.parser import HTMLParser
 import random,time,difflib
+from tabulate import tabulate
+from essential_generators import DocumentGenerator
 
 class HTMLFilter(HTMLParser):
     """For HTML to text properly without any dependencies.
@@ -18,31 +20,44 @@ def nocheats(text:str) -> str:
         text.insert(random.randint(0,size),"​")
     return "".join(text)
 
-class TypeRace(commands.Cog):
+class TypeRacer(commands.Cog):
     """A Typing Speed test cog, to give test your typing skills"""
     def __init__(self, bot):
         self.bot = bot
         self.filter = HTMLFilter()
+        self.exclude = {'+', '|', '^', '`', '"', '$', ',', '!', '~', ':', '<', '#', '*', '-', '&', '(', '>', '%', ';', '}', "'", '_', '{', '=', ')', '?', '[', '/', '\\', ']', '.', '@'}
 
     @commands.command()
     async def racestart(self,ctx):
         async with ctx.typing():
-            async with aiohttp.ClientSession() as session:
-                async with session.get("http://www.randomtext.me/api/gibberish/p-1/25-45") as f:
-                    if f.status == 200:
-                        resp=await f.json()
-                    else:
-                        await ctx.send(f"Something went wrong, ERROR CODE:{f.status}")
-                        return
-        a_string = self.filter.feed(resp["text_out"])
+            gen = DocumentGenerator()
+            data = ''.join(ch for ch in gen.paragraph() if ch not in self.exclude)
+            data = "".join(filter(lambda x : (x.isalnum or x == " "), data))
+            data = data.split()
+            data = ' '.join(data[0:random.randint(25,45)])
+        #Starting test after getting the text
+        self.filter.feed(data)
+        a_string = self.filter.text
+        self.filter.text = ""
         msg = await ctx.send(f"{ctx.author.display_name} started a typing test: \n Let's Start in 3")
         for i in range(2,0,-1):
-            asyncio.sleep(1)
-            await msg.edit("Let's Start in {i}")     
-        await msg.edit("`"+nocheats(a_string)+"`")
+            await asyncio.sleep(1)
+            await msg.edit(content=f"{ctx.author.display_name} started a typing test: \n Let's Start in {i}")  
+        await asyncio.sleep(1)   
+        await msg.edit(content="```"+nocheats(a_string)+"```")
         start = time.time()
-        b_string = await self.bot.wait_for('message',timeout=120.0,check = lambda m: m.author.id == ctx.author.id )
+        try:
+            self.task = asyncio.create_task(self.bot.wait_for('message',timeout=300.0,check = lambda m: m.author.id == ctx.author.id ))
+            b_string = (await self.task).content.strip()
+        except asyncio.TimeoutError:
+            await msg.edit(content="Sorry you were way too slow, timed out")
+            return  
+        except asyncio.CancelledError:
+            await msg.edit(content="The User aborted the Typing test")
+            return
         end = time.time()
+
+        #Post test calculations
         if "​" in b_string:
             await ctx.send("Imagine cheating bruh, cm'on atleast be honest here.")
             return
@@ -53,13 +68,27 @@ class TypeRace(commands.Cog):
                 if s[0]==' ': continue
                 elif s[0]=='-' or s[0]=='+':
                     mistakes+=1
-            wpm = ((len(a_string)-mistakes)/time_taken)*100
+            wpm = ((len(a_string.split())-mistakes)/time_taken)*100
+        #Analysis
+        author = ctx.author.display_name
+        verdict = [
+                    ("WPM (Correct Words per minute)",wpm),
+                    ("Total Words",len(a_string.split())),
+                    (f"Total Words from {author}",len(b_string.split())),
+                    ("Total Characters",len(a_string)),
+                    (f"Total Characters from {author}",len(b_string)),
+                    (f"Mistakes done by {author}",mistakes),
+                ]
+        await ctx.send(content = '```'+tabulate(verdict)+'```')
         
 
     @commands.command()
-    async def racestop(self,ctx,*,cmd:str):
-        pass
-
+    async def racestop(self,ctx):
+        if 'task' in dir(self):
+            self.task.cancel()
+        else:
+            await ctx.send("You need to start the test.")
+        
     async def red_get_data_for_user(self, *, user_id: int):
         # this cog does not store any data
         return {}

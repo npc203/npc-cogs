@@ -7,5 +7,9 @@
         "utility",
         "fun"
     ],
+    "requirements": [
+        "tabulate",
+        "essential-generators"
+    ],
     "end_user_data_statement": "This cog stores data about the created custom api commands"
 }
