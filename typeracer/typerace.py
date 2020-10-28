@@ -32,7 +32,7 @@ class TypeRacer(commands.Cog):
         async with ctx.typing():
             gen = DocumentGenerator()
             data = ''.join(ch for ch in gen.paragraph() if ch not in self.exclude)
-            data = "".join(filter(lambda x : (x.isalnum or x == " "), data))
+            data = "".join(filter(lambda x : (x.isalpha or x == " "), data))
             data = data.split()
             data = ' '.join(data[0:random.randint(25,45)])
         #Starting test after getting the text
@@ -67,19 +67,20 @@ class TypeRacer(commands.Cog):
             for i,s in enumerate(difflib.ndiff(a_string, b_string)):
                 if s[0]==' ': continue
                 elif s[0]=='-' or s[0]=='+':
-                    mistakes+=1
-            wpm = ((len(a_string.split())-mistakes)/time_taken)*100
+                    mistakes+=1           
         #Analysis
+        wpm = ((len(a_string.split())-mistakes)/time_taken)*100
         author = ctx.author.display_name
         verdict = [
                     ("WPM (Correct Words per minute)",wpm),
-                    ("Total Words",len(a_string.split())),
-                    (f"Total Words from {author}",len(b_string.split())),
-                    ("Total Characters",len(a_string)),
-                    (f"Total Characters from {author}",len(b_string)),
+                    ("Words Given",len(a_string.split())),
+                    (f"Words from {author}",len(b_string.split())),
+                    ("Characters Given",len(a_string)),
+                    (f"Characters from {author}",len(b_string)),
                     (f"Mistakes done by {author}",mistakes),
                 ]
-        await ctx.send(content = '```'+tabulate(verdict)+'```')
+        note = "Every mistaken characters accounts for a mistaken word.\n example: If a word contains 2 mistaken characters then 2 words are considered wrong"
+        await ctx.send(content = '```'+tabulate(verdict)+'```\nNote:\n'+note)
         
 
     @commands.command()
