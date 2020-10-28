@@ -8,8 +8,7 @@
         "fun"
     ],
     "requirements": [
-        "tabulate",
-        "essential-generators"
+        "tabulate"
     ],
-    "end_user_data_statement": "This cog stores data about the created custom api commands"
+    "end_user_data_statement": "This cog does not persistently store data or metadata about users."
 }
