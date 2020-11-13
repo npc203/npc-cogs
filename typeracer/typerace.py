@@ -24,6 +24,32 @@ def nocheats(text: str) -> str:
     return "".join(text)
 
 
+def levenshtein_match_calc(s, t):
+    """Copy pasta accuracy checker"""
+    rows = len(s) + 1
+    cols = len(t) + 1
+    distance = [[0 for i in range(cols)] for j in range(rows)]
+
+    for i in range(1, rows):
+        for k in range(1, cols):
+            distance[i][0] = i
+            distance[0][k] = k
+
+    for col in range(1, cols):
+        for row in range(1, rows):
+            if s[row - 1] == t[col - 1]:
+                cost = 0
+            else:
+                cost = 2
+            distance[row][col] = min(
+                distance[row - 1][col] + 1,  # Cost of deletions
+                distance[row][col - 1] + 1,  # Cost of insertions
+                distance[row - 1][col - 1] + cost,
+            )  # Cost of substitutions
+    Ratio = ((len(s) + len(t)) - distance[row][col]) / (len(s) + len(t))
+    return int(Ratio * 100)
+
+
 class TypeRacer(commands.Cog):
     """A Typing Speed test cog, to give test your typing skills"""
 
@@ -181,9 +207,11 @@ class TypeRacer(commands.Cog):
                     mistakes += 1
         # Analysis
         wpm = ((len(a_string.split()) - mistakes) / time_taken) * 100
+        accuracy = levenshtein_match_calc(a_string, b_string)
         if wpm > 0:
             verdict = [
                 ("WPM (Correct Words per minute)", wpm),
+                ("Accuracy", accuracy),
                 ("Words Given", len(a_string.split())),
                 (f"Words from {ctx.author.display_name}", len(b_string.split())),
                 ("Characters Given", len(a_string)),
