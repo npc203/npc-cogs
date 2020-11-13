@@ -13,10 +13,11 @@ To add cogs from this repo to your instance, do these steps:
 - `[p]load <cog name>`
 
 ## About Cogs
-| Cog | Description |
-| --- | ----------- |
-| Speak | <details><summary>Speak as others or for yourself</summary>This uses webhooks to mimic the person's identity and speak what you type, it also can speak stuff for you (insults and sadme)</details>
-| Weeb | <details><summary>Bunch of Otaku emoticons</summary>Expwess youw weebness using the bunch of wandom weeb emoticons UwU</details>
+| Cog | Status | Description |
+| --- | ---------- |---------------- |
+| Speak | Alpha |<details><summary>Speak as others or for yourself</summary>This uses webhooks to mimic the person's identity and speak what you type, it also can speak stuff for you (insults and sadme)</details>
+| Weeb | Alpha |<details><summary>Bunch of Otaku emoticons</summary>Expwess youw weebness using the bunch of wandom weeb emoticons UwU</details>
+| TypeRacer | Incomplete |<details><summary>Typing speed test</summary>Test you typing skills with this cog</details>
                                                                                                                                                                                                                           
 ## Credits
 - Thank you Red community, you guys are awesome
