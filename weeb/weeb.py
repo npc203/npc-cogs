@@ -34,7 +34,6 @@ class Weeb(commands.Cog):
     @commands.command(usage="[c]")
     async def owo(self, ctx, option: str = None):
         """Replies with OwO variant emoticons
-        Options:\n
         `[p]owo c` - deletes your message"""
         if option == "c":
             await ctx.message.delete()

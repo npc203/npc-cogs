@@ -29,12 +29,130 @@ class TypeRacer(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.config = Config.get_conf(self, identifier=109171231123)
+        # self.config = Config.get_conf(self, identifier=109171231123)
         self.filter = HTMLFilter()
         # self.exclude = {'+', '|', '^', '`', '"', '$', ',', '!', '~', ':', '<', '#', '*', '-', '&', '(', '>', '%', ';', '}', "'", '_', '{', '=', ')', '?', '[', '/', '\\', ']', '.', '@'}
 
-    async def task_race(self, ctx, a_string):
-        """the race starts and ends here"""
+    async def get_text(self, ctx) -> str:
+        """Gets the paragraph for the test"""
+        # TODO add customisable length of text and difficuilty
+        async with ctx.typing():
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    "http://www.randomtext.me/api/gibberish/p-1/25-45"
+                ) as f:
+                    if f.status == 200:
+                        resp = await f.json()
+                    else:
+                        await ctx.send(f"Something went wrong, ERROR CODE:{f.status}")
+                        return
+            self.filter.feed(resp["text_out"])
+            a_string = self.filter.text.strip()
+            self.filter.text = ""
+        return a_string
+
+    @commands.group()
+    async def typer(self, ctx):
+        """Commands to start and stop personal typing speed test"""
+
+    @typer.command()
+    @commands.max_concurrency(1, commands.BucketType.user)
+    async def start(self, ctx):
+        """Start the typing speed test"""
+        self.player_id = ctx.author.id
+        # Starting test after getting the text
+        a_string = await self.get_text(ctx)
+        self.task = asyncio.create_task(self.task_personal_race(ctx, a_string))
+        temp = await self.task
+        if temp:
+            time_taken, b_string = temp
+        else:
+            return
+
+        # Post test calculations
+        if "​" in b_string:
+            await ctx.send("Imagine cheating bruh, c'mon atleast be honest here.")
+            return
+        else:
+            mistakes = 0
+            for i, s in enumerate(difflib.ndiff(a_string, b_string)):
+                if s[0] == " ":
+                    continue
+                elif s[0] == "-" or s[0] == "+":
+                    mistakes += 1
+        # Analysis
+        wpm = ((len(a_string.split()) - mistakes) / time_taken) * 100
+        if wpm > 0:
+            verdict = [
+                ("WPM (Correct Words per minute)", wpm),
+                ("Words Given", len(a_string.split())),
+                (f"Words from {ctx.author.display_name}", len(b_string.split())),
+                ("Characters Given", len(a_string)),
+                (f"Characters from {ctx.author.display_name}", len(b_string)),
+                (f"Mistakes done by {ctx.author.display_name}", mistakes),
+            ]
+            note = "Every mistaken characters accounts for a mistaken word.\nExample: If a word contains 2 mistaken characters then 2 words are considered wrong"
+            await ctx.send(content="```" + tabulate(verdict) + "```\nNote:\n" + note)
+        else:
+            await ctx.send(
+                f"{ctx.author.display_name} didn't want to complete the challenge."
+            )
+
+    @typer.command()
+    async def stop(self, ctx):
+        if hasattr(self, "task") and ctx.author.id == self.player_id:
+            self.task.cancel()
+        else:
+            await ctx.send("You need to start the test.")
+
+    @commands.group()
+    async def typerset(self, ctx):
+        """Settings for the typing speed test TODO"""
+
+    @commands.group()
+    @checks.admin_or_permissions(administrator=True)
+    async def speedevent(self, ctx):
+        """Play a speed test event with multiple players"""
+
+    @speedevent.command(name=start)
+    async def start_event(self, ctx):
+        self.active = []
+        a_string = await self.get_text(ctx)
+        """Start a typing speed test event (Be warned that cheating gets you disqualified)"""
+        countdown = await ctx.send(
+            f"A Typing speed test event will commence in 60 seconds\n"
+            f" Type {ctx.prefix}speedevent join to enter the race\n "
+            f"Joined Users:\nNone"
+        )
+        asyncio.sleep(5)
+        for i in range(55, 0, -5):
+            active = "\n".join(
+                [f"{index}. {user}" for index, user in enumerate(self.active, 1)]
+            )
+            await countdown.edit(
+                content=f"A Typing speed test event will commence in 60 seconds\n"
+                f" Type {ctx.prefix}speedevent join to enter the race\n "
+                f"Joined Users:\n{active}"
+            )
+            asyncio.sleep(5)
+        self.event = asyncio.create_task(self.task_event_race(ctx, a_string))
+        await countdown.edit(f"```{nocheats(a_string)}```")
+        await self.event
+
+    @speedevent.command()
+    async def join(self, ctx):
+        if hasattr(self, "active"):
+            self.active.append(ctx.author.display_name)
+        elif hasattr(self, "event") and self.started == True:
+            await ctx.author.send("Event already started")
+        else:
+            await ctx.send("No active events")
+
+    async def task_event_race(self, ctx, a_string):
+        """Event Race"""
+
+    async def task_personal_race(self, ctx, a_string):
+        """Personal Race"""
         msg = await ctx.send(
             f"{ctx.author.display_name} started a typing test: \n Let's Start in 3"
         )
@@ -63,80 +181,6 @@ class TypeRacer(commands.Cog):
         end = time.time()
         time_taken = end - start
         return time_taken, b_string
-
-    @commands.group()
-    async def typer(self, ctx):
-        """Commands to start and stop the typing speed test"""
-
-    @typer.command()
-    @commands.max_concurrency(1, commands.BucketType.user)
-    async def start(self, ctx):
-        """Start the typing speed test"""
-        async with ctx.typing():
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    "http://www.randomtext.me/api/gibberish/p-1/25-45"
-                ) as f:
-                    if f.status == 200:
-                        resp = await f.json()
-                    else:
-                        await ctx.send(f"Something went wrong, ERROR CODE:{f.status}")
-                        return
-        data = resp["text_out"]
-        self.player_id = ctx.author.id
-
-        # Starting test after getting the text
-        self.filter.feed(data)
-        a_string = self.filter.text.strip()
-        self.filter.text = ""
-
-        self.task = asyncio.create_task(self.task_race(ctx, a_string))
-        temp = await self.task
-        if temp:
-            time_taken, b_string = temp
-        else:
-            return
-
-        # Post test calculations
-        if "​" in b_string:
-            await ctx.send("Imagine cheating bruh, c'mon atleast be honest here.")
-            return
-        else:
-            mistakes = 0
-            for i, s in enumerate(difflib.ndiff(a_string, b_string)):
-                if s[0] == " ":
-                    continue
-                elif s[0] == "-" or s[0] == "+":
-                    mistakes += 1
-        # Analysis
-        wpm = ((len(a_string.split()) - mistakes) / time_taken) * 100
-        player_id = ctx.author.id
-        if wpm > 0:
-            verdict = [
-                ("WPM (Correct Words per minute)", wpm),
-                ("Words Given", len(a_string.split())),
-                (f"Words from {ctx.author.display_name}", len(b_string.split())),
-                ("Characters Given", len(a_string)),
-                (f"Characters from {ctx.author.display_name}", len(b_string)),
-                (f"Mistakes done by {ctx.author.display_name}", mistakes),
-            ]
-            note = "Every mistaken characters accounts for a mistaken word.\nExample: If a word contains 2 mistaken characters then 2 words are considered wrong"
-            await ctx.send(content="```" + tabulate(verdict) + "```\nNote:\n" + note)
-        else:
-            await ctx.send(
-                f"{ctx.author.display_name} didn't want to complete the challenge."
-            )
-
-    @typer.command()
-    async def stop(self, ctx):
-        if hasattr(self, "task") and ctx.author.id == self.player_id:
-            self.task.cancel()
-        else:
-            await ctx.send("You need to start the test.")
-
-    @commands.group()
-    async def typerset(self, ctx):
-        """Settings for the typing speed test"""
 
     async def on_command_error(self, ctx, error):
         await ctx.message.delete()
