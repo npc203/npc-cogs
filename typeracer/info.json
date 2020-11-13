@@ -5,7 +5,9 @@
     "description": "This cog can be used to check your typing speed, it isnt that accurate cause of ping issues, otherwise it's a decent one",
     "tags": [
         "utility",
-        "fun"
+        "fun",
+        "speed test",
+        "race"
     ],
     "requirements": [
         "tabulate"
