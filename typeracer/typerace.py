@@ -47,7 +47,7 @@ def levenshtein_match_calc(s, t):
                 distance[row - 1][col - 1] + cost,
             )  # Cost of substitutions
     Ratio = ((len(s) + len(t)) - distance[row][col]) / (len(s) + len(t))
-    return int(Ratio * 100)
+    return int(Ratio)
 
 
 class TypeRacer(commands.Cog):
@@ -206,11 +206,12 @@ class TypeRacer(commands.Cog):
                 elif s[0] == "-" or s[0] == "+":
                     mistakes += 1
         # Analysis
-        wpm = ((len(a_string.split()) - mistakes) / time_taken) * 100
         accuracy = levenshtein_match_calc(a_string, b_string)
-        if wpm > 0:
+        wpm = (len(a_string.split()) / time_taken) * 100
+        if accuracy > 50:
             verdict = [
-                ("WPM (Correct Words per minute)", wpm),
+                ("WPM (Correct Words per minute)", wpm * accuracy),
+                ("Raw WPM (Without accounting mistakes)", wpm),
                 ("Accuracy", accuracy),
                 ("Words Given", len(a_string.split())),
                 (f"Words from {ctx.author.display_name}", len(b_string.split())),
@@ -218,10 +219,7 @@ class TypeRacer(commands.Cog):
                 (f"Characters from {ctx.author.display_name}", len(b_string)),
                 (f"Mistakes done by {ctx.author.display_name}", mistakes),
             ]
-            note = "Every mistaken characters accounts for a mistaken word.\nExample: If a word contains 2 mistaken characters then 2 words are considered wrong"
-            await special_send(
-                content="```" + tabulate(verdict) + "```\nNote:\n" + note
-            )
+            await special_send(content="```" + tabulate(verdict) + "```")
         else:
             await special_send(
                 f"{ctx.author.display_name if personal else 'You'}  didn't want to complete the challenge."
