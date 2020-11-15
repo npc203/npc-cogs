@@ -47,7 +47,7 @@ def levenshtein_match_calc(s, t):
                 distance[row - 1][col - 1] + cost,
             )  # Cost of substitutions
     Ratio = ((len(s) + len(t)) - distance[row][col]) / (len(s) + len(t))
-    return int(Ratio)
+    return int(Ratio * 100)
 
 
 class TypeRacer(commands.Cog):
@@ -208,9 +208,9 @@ class TypeRacer(commands.Cog):
         # Analysis
         accuracy = levenshtein_match_calc(a_string, b_string)
         wpm = (len(a_string.split()) / time_taken) * 100
-        if accuracy > 50:
+        if accuracy > 30:
             verdict = [
-                ("WPM (Correct Words per minute)", wpm * accuracy),
+                ("WPM (Correct Words per minute)", wpm * accuracy / 100),
                 ("Raw WPM (Without accounting mistakes)", wpm),
                 ("Accuracy", accuracy),
                 ("Words Given", len(a_string.split())),
