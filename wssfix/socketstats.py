@@ -18,6 +18,7 @@ class Wss(commands.Cog):
     async def on_socket_response(self, msg):
         self.bot.socket_stats[msg.get("t", "UNKNOWN") or "UNDEFINED"] += 1
 
+    @commands.is_owner()
     @commands.command(aliases=["wsstats"], hidden=True)
     @commands.bot_has_permissions(embed_links=True, external_emojis=True)
     async def socketstats(self, ctx, add_chart: bool = False):
