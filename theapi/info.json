@@ -10,5 +10,6 @@
     "requirements": [
         "tabulate"
     ],
+    "hidden": true,
     "end_user_data_statement": "This cog stores data about the created custom api commands"
 }
