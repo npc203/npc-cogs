@@ -175,7 +175,7 @@ class TypeRacer(commands.Cog):
             f"Joined Users:\n{active}"
         )
         await asyncio.sleep(5)
-        for i in range(10, 0, -5):
+        for i in range(55, 0, -5):  # TODO add to config, time to start event
             active = "\n".join(
                 [
                     f"{index}. {self.active[user]}"
