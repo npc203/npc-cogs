@@ -128,16 +128,33 @@ class TypeRacer(commands.Cog):
     @speedevent.command(name="start")
     async def start_event(self, ctx):
         """Start a typing speed test event \n(Be warned that cheating gets you disqualified)"""
-        self.active = [ctx.author]
+        self.active = {ctx.author.id: ctx.author.name}
+        self.leaderboard = []
         a_string = await self.get_text(ctx)
         self.event = asyncio.create_task(self.task_event_race(ctx, a_string))
         await self.event
+        await ctx.send(
+            "```Event results:\n{}```".format(
+                tabulate(
+                    self.leaderboard,
+                    headers=("Name", "Time taken", "WPM", "Mistakes"),
+                    tablefmt="fancy_grid",
+                )
+            )
+        )
+        del self.event, self.active, self.leaderboard
 
     @speedevent.command()
     async def join(self, ctx):
         if hasattr(self, "active"):
-            self.active.append(ctx.author)
-        elif hasattr(self, "event") and self.started == True:
+            if ctx.author.id not in self.active:
+                self.active[ctx.author.id] == ctx.author.name
+                notify = await ctx.send(f"{ctx.author.name} has joined in")
+            else:
+                notify = await ctx.send(f"You already joined in")
+            await asyncio.sleep(2)
+            await notify.delete()
+        elif hasattr(self, "event"):
             await ctx.author.send("Event already started")
         else:
             await ctx.send("No active events")
@@ -145,13 +162,9 @@ class TypeRacer(commands.Cog):
     async def task_event_race(self, ctx, a_string):
         """Event Race"""
 
-        def evaluate_person_completion(message):
-            if message.author in self.active:
-                pass
-
         active = "\n".join(
             [
-                f"{index}. {user.display_name}"
+                f"{index}. {self.active[user]}"
                 for index, user in enumerate(self.active, 1)
             ]
         )
@@ -161,10 +174,10 @@ class TypeRacer(commands.Cog):
             f"Joined Users:\n{active}"
         )
         await asyncio.sleep(5)
-        for i in range(55, 0, -5):
+        for i in range(10, 0, -5):
             active = "\n".join(
                 [
-                    f"{index}. {user.display_name}"
+                    f"{index}. {self.active[user]}"
                     for index, user in enumerate(self.active, 1)
                 ]
             )
@@ -174,13 +187,29 @@ class TypeRacer(commands.Cog):
                 f"Joined Users:\n{active}"
             )
             await asyncio.sleep(5)
-        await countdown.edit(content=f"```{nocheats(a_string)}```")
+        await countdown.delete()
+        await ctx.send(content=f"Write the given paragraph\n```{a_string}```")
+        match_begin = time.time()
+
+        async def runner():
+            while True:
+                msg_result = await self.bot.wait_for(
+                    "message",
+                    timeout=180.0,
+                    check=lambda msg: msg.author.id in self.active,
+                )
+                self.active.pop(msg_result.author.id)
+                results = await self.evaluate(
+                    ctx, a_string, msg_result.content, time.time() - match_begin
+                )
+                if results:
+                    results.insert(0, msg_result.author.name)
+                    self.leaderboard.append(results)
+                if len(self.active) == 0:
+                    break
+
         try:
-            await self.bot.wait_for(
-                "message",
-                timeout=300.0,
-                check=evaluate_person_completion,
-            )
+            await asyncio.wait_for(runner(), timeout=180)
         except asyncio.TimeoutError:
             pass
 
@@ -208,9 +237,9 @@ class TypeRacer(commands.Cog):
         # Analysis
         accuracy = levenshtein_match_calc(a_string, b_string)
         wpm = (len(a_string.split()) / time_taken) * 100
-        if accuracy > 30:
+        if accuracy > 66:  # TODO add to config
             verdict = [
-                ("WPM (Correct Words per minute)", wpm * accuracy / 100),
+                ("WPM (Correct Words per minute)", wpm * (accuracy) / 100),
                 ("Raw WPM (Without accounting mistakes)", wpm),
                 ("Accuracy", accuracy),
                 ("Words Given", len(a_string.split())),
@@ -219,7 +248,10 @@ class TypeRacer(commands.Cog):
                 (f"Characters from {ctx.author.display_name}", len(b_string)),
                 (f"Mistakes done by {ctx.author.display_name}", mistakes),
             ]
-            await special_send(content="```" + tabulate(verdict) + "```")
+            await special_send(
+                content="```" + tabulate(verdict, tablefmt="fancy_grid") + "```"
+            )
+            return [time_taken, wpm * (accuracy) / 100, mistakes]
         else:
             await special_send(
                 f"{ctx.author.display_name if personal else 'You'}  didn't want to complete the challenge."
