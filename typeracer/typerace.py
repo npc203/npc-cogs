@@ -146,6 +146,7 @@ class TypeRacer(commands.Cog):
 
     @speedevent.command()
     async def join(self, ctx):
+        """Join the typing test speed event"""
         if hasattr(self, "active"):
             if ctx.author.id not in self.active:
                 self.active[ctx.author.id] == ctx.author.name
@@ -188,7 +189,7 @@ class TypeRacer(commands.Cog):
             )
             await asyncio.sleep(5)
         await countdown.delete()
-        await ctx.send(content=f"Write the given paragraph\n```{a_string}```")
+        await ctx.send(content=f"Write the given paragraph\n```{nocheats(a_string)}```")
         match_begin = time.time()
 
         async def runner():
