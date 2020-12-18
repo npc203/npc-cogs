@@ -45,17 +45,17 @@ class Speak(commands.Cog):
 
     @checks.bot_has_permissions(manage_webhooks=True, manage_messages=True)
     @commands.group(invoke_without_command=False)
-    async def say(self, ctx):
+    async def says(self, ctx):
         """Says Stuff for the user"""
         if ctx.invoked_subcommand is not None:
             await ctx.message.delete()
 
-    @say.command()
+    @says.command()
     async def insult(self, ctx):
         """says lame insults, use at your own precaution"""
         await self.print_it(ctx, choice(self.insult_list))
 
-    @say.command()
+    @says.command()
     async def sadme(self, ctx):
         """says depressing stuff about you"""
         await self.print_it(ctx, choice(self.sadme_list))
