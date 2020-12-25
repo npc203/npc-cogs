@@ -1,7 +1,10 @@
 from redbot.core import commands, data_manager, checks, Config
-import asyncio, aiohttp
+import asyncio
+import aiohttp
 from html.parser import HTMLParser
-import random, time, difflib
+import random
+import time
+import difflib
 from tabulate import tabulate
 
 
@@ -55,7 +58,22 @@ class TypeRacer(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        # self.config = Config.get_conf(self, identifier=109171231123)
+        self.config = Config.get_conf(self, identifier=29834829369)
+        default_global = {
+            "time_start": 60,
+            "text_size": [25, 45],
+            "type": "gibberish",
+            "image": False,
+        }
+        default_guild = {
+            "time_start": 60,
+            "text_size": [25, 45],
+            "type": "gibberish",
+            "accuracy": 66,
+            "image": False,
+        }
+        self.config.register_global(**default_global)
+        self.config.register_guild(**default_guild)
         self.filter = HTMLFilter()
         # self.exclude = {'+', '|', '^', '`', '"', '$', ',', '!', '~', ':', '<', '#', '*', '-', '&', '(', '>', '%', ';', '}', "'", '_', '{', '=', ')', '?', '[', '/', '\\', ']', '.', '@'}
 
@@ -76,7 +94,11 @@ class TypeRacer(commands.Cog):
             time_taken, b_string = temp
         else:
             return
-        result = await self.evaluate(ctx, a_string, b_string, time_taken, True)
+        # user sent an empty message, prolly an image
+        if b_string:
+            result = await self.evaluate(ctx, a_string, b_string, time_taken, True)
+        else:
+            await ctx.send(f'{ctx.author.display_name} didn\'t want to complete the test')
 
     async def task_personal_race(self, ctx, a_string):
         """Personal Race"""
@@ -117,10 +139,6 @@ class TypeRacer(commands.Cog):
             await ctx.send("You need to start the test.")
 
     @commands.group()
-    async def typerset(self, ctx):
-        """Settings for the typing speed test TODO"""
-
-    @commands.group()
     @commands.mod_or_permissions(kick_members=True)
     async def speedevent(self, ctx):
         """Play a speed test event with multiple players"""
@@ -132,7 +150,7 @@ class TypeRacer(commands.Cog):
         self.leaderboard = []
         a_string = await self.get_text(ctx)
         self.event = asyncio.create_task(self.task_event_race(ctx, a_string))
-        await self.event
+        await self.event()
         await ctx.send(
             "```Event results:\n{}```".format(
                 tabulate(
@@ -237,20 +255,23 @@ class TypeRacer(commands.Cog):
                     mistakes += 1
         # Analysis
         accuracy = levenshtein_match_calc(a_string, b_string)
-        wpm = (len(a_string.split()) / time_taken) * 100
+        wpm = (len(a_string)/5 / (time_taken/60))
         if accuracy > 66:  # TODO add to config
             verdict = [
-                ("WPM (Correct Words per minute)", wpm * (accuracy) / 100),
+                ("WPM (Correct Words per minute)",
+                 wpm - (mistakes/(time_taken/60))),
                 ("Raw WPM (Without accounting mistakes)", wpm),
-                ("Accuracy", accuracy),
+                ("Accuracy(Levenshtein)", accuracy),
                 ("Words Given", len(a_string.split())),
-                (f"Words from {ctx.author.display_name}", len(b_string.split())),
+                (f"Words from {ctx.author.display_name}",
+                 len(b_string.split())),
                 ("Characters Given", len(a_string)),
                 (f"Characters from {ctx.author.display_name}", len(b_string)),
                 (f"Mistakes done by {ctx.author.display_name}", mistakes),
             ]
             await special_send(
-                content="```" + tabulate(verdict, tablefmt="fancy_grid") + "```"
+                content="```" +
+                tabulate(verdict, tablefmt="fancy_grid") + "```"
             )
             return [time_taken, wpm * (accuracy) / 100, mistakes]
         else:
@@ -275,6 +296,24 @@ class TypeRacer(commands.Cog):
             a_string = self.filter.text.strip()
             self.filter.text = ""
         return a_string
+
+    @commands.group()
+    async def typerset(self, ctx):
+        """Settings for the typing speed test TODO"""
+
+    @typerset.command()
+    async def time(self, ctx, num: int):
+        """Sets the time delay to start a speedtest event (max limit = 1000 seconds)"""
+        if num <= 1000:
+            await self.config.guild(ctx.guild).time_start.set(num)
+            await ctx.send(f'Changed delay to {num}')
+        else:
+            await ctx.send('Max limit is 1000 seconds')
+
+    @commands.is_owner()  # TODO
+    @typerset.group(name='global')
+    async def global_conf(self, ctx):
+        """Global settings for the typeracer cog"""
 
     async def on_command_error(self, ctx, error):
         await ctx.message.delete()
