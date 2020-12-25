@@ -96,7 +96,7 @@ class TypeRacer(commands.Cog):
             return
         # user sent an empty message, prolly an image
         if b_string:
-            result = await self.evaluate(ctx, a_string, b_string, time_taken, True)
+            result = await self.evaluate(ctx, a_string, b_string, time_taken, None)
         else:
             await ctx.send(f'{ctx.author.display_name} didn\'t want to complete the test')
 
@@ -139,10 +139,10 @@ class TypeRacer(commands.Cog):
             await ctx.send("You need to start the test.")
 
     @commands.group()
-    @commands.mod_or_permissions(kick_members=True)
     async def speedevent(self, ctx):
         """Play a speed test event with multiple players"""
 
+    @commands.mod_or_permissions(kick_members=True)
     @speedevent.command(name="start")
     async def start_event(self, ctx):
         """Start a typing speed test event \n(Be warned that cheating gets you disqualified)"""
@@ -150,7 +150,7 @@ class TypeRacer(commands.Cog):
         self.leaderboard = []
         a_string = await self.get_text(ctx)
         self.event = asyncio.create_task(self.task_event_race(ctx, a_string))
-        await self.event()
+        await self.event
         await ctx.send(
             "```Event results:\n{}```".format(
                 tabulate(
@@ -160,6 +160,7 @@ class TypeRacer(commands.Cog):
                 )
             )
         )
+        # cleanup for next event
         del self.event, self.active, self.leaderboard
 
     @speedevent.command()
@@ -167,7 +168,7 @@ class TypeRacer(commands.Cog):
         """Join the typing test speed event"""
         if hasattr(self, "active"):
             if ctx.author.id not in self.active:
-                self.active[ctx.author.id] == ctx.author.name
+                self.active[ctx.author.id] = ctx.author.name
                 notify = await ctx.send(f"{ctx.author.name} has joined in")
             else:
                 notify = await ctx.send(f"You already joined in")
@@ -219,7 +220,7 @@ class TypeRacer(commands.Cog):
                 )
                 self.active.pop(msg_result.author.id)
                 results = await self.evaluate(
-                    ctx, a_string, msg_result.content, time.time() - match_begin
+                    ctx, a_string, msg_result.content, time.time() - match_begin, msg_result.author.id
                 )
                 if results:
                     results.insert(0, msg_result.author.name)
@@ -234,12 +235,13 @@ class TypeRacer(commands.Cog):
 
     # Helper Functions
     async def evaluate(
-        self, ctx, a_string: str, b_string: str, time_taken, personal: bool = False
+        self, ctx, a_string: str, b_string: str, time_taken, dm_id
     ):
-        special_send = ctx.send if personal else ctx.author.send
+        user_obj = ctx.guild.get_member(dm_id) if dm_id else ctx.author
+        special_send = user_obj.send if dm_id else ctx.send
         # TODO
         if "​" in b_string:
-            if personal:
+            if not dm_id:
                 await special_send(
                     "Imagine cheating bruh, c'mon atleast be honest here."
                 )
@@ -263,20 +265,20 @@ class TypeRacer(commands.Cog):
                 ("Raw WPM (Without accounting mistakes)", wpm),
                 ("Accuracy(Levenshtein)", accuracy),
                 ("Words Given", len(a_string.split())),
-                (f"Words from {ctx.author.display_name}",
+                (f"Words from {user_obj.display_name}",
                  len(b_string.split())),
                 ("Characters Given", len(a_string)),
-                (f"Characters from {ctx.author.display_name}", len(b_string)),
-                (f"Mistakes done by {ctx.author.display_name}", mistakes),
+                (f"Characters from {user_obj.display_name}", len(b_string)),
+                (f"Mistakes done by {user_obj.display_name}", mistakes),
             ]
             await special_send(
                 content="```" +
                 tabulate(verdict, tablefmt="fancy_grid") + "```"
             )
-            return [time_taken, wpm * (accuracy) / 100, mistakes]
+            return [time_taken, wpm - (mistakes/(time_taken/60)), mistakes]
         else:
             await special_send(
-                f"{ctx.author.display_name if personal else 'You'}  didn't want to complete the challenge."
+                f"{'You' if dm_id else user_obj.display_name}  didn't want to complete the challenge."
             )
 
     async def get_text(self, ctx) -> str:
