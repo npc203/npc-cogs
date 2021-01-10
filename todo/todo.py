@@ -36,6 +36,7 @@ class Todo(commands.Cog):
 
     @todo.command(name="list")
     async def list_todos(self, ctx):
+        """List all your todos"""
         todos = await self.config.user(ctx.author).todos()
         for page in pagify(box('\n'.join([f'{i} - {x}' for i, x in enumerate(todos)]))):
             await ctx.send(page)
