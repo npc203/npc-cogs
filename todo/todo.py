@@ -4,6 +4,8 @@ from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.config import Config
 from redbot.core.utils.chat_formatting import pagify, box
+from redbot.core.utils.predicates import ReactionPredicate
+from redbot.core.utils.menus import start_adding_reactions
 
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
 
@@ -38,8 +40,11 @@ class Todo(commands.Cog):
     async def list_todos(self, ctx):
         """List all your todos"""
         todos = await self.config.user(ctx.author).todos()
-        for page in pagify(box('\n'.join([f'{i} - {x}' for i, x in enumerate(todos)]))):
-            await ctx.send(page)
+        if todos:
+            for page in pagify(box('\n'.join([f'{i} - {x}' for i, x in enumerate(todos)]))):
+                await ctx.send(page)
+            return
+        await ctx.send("Currently, you have no TODOs")
 
     @todo.command()
     async def remove(self, ctx, *indices: int):
@@ -61,6 +66,19 @@ class Todo(commands.Cog):
             todos[:] = temp
         for page in pagify('Succesfully removed:\n'+'\n'.join([f'{i}. {x}' for i, x in enumerate(removed, 1)]), page_length=1970):
             await ctx.send(page)
+
+    @todo.command()
+    async def removeall(self, ctx, *indices: int):
+        """Remove your todo tasks, supports multiple id removals as well\n eg:[p]todo remove 1 2 3"""
+        msg = await ctx.send("Are you sure do you want to remove all of your todos?")
+        start_adding_reactions(msg, ReactionPredicate.YES_OR_NO_EMOJIS)
+        pred = ReactionPredicate.yes_or_no(msg, ctx.author)
+        await ctx.bot.wait_for("reaction_add", check=pred)
+        if pred.result is True:
+            await self.config.user(ctx.author).todos.set([])
+            await ctx.send("Successfully removed all your TODOs")
+        else:
+            await ctx.send("Cancelled.")
 
     async def red_delete_data_for_user(self, *, requester: RequestType, user_id: int) -> None:
         # TODO: Replace this with the proper end user data removal handling.
