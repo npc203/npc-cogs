@@ -1,4 +1,4 @@
-from typing import Literal, List
+from typing import Literal
 import discord
 from redbot.core import commands
 from redbot.core.bot import Red
@@ -20,45 +20,44 @@ class Todo(commands.Cog):
             identifier=6732102719277,
             force_registration=True,
         )
-        self.config.register_user({'todos': []})
+        self.config.register_user(**{'todos': []})
 
     @commands.group()
     async def todo(self, ctx):
         """Contains a list of commands to set and retrieve todo tasks"""
 
-    @todo.commands()
-    async def add(self, ctx, task: str):
+    @todo.command()
+    async def add(self, ctx, *, task: str):
         """Add a new task to your todo list"""
         async with self.config.user(ctx.author).todos() as todos:
             todo_id = len(todos)
             todos.append(task)
         await ctx.send(f"Your todo has been added successfully with the id: **{todo_id}**")
 
-    @todo.commands(name="list")
+    @todo.command(name="list")
     async def list_todos(self, ctx):
         todos = await self.config.user(ctx.author).todos()
-        for page in pagify(box('\n'.join([f'{i}. {x}' for i, x in enumerate(todos)]))):
+        for page in pagify(box('\n'.join([f'{i} - {x}' for i, x in enumerate(todos)]))):
             await ctx.send(page)
 
-    @todo.commands()
-    async def remove(self, ctx, *indices: List[int]):
+    @todo.command()
+    async def remove(self, ctx, *indices: int):
         """Remove your todo tasks, supports multiple id removals as well\n eg:[p]todo remove 1 2 3"""
         if len(indices) == 1:
             async with self.config.user(ctx.author).todos() as todos:
-                x = todos.pop(indices)
+                x = todos.pop(indices[0])
                 await ctx.send(f"Succesfully removed: {x}")
             return
 
         removed = []
         async with self.config.user(ctx.author).todos() as todos:
             temp = []
-
             for j, i in enumerate(todos):
                 if j not in indices:
                     temp.append(i)
                 else:
                     removed.append(i)
-            todos = temp
+            todos[:] = temp
         for page in pagify('Succesfully removed:\n'+'\n'.join([f'{i}. {x}' for i, x in enumerate(removed, 1)]), page_length=1970):
             await ctx.send(page)
 
