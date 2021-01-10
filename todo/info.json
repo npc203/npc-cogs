@@ -1,0 +1,19 @@
+{
+    "name": "Todo",
+    "short": "A simple todo list",
+    "description": "A simple todo list cog with add remove and list todos",
+    "end_user_data_statement": "This cog stores the todos associated with uids",
+    "install_msg": "Thank you for installing. Type `[p]help todo` to get the list of commands",
+    "author": [
+        "epic guy#0715"
+    ],
+    "required_cogs": {},
+    "requirements": [],
+    "tags": [
+        "utility"
+    ],
+    "min_bot_version": "3.3.10",
+    "hidden": false,
+    "disabled": false,
+    "type": "COG"
+}
