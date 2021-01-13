@@ -1,0 +1,17 @@
+{
+    "name": "CustomHelp",
+    "short": "A custom help",
+    "description": "This is customisable help, kindly read the readme of this cog, to set it up",
+    "end_user_data_statement": "This cog does not persistently store any data or metadata about users.",
+    "author": [
+        "epic guy","Every other bot's help menu's design"
+    ],
+    "requirements": ["emoji"],
+    "tags": [
+        "help","utility","fun"
+    ],
+    "min_bot_version": "3.3.10",
+    "hidden": true,
+    "disabled": false,
+    "type": "COG"
+}
