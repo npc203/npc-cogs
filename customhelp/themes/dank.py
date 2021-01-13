@@ -40,7 +40,7 @@ class DankHelp:
                     cat.reaction + " " if cat.reaction else ""
                 ) + cat.name.capitalize()
                 emb["fields"].append(
-                    EmbedField(title, f"`{ctx.prefix} help {cat.name}`", True)
+                    EmbedField(title, f"`{ctx.prefix}help {cat.name}`", True)
                 )
         await self.make_and_send_embeds(ctx, emb, help_settings=help_settings)
 
