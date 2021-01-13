@@ -22,7 +22,7 @@ Introducing themes that were shamesslessly ripped off from other bots cause I'm 
 1. `[p]chelp listthemes` to get all the themes and the features available in each of them.
 ![](https://imgur.com/m83FC1N.png)
 2. `[p]chelp load <theme> feature` to load the respective stuff.  
-An example of `[p]chelp load dank main` is shown below 
+An example of `[p]chelp load dank main` is shown below  
 ![](https://imgur.com/Fr1SS37.png)
 3. `[p]chelp settings` to show what themes are loaded  
 ![](https://imgur.com/tW7sFkX.png)
