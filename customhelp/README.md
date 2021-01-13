@@ -10,7 +10,7 @@ All the commands are under `[p]chelp`
 Note:This command can be run as many times as needed and can load up cogs into existing categories as well.
 3. Congrats you just bunched up cogs into categories. Now you can do `[p]help <category>` to load the help of all those cogs in the category. 
 4. Now `[p]chelp list` should show the categories made yay! *but wait*
-5. Well `[p]help` has many incompletes now. Use `[p]chelp add desc` and `[p]chelp add reaction` to add the description for the categories and reactions respectively. Like the example below
+5. Well `[p]help` has many incompletes now. Use `[p]chelp add desc` and `[p]chelp add reaction` to add the description for the categories and reactions respectively. Like the example below  
 ![Adding description](https://imgur.com/ddAgIQe.png)
 ![Adding reaction](https://imgur.com/ieovfQv.png)
 6. Now the main help menu must look a little better.  
