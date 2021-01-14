@@ -177,9 +177,8 @@ class CustomHelp(commands.Cog):
         except asyncio.TimeoutError:
             return await ctx.send("Timed out, please try again.")
 
-        if parsed_data := self.parse_yaml(ctx, msg.content):
-            pass
-        else:
+        parsed_data = await self.parse_yaml(ctx, msg.content)
+        if not parsed_data:
             return
         available_categories_raw = await self.config.categories()
         available_categories = [
