@@ -5,6 +5,7 @@ from redbot.core import commands
 from redbot.core.bot import Red
 import pprint
 from redbot.core.utils.chat_formatting import pagify, box
+from discord.utils import escape_markdown as escape
 
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
 
@@ -27,10 +28,11 @@ class EmbedSteal(commands.Cog):
                         pprint.pformat(msg.embeds[0].to_dict(), indent=4),
                         page_length=1990,
                     ):
-                        await ctx.send(box(page, lang="json"))
+                        await ctx.send(escape(page))
                     if printit:
                         await ctx.send(
-                            embed=discord.Embed().from_dict(msg.embeds[0].to_dict())
+                            content="​\n\nRecreating embed..\n\n..",
+                            embed=discord.Embed().from_dict(msg.embeds[0].to_dict()),
                         )
                 else:
                     await ctx.send("Replied message has no embeds")

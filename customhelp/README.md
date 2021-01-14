@@ -1,6 +1,6 @@
 # A Customisable Custom Help Cog For Red 
-Couldn't get a shorter title. Anyways, the cog introduces categories, meaning you can now bunch up cogs into one blob and give it a name, description and reaction.
-All the commands are under `[p]chelp`
+Couldn't get a shorter title. Anyways, the cog introduces categories, meaning you can now bunch up cogs into one blob and give it a name, description and reaction.  
+Use `[p]chelp` to see what can be customised.
 
 ## Setup:
 1. Start by doing `[p]chelp list` to list all your cogs
@@ -21,10 +21,10 @@ category:
  - reaction: reaction
 ```
 you can mix and match, as much as you want.Like the example below  
-![editz](https://imgur.com/m4LtUy4.png)
+![editz](https://imgur.com/m4LtUy4.png)  
 6. Now the main help menu must look a little better.  
-![Default command](https://imgur.com/72GXRY8.png)
-7. *butt weight there's more.*
+![Default command](https://imgur.com/72GXRY8.png)  
+7. *butt weight there's more.*  
 
 ## Themes:
 Introducing themes that were shamesslessly ripped off from other bots cause I'm bad at designing.
@@ -33,17 +33,14 @@ Introducing themes that were shamesslessly ripped off from other bots cause I'm 
 2. `[p]chelp load <theme> feature` to load the respective stuff.  
 An example of `[p]chelp load dank main` is shown below  
 ![](https://imgur.com/Fr1SS37.png)
-3. `[p]chelp settings` to show what themes are loaded.  
+3. `[p]chelp settings show` to show what themes are loaded.  
 ![](https://imgur.com/tW7sFkX.png)
 4. `[p]chelp unload feature` to reset the given feature back to default
 5. `[p]chelp resetall` to reset everything back to the default custom help  
 Note: This won't revert to the previous red help, to do so use `[p]chelp set 0`
 ## Additional Notes:
-- Incase you don't like the word `uncategorised` as a category name and want to change it.  
-Use `[p]chelp uncategory name <the name u want>`.  
-The uncategory command has a few special gimmicks as well.  
-Example `[p]chelp uncategory desc <change the description>` and `[p]chelp uncategory reaction <new reaction>`
 - A **Good Practice** is to have the category names all **lowercased** and the category description as **Camelcase**.
+- Free to tell about new themes which you might want to see. Let me know if you think any part of the theme can be made better. I'm available in the [cog support server]( https://discord.gg/GET4DVk).
 
 ## Credits:
 - To everyone who patiently answered my noob coding questions.

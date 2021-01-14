@@ -168,11 +168,15 @@ class CustomHelp(commands.Cog):
             "category1:\n"
             " - Cog1\n - Cog2"
         )
-        msg = await self.bot.wait_for(
-            "message",
-            timeout=180,
-            check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
-        )
+        try:
+            msg = await self.bot.wait_for(
+                "message",
+                timeout=180,
+                check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
+            )
+        except asyncio.TimeoutError:
+            return await ctx.send("Timed out, please try again.")
+
         if parsed_data := self.parse_yaml(ctx, msg.content):
             pass
         else:
@@ -234,11 +238,14 @@ class CustomHelp(commands.Cog):
         await ctx.send(
             "Warning: You are about to delete all your categories, type `y` else this is abort"
         )
-        msg = await self.bot.wait_for(
-            "message",
-            check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
-            timeout=60,
-        )
+        try:
+            msg = await self.bot.wait_for(
+                "message",
+                check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
+                timeout=60,
+            )
+        except asyncio.TimeoutError:
+            return await ctx.send("Timed out, please try again.")
         if msg.content == "y":
             await self.config.clear_all()
             self.config.register_global(**self.chelp_global)
@@ -292,11 +299,14 @@ class CustomHelp(commands.Cog):
             "category1:\n"
             " - name: category1\n - reaction: \U0001f604\n - desc: short description\n - long_desc: long description"
         )
-        msg = await self.bot.wait_for(
-            "message",
-            timeout=180,
-            check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
-        )
+        try:
+            msg = await self.bot.wait_for(
+                "message",
+                timeout=180,
+                check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
+            )
+        except asyncio.TimeoutError:
+            return await ctx.send("Timed out, please try again.")
         parsed_data = await self.parse_yaml(ctx, msg.content)
         if not parsed_data:
             return
@@ -429,9 +439,13 @@ class CustomHelp(commands.Cog):
         await getattr(self.config.theme, feature).set(None)
         await ctx.tick()
 
-    @chelp.command()
+    @chelp.group()
     async def settings(self, ctx):
-        """Display the current settings"""
+        """Change various help settings"""
+
+    @chelp.command()
+    async def show(self, ctx):
+        """Show the current help settings"""
         val = await self.config.theme()
         val = "\n".join(
             [f"`{i:<10}`: " + (j if j else "default") for i, j in val.items()]
@@ -439,6 +453,12 @@ class CustomHelp(commands.Cog):
         emb = discord.Embed(title="Custom help settings", color=await ctx.embed_color())
         emb.add_field(name="Theme", value=val)
         await ctx.send(embed=emb)
+
+    @settings.command()
+    async def usereactions(self, ctx, toggle: bool):
+        """Toggles adding reaction for navigation."""
+        async with self.config.settings() as f:
+            f["react"] = toggle
 
     @chelp.command()
     async def listthemes(self, ctx):

@@ -1,5 +1,5 @@
 from typing import Literal
-import discord
+import discord, asyncio
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.config import Config
@@ -22,7 +22,7 @@ class Todo(commands.Cog):
             identifier=6732102719277,
             force_registration=True,
         )
-        self.config.register_user(**{'todos': []})
+        self.config.register_user(**{"todos": []})
 
     @commands.group()
     async def todo(self, ctx):
@@ -34,14 +34,18 @@ class Todo(commands.Cog):
         async with self.config.user(ctx.author).todos() as todos:
             todo_id = len(todos)
             todos.append(task)
-        await ctx.send(f"Your todo has been added successfully with the id: **{todo_id}**")
+        await ctx.send(
+            f"Your todo has been added successfully with the id: **{todo_id}**"
+        )
 
     @todo.command(name="list")
     async def list_todos(self, ctx):
         """List all your todos"""
         todos = await self.config.user(ctx.author).todos()
         if todos:
-            for page in pagify(box('\n'.join([f'{i} - {x}' for i, x in enumerate(todos)]))):
+            for page in pagify(
+                box("\n".join([f"{i} - {x}" for i, x in enumerate(todos)]))
+            ):
                 await ctx.send(page)
             return
         await ctx.send("Currently, you have no TODOs")
@@ -64,7 +68,11 @@ class Todo(commands.Cog):
                 else:
                     removed.append(i)
             todos[:] = temp
-        for page in pagify('Succesfully removed:\n'+'\n'.join([f'{i}. {x}' for i, x in enumerate(removed, 1)]), page_length=1970):
+        for page in pagify(
+            "Succesfully removed:\n"
+            + "\n".join([f"{i}. {x}" for i, x in enumerate(removed, 1)]),
+            page_length=1970,
+        ):
             await ctx.send(page)
 
     @todo.command()
@@ -73,13 +81,18 @@ class Todo(commands.Cog):
         msg = await ctx.send("Are you sure do you want to remove all of your todos?")
         start_adding_reactions(msg, ReactionPredicate.YES_OR_NO_EMOJIS)
         pred = ReactionPredicate.yes_or_no(msg, ctx.author)
-        await ctx.bot.wait_for("reaction_add", check=pred)
+        try:
+            await ctx.bot.wait_for("reaction_add", check=pred)
+        except asyncio.TimeoutError:
+            pass
         if pred.result is True:
             await self.config.user(ctx.author).todos.set([])
             await ctx.send("Successfully removed all your TODOs")
         else:
             await ctx.send("Cancelled.")
 
-    async def red_delete_data_for_user(self, *, requester: RequestType, user_id: int) -> None:
+    async def red_delete_data_for_user(
+        self, *, requester: RequestType, user_id: int
+    ) -> None:
         # TODO: Replace this with the proper end user data removal handling.
         super().red_delete_data_for_user(requester=requester, user_id=user_id)

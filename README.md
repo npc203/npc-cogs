@@ -1,7 +1,7 @@
 # Npc-Cogs V3
 [![Red-DiscordBot](https://img.shields.io/badge/Red--DiscordBot-V3-red.svg)](https://github.com/Cog-Creators/Red-DiscordBot) 
-[![Discord.py](https://img.shields.io/badge/Discord.py-rewrite-blue.svg)](https://github.com/Rapptz/discord.py/tree/rewrite)  
-
+[![Discord.py](https://img.shields.io/badge/Discord.py-rewrite-blue.svg)](https://github.com/Rapptz/discord.py/tree/rewrite)
+[![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 A fun oriented list of Red-Cogs made for fun ofc.  
 Open to suggestions/feedback or questions in the [Red's Support server](https://discord.gg/GET4DVk)  
 Discord User: epic guy#0715  
