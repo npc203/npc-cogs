@@ -49,7 +49,7 @@ async def react_page(
         with contextlib.suppress(discord.NotFound):
             await message.remove_reaction(emoji, ctx.author)
 
-    # TODO sigh getting everythin again, please optimised this
+    # TODO sigh getting everything again, please optimise this IMP, maybe create pages on react itself?
     help_settings = await HelpSettings.from_context(ctx)
     for x in GLOBAL_CATEGORIES:
         if x.reaction == emoji:

@@ -26,6 +26,7 @@ _ = Translator("Help", __file__)
 # No cog commands, need to add in menu
 # Crowdin stuff ;-;
 # For all the bunch config calls, do I need it? it's just the bot owner usage!
+# Generating every category page on format_bot_help so as to save time in reaction stuff?
 """
 Config Structure:
     {
@@ -34,6 +35,7 @@ Config Structure:
             {
                 "name" : name 
                 "desc" : desc
+                "long_desc":longer description
                 "cogs" : []
                 "reaction":None
             }
@@ -47,7 +49,7 @@ class CustomHelp(commands.Cog):
     A custom customisable help
     """
 
-    __version__ = "0.0.1"
+    __version__ = "0.1.0"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -171,24 +173,10 @@ class CustomHelp(commands.Cog):
             timeout=180,
             check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
         )
-        try:
-            parsed_data = yaml.safe_load(msg.content)
-        except yaml.parser.ParserError:
-            await ctx.send("Wrongly formatted")
+        if parsed_data := self.parse_yaml(ctx, msg.content):
+            pass
+        else:
             return
-        except yaml.scanner.ScannerError as e:
-            await ctx.send(box(e))
-            return
-
-        if type(parsed_data) != dict:
-            await ctx.send("Invalid Format")
-
-        # TODO pls get a better type checking method
-        for i in parsed_data:
-            if type(parsed_data[i]) != list:
-                await ctx.send("Invalid Format")
-                return
-
         available_categories_raw = await self.config.categories()
         available_categories = [
             category["name"] for category in available_categories_raw
@@ -295,130 +283,111 @@ class CustomHelp(commands.Cog):
         for page in pagify(joined, ["\n"], shorten_by=16):
             await ctx.send(box(page.lstrip(" "), lang="diff"))
 
-    @chelp.group()
-    async def add(self, ctx):
-        """Add reactions and descriptions when needed"""
-
-    # TODO merge desc and reaction cause they are copypasta same code
-    @add.command(aliases=["descriptions", "description"])
-    async def desc(self, ctx):
-        """Add a Short description to your categories"""
+    @chelp.command()
+    async def edit(self, ctx):
+        """Add reactions and descriptions to the category"""
         await ctx.send(
-            "Your next message should be a yaml with \n category: description\n example:\nfun: fun commands\nmod: Moderations stuff"
+            "Your next message should be a yaml with the specfied format as in the docs\n"
+            "Example:\n"
+            "category1:\n"
+            " - name: category1\n - reaction: \U0001f604\n - desc: short description\n - long_desc: long description"
         )
         msg = await self.bot.wait_for(
             "message",
             timeout=180,
             check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
         )
-        parsed_data = [cat for cat in msg.content.split("\n")]
+        parsed_data = await self.parse_yaml(ctx, msg.content)
+        if not parsed_data:
+            return
+
+        # kill me already parsed_data = [('name', 'notrandom'), ('emoji', 'asds'), ('emoji', '😓'), ('desc', 'this iasdiuasd')]
+        parsed_data = {
+            i: [(k, v) for f in my_list for k, v in f.items()]
+            for i, my_list in parsed_data.items()
+        }
+        check = ["name", "desc", "long_desc", "reaction"]
         available_categories = [
             category["name"] for category in await self.config.categories()
         ]
-        success = []
+        already_present_emojis = (i.reaction for i in GLOBAL_CATEGORIES)
+        failed = []  # example: [('desc','categoryname')]
+
         # special naming for uncategorized stuff
         uncat_config = await self.config.uncategorised()
         uncat_config["name"] = (
             uncat_config["name"] if uncat_config["name"] else "uncategorised"
         )
-        for i in range(len(parsed_data)):
-            temp = parsed_data[i].split(":")
-            if len(temp) != 2:
-                pass
+
+        def validity_checker(category, item):
+            if item[0] in check:
+                if item[0] == "name":
+                    return not (item[1] in available_categories)
+                # dupe emoji and valid emoji?
+                elif (
+                    item[0] == "reaction"
+                    and (item[1] not in already_present_emojis)
+                    and (item[1] in UNICODE_EMOJI)
+                ):
+                    return True
+                else:
+                    return True
+
+        # TODO bunch the config calls
+        for category in parsed_data:
+            if uncat_config["name"] == category:
+                async with self.config.uncategorised() as unconf_cat:
+                    for item in parsed_data[category]:
+                        if validity_checker(category, item):
+                            unconf_cat[item[0]] = item[1]
+                        else:
+                            failed.append((item, category))
+                        continue
+            elif category in available_categories:
+                async with self.config.categories() as conf_cat:
+                    cat_index = available_categories.index(category)
+                    for item in parsed_data[category]:
+                        if validity_checker(category, item):
+                            conf_cat[cat_index][item[0]] = item[1]
+                        else:
+                            failed.append((item, category))
             else:
-                # TODO bunch the config calls
-                if uncat_config["name"] == temp[0]:
-                    async with self.config.uncategorised() as unconf_cat:
-                        unconf_cat["desc"] = temp[1].strip()
-                    success.append(temp[0])
-                    continue
-                if temp[0] in available_categories:
-                    async with self.config.categories() as conf_cat:
-                        conf_cat[available_categories.index(temp[0])]["desc"] = temp[
-                            1
-                        ].strip()
-                    success.append(temp[0])
-
+                failed.append(("Everything", category))
         for page in pagify(
-            f"Successfully added description to: `{'`,`'.join(success)}`"
-            if success
-            else "Nothing successful"
-        ):
-            await ctx.send(page)
-        await self.refresh_cache()
-
-    @add.command(aliases=["reactions"])
-    async def reaction(self, ctx):
-        """Add reactions to redirect to your category"""
-        await ctx.send(
-            "Your next message should be a yaml with \n category: reaction\n"
-            "Reactions **must** be default ones not from a server \n"
-            "You can't have 2 categories with the same reaction \n"
-            "example:\nfun: \N{SMILING FACE WITH OPEN MOUTH AND SMILING EYES}\nmod: \N{SHIELD}\N{VARIATION SELECTOR-16}"
-        )
-        msg = await self.bot.wait_for(
-            "message",
-            timeout=180,
-            check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
-        )
-        parsed_data = [cat for cat in msg.content.split("\n")]
-        available_categories = [
-            category["name"] for category in await self.config.categories()
-        ]
-        success = []
-        uncat_config = await self.config.uncategorised()
-        uncat_config["name"] = (
-            uncat_config["name"] if uncat_config["name"] else "uncategorised"
-        )
-        for i in range(len(parsed_data)):
-            temp = parsed_data[i].split(":")
-            temp[1] = temp[1].strip()[0]
-            if len(temp) != 2:
-                pass
-            else:
-                already_present_emojis = (i.reaction for i in GLOBAL_CATEGORIES)
-                if temp[1] not in already_present_emojis:
-                    # valid emoji?
-                    if temp[1] in UNICODE_EMOJI:
-                        # special uncategorised
-                        if uncat_config["name"] == temp[0]:
-                            async with self.config.uncategorised() as unconf_cat:
-                                unconf_cat["reaction"] = temp[1]
-                            success.append(temp[0])
-                            continue
-                        # valid category?
-                        if temp[0] in available_categories:
-                            # TODO bunch the config calls
-                            async with self.config.categories() as conf_cat:
-                                conf_cat[available_categories.index(temp[0])][
-                                    "reaction"
-                                ] = temp[1]
-                            success.append(temp[0])
-
-        for page in pagify(
-            f"Successfully added description to: `{'`,`'.join(success)}`"
-            if success
-            else "Nothing successful"
+            f"Successfully added the edits"
+            if not failed
+            else "The following things failed:\n"
+            + "\n".join(
+                [f"{reason} failed in {category}" for reason, category in failed]
+            )
         ):
             await ctx.send(page)
         await self.refresh_cache()
 
     @chelp.command()
     async def load(self, ctx, theme: str, feature: str):
-        """Load another preset theme"""
+        """Load another preset theme.\nUse `[p]chelp load <theme> all` to load everything from that theme"""
+
+        def loader(theme, feature):
+            inherit_theme = themes.list[theme]
+            if hasattr(inherit_theme, self.feature_list[i]):
+                inherit_feature = getattr(themes.list[theme], self.feature_list[i])
+                # load up the attribute,Monkey patch me daddy UwU
+                setattr(
+                    self.bot._help_formatter,
+                    self.feature_list[feature],
+                    MethodType(inherit_feature, self.bot._help_formatter),
+                )
+                return True
+            return False
+
         if theme in themes.list:
+            if feature == "all":
+                for i in self.feature_list:
+                    loader(theme, feature)
             if feature in self.feature_list:
-                inherit_theme = themes.list[theme]
-                if hasattr(inherit_theme, self.feature_list[feature]):
-                    inherit_feature = getattr(
-                        themes.list[theme], self.feature_list[feature]
-                    )
-                    # load up the attribute,Monkey patch me daddy UwU
-                    setattr(
-                        self.bot._help_formatter,
-                        self.feature_list[feature],
-                        MethodType(inherit_feature, self.bot._help_formatter),
-                    )
+                if loader(theme, feature):
+                    await ctx.send(f"Successfully loaded {feature} from {theme}")
                 else:
                     await ctx.send(f"{theme} doesn't have the feature {feature}")
 
@@ -500,6 +469,26 @@ class CustomHelp(commands.Cog):
             async with self.config.uncategorised() as un_conf:
                 un_conf[thing] = item
         await self.refresh_cache()
+
+    async def parse_yaml(self, ctx, content):
+        try:
+            parsed_data = yaml.safe_load(content)
+        except yaml.parser.ParserError:
+            await ctx.send("Wrongly formatted")
+            return
+        except yaml.scanner.ScannerError as e:
+            await ctx.send(box(e))
+            return
+
+        if type(parsed_data) != dict:
+            await ctx.send("Invalid Format")
+
+        # TODO pls get a better type checking method
+        for i in parsed_data:
+            if type(parsed_data[i]) != list:
+                await ctx.send("Invalid Format")
+                return
+        return parsed_data
 
     async def red_delete_data_for_user(
         self, *, requester: RequestType, user_id: int
