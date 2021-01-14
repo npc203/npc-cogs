@@ -3,14 +3,23 @@ from redbot.core import commands
 import contextlib
 import discord
 from redbot.core.utils.menus import menu
+from redbot.core.commands.help import HelpSettings
 
 GLOBAL_CATEGORIES = []
 
 
 class Category:
-    def __init__(self, name: str, desc: str, cogs: list, reaction: str = None):
+    def __init__(
+        self,
+        name: str,
+        desc: str,
+        cogs: list,
+        reaction: str = None,
+        long_desc: str = None,
+    ):
         self.name = name
-        self.description = desc
+        self.desc = desc
+        self.long_desc = long_desc
         self.cogs = cogs
         self.reaction = reaction
 
@@ -39,10 +48,16 @@ async def react_page(
     if perms.manage_messages:  # Can manage messages, so remove react
         with contextlib.suppress(discord.NotFound):
             await message.remove_reaction(emoji, ctx.author)
-    if page == 0:
-        page = len(pages) - 1  # Loop around to the last item
-    else:
-        page = page - 1
+
+    # TODO sigh getting everythin again, please optimised this
+    help_settings = await HelpSettings.from_context(ctx)
+    for x in GLOBAL_CATEGORIES:
+        if x.reaction == emoji:
+            category = x
+            break
+    pages = await ctx.bot._help_formatter.format_category_help(
+        ctx, category, help_settings, get_pages=True
+    )
     return await menu(ctx, pages, controls, message=message, page=page, timeout=timeout)
 
 

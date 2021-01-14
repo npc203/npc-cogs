@@ -38,8 +38,9 @@ _ = Translator("Help", __file__)
 class BaguetteHelp(commands.RedHelpFormatter):
     """In the memory of Jack the virgin"""
 
-    def __init__(self, bot):
+    def __init__(self, bot, config):
         self.bot = bot
+        self.config = config
 
     @staticmethod
     def parse_command(ctx, help_for: str):
@@ -78,6 +79,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
     async def get_category_help_mapping(
         self, ctx, category, help_settings: HelpSettings
     ):
+        # TODO getting every cog and checking if its in category isn't optimised.
         sorted_iterable = []
         for cogname, cog in (*sorted(ctx.bot.cogs.items()), (None, None)):
             if cogname in category.cogs:
@@ -181,6 +183,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
             await self.make_and_send_embeds(ctx, emb, help_settings=help_settings)
 
         else:
+            # TODO remove this?
             subtext = None
             subtext_header = None
             if coms:
@@ -208,7 +211,11 @@ class BaguetteHelp(commands.RedHelpFormatter):
             await self.send_pages(ctx, pages, embed=False, help_settings=help_settings)
 
     async def format_category_help(
-        self, ctx: Context, obj: CategoryConvert, help_settings: HelpSettings
+        self,
+        ctx: Context,
+        obj: CategoryConvert,
+        help_settings: HelpSettings,
+        get_pages: bool = False,
     ):
         coms = await self.get_category_help_mapping(
             ctx, obj, help_settings=help_settings
@@ -253,8 +260,12 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 field = EmbedField(title, page, False)
                 emb["fields"].append(field)
                 title = EMPTY_STRING
-
-            await self.make_and_send_embeds(ctx, emb, help_settings=help_settings)
+            if get_pages:
+                return await self.make_and_send_embeds(
+                    ctx, emb, help_settings=help_settings, get_pages=True
+                )
+            else:
+                await self.make_and_send_embeds(ctx, emb, help_settings=help_settings)
         else:
             # fix this
             await ctx.send("Kindly enable embeds")
@@ -317,11 +328,11 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 def shorten_line(a_line: str) -> str:
                     if len(a_line) < 70:  # embed max width needs to be lower
                         return a_line
-                    return a_line[:67] + "..."
+                    return a_line[:67] + ".."
 
-                subtext = "\n".join(
+                subtext = "\n" + "\n".join(
                     shorten_line(
-                        f"**{name}** {command.format_shortdoc_for_context(ctx)}"
+                        f"`{name:<15}:`{command.format_shortdoc_for_context(ctx)}"
                     )
                     for name, command in sorted(subcommands.items())
                 )
@@ -331,7 +342,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                     if i == 0:
                         title = _("**__Subcommands:__**")
                     else:
-                        title = _("**__Subcommands:__** (continued)")
+                        title = _(EMPTY_STRING)
                     field = EmbedField(title, page, False)
                     emb["fields"].append(field)
 
@@ -377,9 +388,6 @@ class BaguetteHelp(commands.RedHelpFormatter):
             await self.send_pages(ctx, pages, embed=False, help_settings=help_settings)
 
     async def format_bot_help(self, ctx: Context, help_settings: HelpSettings):
-        # coms = await self.get_bot_help_mapping(ctx, help_settings=help_settings)
-        # if not coms:
-        #    return
         description = ctx.bot.description or ""
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
         if (
@@ -408,7 +416,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
             for i in pagify(
                 "\n".join(
                     [
-                        f"{ctx.prefix+'help '+cat.name:<25}{cat.description[:30]:<30}"
+                        f"{ctx.prefix+'help '+cat.name:<25}{cat.desc[:30]:<30}"
                         + (f"{cat.reaction}" if cat.reaction else "None")
                         for cat in GLOBAL_CATEGORIES
                     ]
@@ -417,18 +425,18 @@ class BaguetteHelp(commands.RedHelpFormatter):
             ):
                 emb["fields"].append(EmbedField("Categories:", box(i), False))
         await self.make_and_send_embeds(
-            ctx, emb, help_settings=help_settings, main_page=True
+            ctx, emb, help_settings=help_settings, add_emojis=True
         )
-        new = {}
-        # Adding additional category emojis
-        for cat in GLOBAL_CATEGORIES:
-            if cat.reaction:
-                new[cat.reaction] = react_page
 
     async def make_and_send_embeds(
-        self, ctx, embed_dict: dict, help_settings: HelpSettings, main_page=False
+        self,
+        ctx,
+        embed_dict: dict,
+        help_settings: HelpSettings,
+        get_pages: bool = False,
+        add_emojis: bool = False,
     ):
-
+        """Returns pages if get_pages, else sends the pages as menu embeds"""
         pages = []
 
         page_char_limit = help_settings.page_char_limit
@@ -480,13 +488,93 @@ class BaguetteHelp(commands.RedHelpFormatter):
             embed.set_footer(**embed_dict["footer"])
 
             pages.append(embed)
-        if main_page:
-            # Adding the extra reactions
-            """
-            await self.modified_send_pages(
-                ctx, pages, embed=True, help_settings=help_settings
+            if get_pages:
+                return pages
+            await self.send_pages(
+                ctx,
+                pages,
+                embed=True,
+                help_settings=help_settings,
+                add_emojis=(await self.config.settings())["react"] and add_emojis,
             )
-            """
-            await self.send_pages(ctx, pages, embed=True, help_settings=help_settings)
+
+    async def send_pages(
+        self,
+        ctx: Context,
+        pages: List[Union[str, discord.Embed]],
+        embed: bool = True,
+        help_settings: HelpSettings = None,
+        add_emojis: bool = False,
+    ):
+        """
+        Sends pages based on settings.
+        """
+
+        # save on config calls
+        channel_permissions = ctx.channel.permissions_for(ctx.me)
+
+        if not (channel_permissions.add_reactions and help_settings.use_menus):
+
+            max_pages_in_guild = help_settings.max_pages_in_guild
+            use_DMs = len(pages) > max_pages_in_guild
+            destination = ctx.author if use_DMs else ctx.channel
+            delete_delay = help_settings.delete_delay
+
+            messages: List[discord.Message] = []
+            for page in pages:
+                try:
+                    if embed:
+                        msg = await destination.send(embed=page)
+                    else:
+                        msg = await destination.send(page)
+                except discord.Forbidden:
+                    return await ctx.send(
+                        _(
+                            "I couldn't send the help message to you in DM. "
+                            "Either you blocked me or you disabled DMs in this server."
+                        )
+                    )
+                else:
+                    messages.append(msg)
+            if use_DMs and help_settings.use_tick:
+                await ctx.tick()
+            # The if statement takes into account that 'destination' will be
+            # the context channel in non-DM context, reusing 'channel_permissions' to avoid
+            # computing the permissions twice.
+            if (
+                not use_DMs  # we're not in DMs
+                and delete_delay > 0  # delete delay is enabled
+                and channel_permissions.manage_messages  # we can manage messages here
+            ):
+
+                # We need to wrap this in a task to not block after-sending-help interactions.
+                # The channel has to be TextChannel as we can't bulk-delete from DMs
+                async def _delete_delay_help(
+                    channel: discord.TextChannel,
+                    messages: List[discord.Message],
+                    delay: int,
+                ):
+                    await asyncio.sleep(delay)
+                    await mass_purge(messages, channel)
+
+                asyncio.create_task(
+                    _delete_delay_help(destination, messages, delete_delay)
+                )
         else:
-            await self.send_pages(ctx, pages, embed=True, help_settings=help_settings)
+            # Specifically ensuring the menu's message is sent prior to returning
+            m = await (ctx.send(embed=pages[0]) if embed else ctx.send(pages[0]))
+            c = dict(
+                menus.DEFAULT_CONTROLS
+                if len(pages) > 1
+                else {"\N{CROSS MARK}": menus.close_menu}
+            )
+            # TODO important!
+            if add_emojis:
+                # Adding additional category emojis
+                for cat in GLOBAL_CATEGORIES:
+                    if cat.reaction:
+                        c[cat.reaction] = react_page
+            # Allow other things to happen during menu timeout/interaction.
+            asyncio.create_task(menus.menu(ctx, pages, c, message=m))
+            # menu needs reactions added manually since we fed it a message
+            menus.start_adding_reactions(m, c.keys())

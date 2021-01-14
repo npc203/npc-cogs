@@ -23,7 +23,8 @@ _ = Translator("Help", __file__)
 
 # Rememeber cache pages, obselete cause help changes with user.
 # Swtichable alphabetic ordered display
-# No cog commands still to add
+# No cog commands, need to add in menu
+# Crowdin stuff ;-;
 # For all the bunch config calls, do I need it? it's just the bot owner usage!
 """
 Config Structure:
@@ -46,7 +47,6 @@ class CustomHelp(commands.Cog):
     A custom customisable help
     """
 
-    __author__ = ["npc203"]
     __version__ = "0.0.1"
 
     def __init__(self, bot: Red):
@@ -65,7 +65,13 @@ class CustomHelp(commands.Cog):
         self.chelp_global = {
             "categories": [],
             "theme": {"cog": None, "category": None, "command": None, "main": None},
-            "uncategorised": {"name": None, "desc": None, "reaction": None},
+            "uncategorised": {
+                "name": None,
+                "desc": None,
+                "long_desc": None,
+                "reaction": None,
+            },
+            "settings": {"url": None, "react": True},
         }
         self.config.register_global(**self.chelp_global)
 
@@ -86,6 +92,7 @@ class CustomHelp(commands.Cog):
     """
 
     async def refresh_cache(self):
+        """Get's the config and re-populates the GLOBAL_CATEGORIES"""
         # Blocking?
         # await self.config.clear_all()
         my_categories = await self.config.categories()
@@ -110,8 +117,9 @@ class CustomHelp(commands.Cog):
         )
 
     async def _setup(self):
+        """Adds the themes and loads the formatter"""
         await self.refresh_cache()
-        main_theme = BaguetteHelp(self.bot)
+        main_theme = BaguetteHelp(self.bot, self.config)
         theme = await self.config.theme()
         if all(theme.values()) == None:
             pass
@@ -135,11 +143,12 @@ class CustomHelp(commands.Cog):
 
     @chelp.command(name="set")
     async def set_formatter(self, ctx, setval: bool):
-        """Set to toggle custom formatter or the default help formatter \n `[p]chelp set 0` to turn custom off \n `[p]chelp set 1` to turn it on"""
+        """Set to toggle custom formatter or the default help formatter
+        `[p]chelp set 0` to turn custom off \n `[p]chelp set 1` to turn it on"""
         async with ctx.typing():
             try:
                 if setval:
-                    self.bot.set_help_formatter(BaguetteHelp(self.bot))
+                    self.bot.set_help_formatter(BaguetteHelp(self.bot, self.config))
                     await ctx.send("Fomatter set to custom")
                 else:
                     self.bot.reset_help_formatter()
@@ -152,7 +161,10 @@ class CustomHelp(commands.Cog):
     async def create(self, ctx):
         """Create a new category to add cogs to it using yaml"""
         await ctx.send(
-            "Your next message should be a yaml with the specfied format as in the docs"
+            "Your next message should be a yaml with the specfied format as in the docs\n"
+            "Example:\n"
+            "category1:\n"
+            " - Cog1\n - Cog2"
         )
         msg = await self.bot.wait_for(
             "message",
@@ -423,7 +435,7 @@ class CustomHelp(commands.Cog):
         """Resets all settings to default **custom** help \n use `[p]chelp set 0` to revert back to the old help"""
         # TODO add a prompt here
         self.bot.reset_help_formatter()
-        self.bot.set_help_formatter(BaguetteHelp(self.bot))
+        self.bot.set_help_formatter(BaguetteHelp(self.bot, self.config))
         await self.config.theme.set(
             {"cog": None, "category": None, "command": None, "main": None}
         )
@@ -455,7 +467,7 @@ class CustomHelp(commands.Cog):
         val = "\n".join(
             [f"`{i:<10}`: " + (j if j else "default") for i, j in val.items()]
         )
-        emb = discord.Embed(title="Custom help settings")
+        emb = discord.Embed(title="Custom help settings", color=await ctx.embed_color())
         emb.add_field(name="Theme", value=val)
         await ctx.send(embed=emb)
 

@@ -31,7 +31,6 @@ class DankHelp:
 
             emb["footer"]["text"] = tagline
             emb["embed"]["description"] = description
-
             category_text = ""
             emb["title"] = f"{ctx.me.name} Help Menu"
             # Maybe add category desc somewhere?
@@ -40,7 +39,11 @@ class DankHelp:
                     cat.reaction + " " if cat.reaction else ""
                 ) + cat.name.capitalize()
                 emb["fields"].append(
-                    EmbedField(title, f"`{ctx.prefix}help {cat.name}`", True)
+                    EmbedField(
+                        title,
+                        f'`{ctx.prefix}help {cat.name}`\n[Hover for info](https://www.youtube.com/watch?v=dQw4w9WgXcQ "{cat.desc}")  \n',
+                        True,
+                    )
                 )
         await self.make_and_send_embeds(ctx, emb, help_settings=help_settings)
 
@@ -79,11 +82,7 @@ class DankHelp:
             for i, page in enumerate(
                 pagify(all_cog_text, page_length=1000, shorten_by=0)
             ):
-                field = EmbedField(
-                    EMPTY_STRING,
-                    page,
-                    False,
-                )
+                field = EmbedField(EMPTY_STRING, page, False,)
                 emb["fields"].append(field)
 
             await self.make_and_send_embeds(ctx, emb, help_settings=help_settings)

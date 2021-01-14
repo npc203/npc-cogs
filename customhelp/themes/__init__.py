@@ -1,5 +1,4 @@
-from .danny import DannyHelp
-from .dank import DankHelp
+from . import danny, dank
 
 # TODO automate the generation of this list
-list = {"danny": DannyHelp, "dank": DankHelp}
+list = {"danny": danny.DannyHelp, "dank": dank.DankHelp}
