@@ -50,7 +50,7 @@ class CustomHelp(commands.Cog):
     A custom customisable help
     """
 
-    __version__ = "0.1.2"
+    __version__ = "0.1.3"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -161,24 +161,28 @@ class CustomHelp(commands.Cog):
                 return
 
     @chelp.command()
-    async def create(self, ctx):
+    async def create(self, ctx, *, yaml_txt=None):
         """Create a new category to add cogs to it using yaml"""
-        await ctx.send(
-            "Your next message should be a yaml with the specfied format as in the docs\n"
-            "Example:\n"
-            "category1:\n"
-            " - Cog1\n - Cog2"
-        )
-        try:
-            msg = await self.bot.wait_for(
-                "message",
-                timeout=180,
-                check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
+        if yaml_txt:
+            content = yaml_txt
+        else:
+            await ctx.send(
+                "Your next message should be a yaml with the specfied format as in the docs\n"
+                "Example:\n"
+                "category1:\n"
+                " - Cog1\n - Cog2"
             )
-        except asyncio.TimeoutError:
-            return await ctx.send("Timed out, please try again.")
+            try:
+                msg = await self.bot.wait_for(
+                    "message",
+                    timeout=180,
+                    check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
+                )
+                content = msg.content
+            except asyncio.TimeoutError:
+                return await ctx.send("Timed out, please try again.")
 
-        parsed_data = await self.parse_yaml(ctx, msg.content)
+        parsed_data = await self.parse_yaml(ctx, content)
         if not parsed_data:
             return
         available_categories_raw = await self.config.categories()
@@ -299,22 +303,26 @@ class CustomHelp(commands.Cog):
             await ctx.send(box(page.lstrip(" "), lang="diff"))
 
     @chelp.command()
-    async def edit(self, ctx):
+    async def edit(self, ctx, *, yaml_txt=None):
         """Add reactions and descriptions to the category"""
-        await ctx.send(
-            "Your next message should be a yaml with the specfied format as in the docs\n"
-            "Example:\n"
-            "category1:\n"
-            " - name: category1\n - reaction: \U0001f604\n - desc: short description\n - long_desc: long description"
-        )
-        try:
-            msg = await self.bot.wait_for(
-                "message",
-                timeout=180,
-                check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
+        if yaml_txt:
+            content = yaml_txt
+        else:
+            await ctx.send(
+                "Your next message should be a yaml with the specfied format as in the docs\n"
+                "Example:\n"
+                "category1:\n"
+                " - name: category1\n - reaction: \U0001f604\n - desc: short description\n - long_desc: long description"
             )
-        except asyncio.TimeoutError:
-            return await ctx.send("Timed out, please try again.")
+            try:
+                msg = await self.bot.wait_for(
+                    "message",
+                    timeout=180,
+                    check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
+                )
+            except asyncio.TimeoutError:
+                return await ctx.send("Timed out, please try again.")
+
         parsed_data = await self.parse_yaml(ctx, msg.content)
         if not parsed_data:
             return
@@ -525,9 +533,9 @@ class CustomHelp(commands.Cog):
         except yaml.scanner.ScannerError as e:
             await ctx.send(box(e))
             return
-
         if type(parsed_data) != dict:
             await ctx.send("Invalid Format")
+            return
 
         # TODO pls get a better type checking method
         for i in parsed_data:
