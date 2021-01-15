@@ -81,8 +81,12 @@ class BaguetteHelp(commands.RedHelpFormatter):
     ):
         # TODO getting every cog and checking if its in category isn't optimised.
         sorted_iterable = []
+        isuncategory = False
+        if category.name == GLOBAL_CATEGORIES[-1].name:
+            isuncategory = True
         for cogname, cog in (*sorted(ctx.bot.cogs.items()), (None, None)):
-            if cogname in category.cogs:
+            # TODO test this if condition, cause i can't trust my math
+            if (cogname in category.cogs) or (isuncategory and cogname == None):
                 cm = await self.get_cog_help_mapping(
                     ctx, cog, help_settings=help_settings
                 )
@@ -248,12 +252,12 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
                 cog_text = "\n" + "\n".join(
                     shorten_line(
-                        f"`{name:<15}:`{command.format_shortdoc_for_context(ctx)}"
+                        f"`{name:<12}:`{command.format_shortdoc_for_context(ctx)}"
                     )
                     for name, command in sorted(data.items())
                 )
                 all_cog_text += cog_text
-            title = obj.name.upper()
+            title = obj.name.capitalize()
             for i, page in enumerate(
                 pagify(all_cog_text, page_length=1000, shorten_by=0)
             ):
@@ -332,7 +336,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
                 subtext = "\n" + "\n".join(
                     shorten_line(
-                        f"`{name:<15}:`{command.format_shortdoc_for_context(ctx)}"
+                        f"`{name:<12}:`{command.format_shortdoc_for_context(ctx)}"
                     )
                     for name, command in sorted(subcommands.items())
                 )
@@ -347,45 +351,8 @@ class BaguetteHelp(commands.RedHelpFormatter):
                     emb["fields"].append(field)
 
             await self.make_and_send_embeds(ctx, emb, help_settings=help_settings)
-
-        else:  # Code blocks: DELETE THISS XD TODO
-
-            subtext = None
-            subtext_header = None
-            if subcommands:
-                subtext_header = _("Subcommands:")
-                max_width = max(
-                    discord.utils._string_width(name) for name in subcommands.keys()
-                )
-
-                def width_maker(cmds):
-                    doc_max_width = 80 - max_width
-                    for nm, com in sorted(cmds):
-                        width_gap = discord.utils._string_width(nm) - len(nm)
-                        doc = com.format_shortdoc_for_context(ctx)
-                        if len(doc) > doc_max_width:
-                            doc = doc[: doc_max_width - 3] + "..."
-                        yield nm, doc, max_width - width_gap
-
-                subtext = "\n".join(
-                    f"  {name:<{width}} {doc}"
-                    for name, doc, width in width_maker(subcommands.items())
-                )
-
-            to_page = "\n\n".join(
-                filter(
-                    None,
-                    (
-                        description,
-                        signature[1:-1],
-                        command.format_help_for_context(ctx),
-                        subtext_header,
-                        subtext,
-                    ),
-                )
-            )
-            pages = [box(p) for p in pagify(to_page)]
-            await self.send_pages(ctx, pages, embed=False, help_settings=help_settings)
+        else:
+            await ctx.send("Enable embeds pls")
 
     async def format_bot_help(self, ctx: Context, help_settings: HelpSettings):
         description = ctx.bot.description or ""

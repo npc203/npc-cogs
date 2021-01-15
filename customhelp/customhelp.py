@@ -21,12 +21,11 @@ RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
 
 _ = Translator("Help", __file__)
 
-# Rememeber cache pages, obselete cause help changes with user.
 # Swtichable alphabetic ordered display
-# No cog commands, need to add in menu
 # Crowdin stuff ;-;
 # For all the bunch config calls, do I need it? it's just the bot owner usage!
 # Generating every category page on format_bot_help so as to save time in reaction stuff?
+# No need to fetch config uncat, when u can use global cache, but is that better?
 """
 Config Structure:
     {
@@ -49,7 +48,7 @@ class CustomHelp(commands.Cog):
     A custom customisable help
     """
 
-    __version__ = "0.1.0"
+    __version__ = "0.1.1"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -253,15 +252,23 @@ class CustomHelp(commands.Cog):
             return
         await ctx.send("Aborted")
 
-    """
-    @chelp.command()  # TODO
-    async def removecog(self, ctx, category: str, cog: str):
-        await ctx.send("WIP")
-        
-        await getattr(self.config.categories, category).clear()
-        self.available_categories = await self.config.categories()
-        await ctx.send(f"Removed {cog} from {category}")
-    """
+    @chelp.command()
+    async def remove(self, ctx, category: str):
+        """Remove a single category"""
+        all_cat = await self.config.categories()
+        all_cat = [i["name"] for i in all_cat]
+        if category in all_cat:
+            async with self.config.categories() as conf_cat:
+                conf_cat.pop(all_cat.index(category))
+            await self.refresh_cache()
+            await ctx.send(f"Successfully removed {category}")
+        # uncategorised
+        elif category == GLOBAL_CATEGORIES[-1].name:
+            await ctx.send(
+                f"You can't remove {category} cause it is where the uncategorised cogs go into"
+            )
+        else:
+            await ctx.send(f"Invalid category name: {category}")
 
     @chelp.command()
     async def list(self, ctx):
@@ -379,8 +386,10 @@ class CustomHelp(commands.Cog):
 
         def loader(theme, feature):
             inherit_theme = themes.list[theme]
-            if hasattr(inherit_theme, self.feature_list[i]):
-                inherit_feature = getattr(themes.list[theme], self.feature_list[i])
+            if hasattr(inherit_theme, self.feature_list[feature]):
+                inherit_feature = getattr(
+                    themes.list[theme], self.feature_list[feature]
+                )
                 # load up the attribute,Monkey patch me daddy UwU
                 setattr(
                     self.bot._help_formatter,
@@ -393,7 +402,7 @@ class CustomHelp(commands.Cog):
         if theme in themes.list:
             if feature == "all":
                 for i in self.feature_list:
-                    loader(theme, feature)
+                    loader(theme, i)
             if feature in self.feature_list:
                 if loader(theme, feature):
                     await ctx.send(f"Successfully loaded {feature} from {theme}")
@@ -442,15 +451,24 @@ class CustomHelp(commands.Cog):
     async def settings(self, ctx):
         """Change various help settings"""
 
-    @chelp.command()
+    @settings.command()
     async def show(self, ctx):
         """Show the current help settings"""
+        settings = await self.config.settings()
+        setting_mapping = {"react": "usereactions", "url": "website url"}
         val = await self.config.theme()
         val = "\n".join(
             [f"`{i:<10}`: " + (j if j else "default") for i, j in val.items()]
         )
         emb = discord.Embed(title="Custom help settings", color=await ctx.embed_color())
         emb.add_field(name="Theme", value=val)
+        emb.add_field(
+            name="Other Settings",
+            value="\n".join(
+                [f"`{setting_mapping[i]:<13}`: {j}" for i, j in settings.items()],
+            ),
+            inline=False,
+        )
         await ctx.send(embed=emb)
 
     @settings.command()
@@ -458,6 +476,15 @@ class CustomHelp(commands.Cog):
         """Toggles adding reaction for navigation."""
         async with self.config.settings() as f:
             f["react"] = toggle
+        await ctx.tick()
+
+    @settings.command()
+    async def seturl(self, ctx, url: str):
+        """Set your website or support server url here."""
+        # TODO maybe check valid urls? mehh
+        async with self.config.settings() as f:
+            f["url"] = url
+        await ctx.tick()
 
     @chelp.command()
     async def listthemes(self, ctx):
@@ -477,17 +504,6 @@ class CustomHelp(commands.Cog):
         )
 
         await ctx.send(box(final))
-
-    @chelp.command()
-    async def uncategory(self, ctx, thing: str, *, item):
-        """This is to change the name,description and reaction of uncategorised cogs.
-        you can change the name,desc and reaction
-        example:\n[p]chelp uncategory name notcategorized\n[p]chelp uncategory desc weird cogs\n[p]chelp uncategory reaction \U0001f604"""
-        change = ["name", "desc", "reaction"]
-        if thing in change:
-            async with self.config.uncategorised() as un_conf:
-                un_conf[thing] = item
-        await self.refresh_cache()
 
     async def parse_yaml(self, ctx, content):
         try:
