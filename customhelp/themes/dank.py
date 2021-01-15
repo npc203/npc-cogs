@@ -11,10 +11,12 @@ from ..core.base_help import (
     commands,
     box,
     GLOBAL_CATEGORIES,
+    cast,
 )
 
 
 class DankHelp:
+    """Inspired from Dankmemer's help menu"""
     async def format_bot_help(self, ctx: Context, help_settings: HelpSettings):
         description = ctx.bot.description or ""
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
@@ -45,7 +47,9 @@ class DankHelp:
                         True,
                     )
                 )
-        await self.make_and_send_embeds(ctx, emb, help_settings=help_settings)
+        await self.make_and_send_embeds(
+            ctx, emb, help_settings=help_settings, add_emojis=True
+        )
 
     async def format_category_help(
         self, ctx: Context, obj: CategoryConvert, help_settings: HelpSettings
@@ -92,3 +96,91 @@ class DankHelp:
             await self.make_and_send_embeds(ctx, emb, help_settings=help_settings)
         else:
             await ctx.send("Enable embeds please")
+
+    async def format_command_help(
+        self, ctx: Context, obj: commands.Command, help_settings: HelpSettings
+    ):
+
+        send = help_settings.verify_exists
+        if not send:
+            async for __ in self.help_filter_func(
+                ctx, (obj,), bypass_hidden=True, help_settings=help_settings
+            ):
+                send = True
+
+        if not send:
+            return
+
+        command = obj
+
+        description = command.description or ""
+
+        tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
+        signature = _(
+            "`{ctx.clean_prefix}{command.qualified_name} {command.signature}`"
+        ).format(ctx=ctx, command=command)
+        aliases = command.aliases
+        subcommands = None
+
+        if hasattr(command, "all_commands"):
+            grp = cast(commands.Group, command)
+            subcommands = await self.get_group_help_mapping(
+                ctx, grp, help_settings=help_settings
+            )
+
+        if await ctx.embed_requested():
+            emb = {
+                "embed": {"title": "", "description": ""},
+                "footer": {"text": ""},
+                "fields": [],
+            }
+
+            if description:
+                emb["embed"]["title"] = f"*{description[:250]}*"
+
+            emb["footer"]["text"] = tagline
+            # emb["embed"]["description"] = signature
+
+            command_help = command.format_help_for_context(ctx)
+            if command_help:
+                splitted = command_help.split("\n\n")
+                name = splitted[0]
+                value = "\n\n".join(splitted[1:])
+                if not value:
+                    value = EMPTY_STRING
+                field = EmbedField(name[:250], value[:1024], False)
+                emb["fields"].append(EmbedField("Description:", name[:250], False))
+                emb["fields"].append(EmbedField("Usage:", signature, False))
+                if aliases:
+                    emb["fields"].append(
+                        EmbedField("Aliases:", (",".join(aliases)), False)
+                    )
+                # emb['fields'].append()
+                # emb["fields"].append(field)
+
+            if subcommands:
+
+                def shorten_line(a_line: str) -> str:
+                    if len(a_line) < 70:  # embed max width needs to be lower
+                        return a_line
+                    return a_line[:67] + ".."
+
+                subtext = "\n" + "\n".join(
+                    shorten_line(
+                        f"`{name:<12}:`{command.format_shortdoc_for_context(ctx)}"
+                    )
+                    for name, command in sorted(subcommands.items())
+                )
+                for i, page in enumerate(
+                    pagify(subtext, page_length=500, shorten_by=0)
+                ):
+                    if i == 0:
+                        title = _("**__Subcommands:__**")
+                    else:
+                        title = _(EMPTY_STRING)
+                    field = EmbedField(title, page, False)
+                    emb["fields"].append(field)
+
+            await self.make_and_send_embeds(ctx, emb, help_settings=help_settings)
+        else:
+            await ctx.send("Enable embeds pls")

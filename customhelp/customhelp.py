@@ -4,9 +4,11 @@ import yaml
 import asyncio
 import discord
 from discord.ext import commands as dpy_commands
-from redbot.core.utils import menus
+from redbot.core.utils import menus, predicates
 from redbot.core.i18n import Translator
 from redbot.core.utils.chat_formatting import pagify, box
+from redbot.core.utils.predicates import ReactionPredicate
+
 from redbot.core import commands, checks
 from redbot.core.bot import Red
 from redbot.core import Config
@@ -48,7 +50,7 @@ class CustomHelp(commands.Cog):
     A custom customisable help
     """
 
-    __version__ = "0.1.1"
+    __version__ = "0.1.2"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -402,16 +404,17 @@ class CustomHelp(commands.Cog):
         if theme in themes.list:
             if feature == "all":
                 for i in self.feature_list:
-                    loader(theme, i)
-            if feature in self.feature_list:
+                    if loader(theme, i):
+                        await getattr(self.config.theme, i).set(theme)
+                await ctx.tick()
+            elif feature in self.feature_list:
                 if loader(theme, feature):
                     await ctx.send(f"Successfully loaded {feature} from {theme}")
+                    # update config
+                    await getattr(self.config.theme, feature).set(theme)
+                    await ctx.tick()
                 else:
                     await ctx.send(f"{theme} doesn't have the feature {feature}")
-
-                # update config
-                await getattr(self.config.theme, feature).set(theme)
-                await ctx.tick()
             else:
                 await ctx.send("Feature not found")
         else:
@@ -420,13 +423,21 @@ class CustomHelp(commands.Cog):
     @chelp.command()
     async def reset(self, ctx):
         """Resets all settings to default **custom** help \n use `[p]chelp set 0` to revert back to the old help"""
-        # TODO add a prompt here
-        self.bot.reset_help_formatter()
-        self.bot.set_help_formatter(BaguetteHelp(self.bot, self.config))
-        await self.config.theme.set(
-            {"cog": None, "category": None, "command": None, "main": None}
+        msg = await ctx.send(
+            "Are you sure? This will reset everything back to the default theme."
         )
-        await ctx.tick()
+        menus.start_adding_reactions(msg, predicates.ReactionPredicate.YES_OR_NO_EMOJIS)
+        pred = predicates.ReactionPredicate.yes_or_no(msg, ctx.author)
+        await ctx.bot.wait_for("reaction_add", check=pred)
+        if pred.result is True:
+            self.bot.reset_help_formatter()
+            self.bot.set_help_formatter(BaguetteHelp(self.bot, self.config))
+            await self.config.theme.set(
+                {"cog": None, "category": None, "command": None, "main": None}
+            )
+            await ctx.send("Reset successful")
+        else:
+            await ctx.send("Aborted")
 
     @chelp.command()
     async def unload(self, ctx, feature: str):
@@ -486,7 +497,7 @@ class CustomHelp(commands.Cog):
             f["url"] = url
         await ctx.tick()
 
-    @chelp.command()
+    @chelp.command(aliases=["getthemes"])
     async def listthemes(self, ctx):
         """List the themes and available features"""
         outs = {i: [] for i in themes.list}
