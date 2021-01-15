@@ -354,7 +354,9 @@ class BaguetteHelp(commands.RedHelpFormatter):
         else:
             await ctx.send("Enable embeds pls")
 
-    async def format_bot_help(self, ctx: Context, help_settings: HelpSettings):
+    async def format_bot_help(
+        self, ctx: Context, help_settings: HelpSettings, get_pages: bool = False
+    ):
         description = ctx.bot.description or ""
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
         if (
@@ -391,9 +393,15 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 page_length=1018,
             ):
                 emb["fields"].append(EmbedField("Categories:", box(i), False))
-        await self.make_and_send_embeds(
-            ctx, emb, help_settings=help_settings, add_emojis=True
-        )
+
+        if get_pages:
+            return await self.make_and_send_embeds(
+                ctx, emb, help_settings=help_settings, get_pages=True
+            )
+        else:
+            await self.make_and_send_embeds(
+                ctx, emb, help_settings=help_settings, add_emojis=True
+            )
 
     async def make_and_send_embeds(
         self,
@@ -455,15 +463,15 @@ class BaguetteHelp(commands.RedHelpFormatter):
             embed.set_footer(**embed_dict["footer"])
 
             pages.append(embed)
-            if get_pages:
-                return pages
-            await self.send_pages(
-                ctx,
-                pages,
-                embed=True,
-                help_settings=help_settings,
-                add_emojis=(await self.config.settings())["react"] and add_emojis,
-            )
+        if get_pages:
+            return pages
+        await self.send_pages(
+            ctx,
+            pages,
+            embed=True,
+            help_settings=help_settings,
+            add_emojis=((await self.config.settings())["react"] and add_emojis),
+        )
 
     async def send_pages(
         self,
@@ -541,6 +549,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 for cat in GLOBAL_CATEGORIES:
                     if cat.reaction:
                         c[cat.reaction] = react_page
+                c["\U0001f3d8\U0000fe0f"] = home_page
             # Allow other things to happen during menu timeout/interaction.
             asyncio.create_task(menus.menu(ctx, pages, c, message=m))
             # menu needs reactions added manually since we fed it a message

@@ -74,7 +74,10 @@ class CustomHelp(commands.Cog):
                 "long_desc": None,
                 "reaction": None,
             },
-            "settings": {"url": None, "react": True},
+            "settings": {
+                "url": None,
+                "react": True,
+            },
         }
         self.config.register_global(**self.chelp_global)
 
@@ -146,8 +149,7 @@ class CustomHelp(commands.Cog):
 
     @chelp.command(name="set")
     async def set_formatter(self, ctx, setval: bool):
-        """Set to toggle custom formatter or the default help formatter
-        `[p]chelp set 0` to turn custom off \n `[p]chelp set 1` to turn it on"""
+        """Set to toggle custom formatter or the default help formatter\n`[p]chelp set 0` to turn custom off \n`[p]chelp set 1` to turn it on"""
         async with ctx.typing():
             try:
                 if setval:
@@ -320,10 +322,11 @@ class CustomHelp(commands.Cog):
                     timeout=180,
                     check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
                 )
+                content = msg.content
             except asyncio.TimeoutError:
                 return await ctx.send("Timed out, please try again.")
 
-        parsed_data = await self.parse_yaml(ctx, msg.content)
+        parsed_data = await self.parse_yaml(ctx, content)
         if not parsed_data:
             return
 
@@ -353,6 +356,7 @@ class CustomHelp(commands.Cog):
                 elif (
                     item[0] == "reaction"
                     and (item[1] not in already_present_emojis)
+                    and not "\U0001f3d8\U0000fe0f"  # home emoji is taken :<
                     and (item[1] in UNICODE_EMOJI)
                 ):
                     return True
