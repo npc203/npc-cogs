@@ -17,7 +17,10 @@ from ..core.base_help import (
 
 class DankHelp:
     """Inspired from Dankmemer's help menu"""
-    async def format_bot_help(self, ctx: Context, help_settings: HelpSettings):
+
+    async def format_bot_help(
+        self, ctx: Context, help_settings: HelpSettings, get_pages: bool = False
+    ):
         description = ctx.bot.description or ""
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
         if (
@@ -47,12 +50,24 @@ class DankHelp:
                         True,
                     )
                 )
-        await self.make_and_send_embeds(
-            ctx, emb, help_settings=help_settings, add_emojis=True
-        )
+            pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
+            if get_pages:
+                return pages
+            else:
+                await self.send_pages(
+                    ctx,
+                    pages,
+                    embed=True,
+                    help_settings=help_settings,
+                    add_emojis=((await self.config.settings())["react"]) and True,
+                )
 
     async def format_category_help(
-        self, ctx: Context, obj: CategoryConvert, help_settings: HelpSettings
+        self,
+        ctx: Context,
+        obj: CategoryConvert,
+        help_settings: HelpSettings,
+        get_pages: bool = False,
     ):
         coms = await self.get_category_help_mapping(
             ctx, obj, help_settings=help_settings
@@ -72,16 +87,17 @@ class DankHelp:
             }
 
             emb["embed"]["title"] = (
-                obj.reaction if obj.reaction else ""
-            ) + obj.name.capitalize()
+                (obj.reaction if obj.reaction else "") + " " + obj.name.capitalize()
+            )
             emb["footer"]["text"] = tagline
             if description:
                 emb["embed"]["description"] = f"*{description[:250]}*"
 
             all_cog_text = ""
             for cog_name, data in coms:
-                all_cog_text += "\n" + ",".join(
-                    f"`{name}`" for name, command in sorted(data.items())
+                all_cog_text += (
+                    ",".join(f"`{name}`" for name, command in sorted(data.items()))
+                    + ","
                 )
             for i, page in enumerate(
                 pagify(all_cog_text, page_length=1000, shorten_by=0)
@@ -93,7 +109,16 @@ class DankHelp:
                 )
                 emb["fields"].append(field)
 
-            await self.make_and_send_embeds(ctx, emb, help_settings=help_settings)
+            pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
+            if get_pages:
+                return pages
+            else:
+                await self.send_pages(
+                    ctx,
+                    pages,
+                    embed=True,
+                    help_settings=help_settings,
+                )
         else:
             await ctx.send("Enable embeds please")
 
@@ -181,6 +206,12 @@ class DankHelp:
                     field = EmbedField(title, page, False)
                     emb["fields"].append(field)
 
-            await self.make_and_send_embeds(ctx, emb, help_settings=help_settings)
+            pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
+            await self.send_pages(
+                ctx,
+                pages,
+                embed=True,
+                help_settings=help_settings,
+            )
         else:
             await ctx.send("Enable embeds pls")

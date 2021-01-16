@@ -184,7 +184,8 @@ class BaguetteHelp(commands.RedHelpFormatter):
                     field = EmbedField(title, page, False)
                     emb["fields"].append(field)
 
-            await self.make_and_send_embeds(ctx, emb, help_settings=help_settings)
+            pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
+            await self.send_pages(ctx, pages, embed=True, help_settings=help_settings)
 
         else:
             # TODO remove this?
@@ -264,12 +265,14 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 field = EmbedField(title, page, False)
                 emb["fields"].append(field)
                 title = EMPTY_STRING
+
+            pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
             if get_pages:
-                return await self.make_and_send_embeds(
-                    ctx, emb, help_settings=help_settings, get_pages=True
-                )
+                return pages
             else:
-                await self.make_and_send_embeds(ctx, emb, help_settings=help_settings)
+                await self.send_pages(
+                    ctx, pages, embed=True, help_settings=help_settings
+                )
         else:
             # fix this
             await ctx.send("Kindly enable embeds")
@@ -350,7 +353,8 @@ class BaguetteHelp(commands.RedHelpFormatter):
                     field = EmbedField(title, page, False)
                     emb["fields"].append(field)
 
-            await self.make_and_send_embeds(ctx, emb, help_settings=help_settings)
+            pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
+            await self.send_pages(ctx, pages, embed=True, help_settings=help_settings)
         else:
             await ctx.send("Enable embeds pls")
 
@@ -385,33 +389,34 @@ class BaguetteHelp(commands.RedHelpFormatter):
             for i in pagify(
                 "\n".join(
                     [
-                        f"{ctx.prefix+'help '+cat.name:<25}{cat.desc[:30]:<30}"
-                        + (f"{cat.reaction}" if cat.reaction else "None")
+                        f"{cat.reaction if cat.reaction else ''} `{ctx.prefix}help {cat.name:<15}:`**{cat.desc}**\n"
                         for cat in GLOBAL_CATEGORIES
                     ]
                 ),
                 page_length=1018,
             ):
-                emb["fields"].append(EmbedField("Categories:", box(i), False))
+                emb["fields"].append(EmbedField("Categories:", i, False))
 
+        pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
         if get_pages:
-            return await self.make_and_send_embeds(
-                ctx, emb, help_settings=help_settings, get_pages=True
-            )
+            return pages
         else:
-            await self.make_and_send_embeds(
-                ctx, emb, help_settings=help_settings, add_emojis=True
+            await self.send_pages(
+                ctx,
+                pages,
+                embed=True,
+                help_settings=help_settings,
+                add_emojis=((await self.config.settings())["react"]) and True,
             )
 
-    async def make_and_send_embeds(
+    # TODO maybe try lazy loading
+    async def make_embeds(
         self,
         ctx,
         embed_dict: dict,
         help_settings: HelpSettings,
-        get_pages: bool = False,
-        add_emojis: bool = False,
     ):
-        """Returns pages if get_pages, else sends the pages as menu embeds"""
+        """Returns Embed pages (Really copy paste from core)"""
         pages = []
 
         page_char_limit = help_settings.page_char_limit
@@ -463,15 +468,8 @@ class BaguetteHelp(commands.RedHelpFormatter):
             embed.set_footer(**embed_dict["footer"])
 
             pages.append(embed)
-        if get_pages:
-            return pages
-        await self.send_pages(
-            ctx,
-            pages,
-            embed=True,
-            help_settings=help_settings,
-            add_emojis=((await self.config.settings())["react"] and add_emojis),
-        )
+
+        return pages
 
     async def send_pages(
         self,

@@ -50,7 +50,7 @@ class CustomHelp(commands.Cog):
     A custom customisable help
     """
 
-    __version__ = "0.1.3"
+    __version__ = "0.1.4"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -241,8 +241,9 @@ class CustomHelp(commands.Cog):
     @chelp.command()
     async def removeall(self, ctx):
         """This will delete all the categories"""
+        # NO i wont use the messagePredicate
         await ctx.send(
-            "Warning: You are about to delete all your categories, type `y` else this is abort"
+            "Warning: You are about to delete all your categories, type `y` to continue else this will abort"
         )
         try:
             msg = await self.bot.wait_for(
@@ -278,6 +279,7 @@ class CustomHelp(commands.Cog):
         else:
             await ctx.send(f"Invalid category name: {category}")
 
+    # taken from api listing from core
     @chelp.command()
     async def list(self, ctx):
         """Show the list of categories and the cogs in them"""
@@ -295,7 +297,7 @@ class CustomHelp(commands.Cog):
             else _("Set Category:\n")
         )
         for category in available_categories_raw:
-            joined += "+ {}\n".format(category["name"])
+            joined += "+ {}:\n".format(category["name"])
             for cog in category["cogs"]:
                 joined += "  - {}\n".format(cog)
         joined += "\n+ {}\n".format("Uncategorised")
@@ -330,7 +332,13 @@ class CustomHelp(commands.Cog):
         if not parsed_data:
             return
 
-        # kill me already parsed_data = [('name', 'notrandom'), ('emoji', 'asds'), ('emoji', '😓'), ('desc', 'this iasdiuasd')]
+        # twin's bug report fix
+        for i in parsed_data.values():
+            if type(i) != list:
+                await ctx.send("Invalid Format!")
+                return
+
+        # kill me already parsed_data = {category:[('name', 'notrandom'), ('emoji', 'asds'), ('emoji', '😓'), ('desc', 'this iasdiuasd')]}
         parsed_data = {
             i: [(k, v) for f in my_list for k, v in f.items()]
             for i, my_list in parsed_data.items()

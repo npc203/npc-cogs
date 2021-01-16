@@ -2,7 +2,7 @@ from typing import Optional
 from redbot.core import commands
 import contextlib
 import discord
-from redbot.core.utils.menus import menu
+from redbot.core.utils.menus import menu, next_page, prev_page, start_adding_reactions
 from redbot.core.commands.help import HelpSettings
 
 GLOBAL_CATEGORIES = []
@@ -79,6 +79,16 @@ async def react_page(
     pages = await ctx.bot._help_formatter.format_category_help(
         ctx, category, help_settings, get_pages=True
     )
+    if len(pages) > 1:
+        controls["\N{LEFTWARDS BLACK ARROW}\N{VARIATION SELECTOR-16}"] = prev_page
+        controls["\N{BLACK RIGHTWARDS ARROW}\N{VARIATION SELECTOR-16}"] = next_page
+        start_adding_reactions(
+            message,
+            [
+                "\N{LEFTWARDS BLACK ARROW}\N{VARIATION SELECTOR-16}",
+                "\N{BLACK RIGHTWARDS ARROW}\N{VARIATION SELECTOR-16}",
+            ],
+        )
     return await menu(ctx, pages, controls, message=message, page=page, timeout=timeout)
 
 
