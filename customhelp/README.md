@@ -47,4 +47,4 @@ Note: This won't revert to the previous red help, to do so use `[p]chelp set 0`
 - To the other bots `R.Danny`,`Dankmemer` from which I got inspiration.
 - `Pikachu's help menu` from [Flare](https://github.com/flaree/) which is the base help design of this cog (the layout).
 - The whole Red community cause redbot is epic.
-- Special thanks to [Jackenman](https://github.com/jack1142) who solved most of the doubts that came during the development.
+- Special thanks to [Jackenmen](https://github.com/jack1142) who solved most of the doubts that came during the development.
