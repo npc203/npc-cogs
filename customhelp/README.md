@@ -1,4 +1,4 @@
-# A Customisable Custom Help Cog For Red 
+# A Customisable Custom Help Cog For Red (DO NOT INSTALL THIS, IT IS STILL IN DEVELOPMENT)
 Couldn't get a shorter title. Anyways, the cog introduces categories, meaning you can now bunch up cogs into one blob and give it a name, description and reaction.  
 Use `[p]chelp` to see what can be customised.
 
