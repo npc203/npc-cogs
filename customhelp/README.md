@@ -21,7 +21,7 @@ category:
  - long_desc: long description
  - reaction: reaction
 ```
-you can mix and match, as much as you want.Like the example below  
+you can mix and match, as much as you want. Like the example below  
 ![editz](https://imgur.com/m4LtUy4.png)  
 6. Now the main help menu must look a little better.  
 ![Default command](https://imgur.com/72GXRY8.png)  
