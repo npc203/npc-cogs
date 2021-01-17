@@ -3,6 +3,7 @@ Couldn't get a shorter title. Anyways, the cog introduces categories, meaning yo
 Use `[p]chelp` to see what can be customised.
 
 ## Setup:
+*Note: Use [p]chelp set 1 to set your help to the custom help, else it'll remain as the normal one*
 1. Start by doing `[p]chelp list` to list all your cogs
 ![list categories](https://i.imgur.com/tsn6Rnx.png=30x5)  
 2. Pick the cogs you need to group into a category. Then use `[p]chelp create`, now add the catergorized cogs as shown below. This is yaml syntax.  
@@ -33,7 +34,7 @@ Introducing themes that were shamesslessly ripped off from other bots cause I'm 
 2. `[p]chelp load <theme> feature` to load the respective stuff.  
 An example of `[p]chelp load dank main` is shown below  
 ![](https://imgur.com/Fr1SS37.png)
-3. `[p]chelp settings show` to show what themes are loaded.  
+3. `[p]chelp show` to show what themes are loaded.  
 ![](https://imgur.com/tW7sFkX.png)
 4. `[p]chelp unload feature` to reset the given feature back to default
 5. `[p]chelp resetall` to reset everything back to the default custom help  
@@ -41,10 +42,11 @@ Note: This won't revert to the previous red help, to do so use `[p]chelp set 0`
 ## Additional Notes:
 - A **Good Practice** is to have the category names all **lowercased** and the category description as **Camelcase**.
 - Free to tell about new themes which you might want to see. Let me know if you think any part of the theme can be made better. I'm available in the [cog support server]( https://discord.gg/GET4DVk).
+- If the owner of any bot feels that their theme needs to be removed from this cog. Please inform me, I'll remove it.
 
 ## Credits:
 - To everyone who patiently answered my noob coding questions.
 - To the other bots `R.Danny`,`Dankmemer` from which I got inspiration.
-- `Pikachu's help menu` from [Flare](https://github.com/flaree/) which is the base help design of this cog (the layout).
-- The whole Red community cause redbot is epic.
+- `Pikachu's help menu` from [Flare](https://github.com/flaree/) which is the base help design of this cog (This isn't available anymore, cause flare requested it's removal).
+- The whole Red community cause redbot is epic and the help_formatter is God sent.
 - Special thanks to [Jackenmen](https://github.com/jack1142) who solved most of the doubts that came during the development.

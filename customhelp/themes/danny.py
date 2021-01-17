@@ -17,7 +17,9 @@ from ..core.base_help import (
 class DannyHelp:
     """Inspired from R.danny's help menu"""
 
-    async def format_bot_help(self, ctx: Context, help_settings: HelpSettings):
+    async def format_bot_help(
+        self, ctx: Context, help_settings: HelpSettings, get_pages: bool = False
+    ):
         description = ctx.bot.description or ""
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
         if (
@@ -54,12 +56,24 @@ class DannyHelp:
                     else:
                         title = EMPTY_STRING
                     emb["fields"].append(EmbedField(title, cog_names, True))
-            await self.make_and_send_embeds(
-                ctx, emb, help_settings=help_settings, add_emojis=True
-            )
+            pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
+            if get_pages:
+                return pages
+            else:
+                await self.send_pages(
+                    ctx,
+                    pages,
+                    embed=True,
+                    help_settings=help_settings,
+                    add_emojis=((await self.config.settings())["react"]) and True,
+                )
 
     async def format_category_help(
-        self, ctx: Context, obj: CategoryConvert, help_settings: HelpSettings
+        self,
+        ctx: Context,
+        obj: CategoryConvert,
+        help_settings: HelpSettings,
+        get_pages: bool = False,
     ):
         coms = await self.get_category_help_mapping(
             ctx, obj, help_settings=help_settings
@@ -94,7 +108,16 @@ class DannyHelp:
                     field = EmbedField(title, page, True)
                     emb["fields"].append(field)
 
-            await self.make_and_send_embeds(ctx, emb, help_settings=help_settings)
+            pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
+            if get_pages:
+                return pages
+            else:
+                await self.send_pages(
+                    ctx,
+                    pages,
+                    embed=True,
+                    help_settings=help_settings,
+                )
 
         else:
             await ctx.send("Please have embeds enabled")

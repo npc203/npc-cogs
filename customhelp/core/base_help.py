@@ -15,7 +15,7 @@ from redbot.core.commands.help import (
     mass_purge,
 )
 
-from redbot.core.utils.chat_formatting import pagify, box
+from redbot.core.utils.chat_formatting import pagify, box, humanize_timedelta
 from redbot.core.i18n import Translator
 from redbot.core.utils import menus
 
@@ -327,8 +327,29 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 value = "\n\n".join(splitted[1:])
                 if not value:
                     value = EMPTY_STRING
-                field = EmbedField(name[:250], value[:1024], False)
+                field = EmbedField(
+                    "Description", name[:250] + "\n" + value[:1024], False
+                )
                 emb["fields"].append(field)
+                # Add permissions
+                if perms := command.requires.user_perms:
+                    perms_list = [
+                        i for i, j in perms if j
+                    ]  # TODO pls learn more to fix this
+                    # print(perms_list)
+                    if perms_list:
+                        emb["fields"].append(
+                            EmbedField("Permissions", ",".join(perms_list), False)
+                        )
+                # Add cooldowns
+                if s := command._buckets._cooldown:
+                    emb["fields"].append(
+                        EmbedField(
+                            "Cooldowns:",
+                            f"{s.rate} time{'s' if s.rate>1 else ''} in {humanize_timedelta(seconds=s.per)} per {s.type.__str__().replace('BucketType.','').capitalize()}",
+                            False,
+                        )
+                    )
 
             if subcommands:
 
@@ -352,7 +373,6 @@ class BaguetteHelp(commands.RedHelpFormatter):
                         title = _(EMPTY_STRING)
                     field = EmbedField(title, page, False)
                     emb["fields"].append(field)
-
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
             await self.send_pages(ctx, pages, embed=True, help_settings=help_settings)
         else:

@@ -50,7 +50,7 @@ class CustomHelp(commands.Cog):
     A custom customisable help
     """
 
-    __version__ = "0.1.4"
+    __version__ = "0.2.0"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -77,6 +77,7 @@ class CustomHelp(commands.Cog):
             "settings": {
                 "url": None,
                 "react": True,
+                "set_formatter": False,
             },
         }
         self.config.register_global(**self.chelp_global)
@@ -124,6 +125,9 @@ class CustomHelp(commands.Cog):
 
     async def _setup(self):
         """Adds the themes and loads the formatter"""
+        if not (await self.config.settings.set_formatter()):
+            print("fu")
+            return
         await self.refresh_cache()
         main_theme = BaguetteHelp(self.bot, self.config)
         theme = await self.config.theme()
@@ -153,9 +157,12 @@ class CustomHelp(commands.Cog):
         async with ctx.typing():
             try:
                 if setval:
-                    self.bot.set_help_formatter(BaguetteHelp(self.bot, self.config))
+                    # TODO potiential save a config call?
+                    await self.config.settings.set_formatter.set(True)
+                    await self._setup()
                     await ctx.send("Fomatter set to custom")
                 else:
+                    await self.config.settings.set_formatter.set(False)
                     self.bot.reset_help_formatter()
                     await ctx.send("Resetting formatter to default")
             except RuntimeError as e:
@@ -406,6 +413,10 @@ class CustomHelp(commands.Cog):
     async def load(self, ctx, theme: str, feature: str):
         """Load another preset theme.\nUse `[p]chelp load <theme> all` to load everything from that theme"""
 
+        if type(self.bot._help_formatter) is commands.help.RedHelpFormatter:
+            await ctx.send("You are not using the custom formatter")
+            return
+
         def loader(theme, feature):
             inherit_theme = themes.list[theme]
             if hasattr(inherit_theme, self.feature_list[feature]):
@@ -462,6 +473,9 @@ class CustomHelp(commands.Cog):
     @chelp.command()
     async def unload(self, ctx, feature: str):
         """Unloads the given feature, this will reset to default"""
+        if type(self.bot._help_formatter) is commands.help.RedHelpFormatter:
+            await ctx.send("You are not using the custom formatter")
+            return
         if feature in self.feature_list:
             setattr(
                 self.bot._help_formatter,
@@ -482,11 +496,15 @@ class CustomHelp(commands.Cog):
     async def settings(self, ctx):
         """Change various help settings"""
 
-    @settings.command()
+    @chelp.command()
     async def show(self, ctx):
         """Show the current help settings"""
         settings = await self.config.settings()
-        setting_mapping = {"react": "usereactions", "url": "website url"}
+        setting_mapping = {
+            "react": "usereactions",
+            "url": "website url",
+            "set_formatter": "iscustomhelp?",
+        }
         val = await self.config.theme()
         val = "\n".join(
             [f"`{i:<10}`: " + (j if j else "default") for i, j in val.items()]

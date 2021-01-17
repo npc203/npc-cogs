@@ -12,6 +12,7 @@ from ..core.base_help import (
     box,
     GLOBAL_CATEGORIES,
     cast,
+    humanize_timedelta,
 )
 
 
@@ -180,8 +181,25 @@ class DankHelp:
                     emb["fields"].append(
                         EmbedField("Aliases:", (",".join(aliases)), False)
                     )
-                # emb['fields'].append()
-                # emb["fields"].append(field)
+                # Add permissions
+                if perms := command.requires.user_perms:
+                    perms_list = [
+                        i for i, j in perms if j
+                    ]  # TODO pls learn more to fix this
+                    # print(perms_list)
+                    if perms_list:
+                        emb["fields"].append(
+                            EmbedField("Permissions", ",".join(perms_list), False)
+                        )
+                # Add cooldowns
+                if s := command._buckets._cooldown:
+                    emb["fields"].append(
+                        EmbedField(
+                            "Cooldowns:",
+                            f"{s.rate} time{'s' if s.rate>1 else ''} in {humanize_timedelta(seconds=s.per)} per {s.type.__str__().replace('BucketType.','').capitalize()}",
+                            False,
+                        )
+                    )
 
             if subcommands:
 

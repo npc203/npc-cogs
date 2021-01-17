@@ -52,7 +52,10 @@ async def home_page(
     pages = await ctx.bot._help_formatter.format_bot_help(
         ctx, help_settings, get_pages=True
     )
-    return await menu(ctx, pages, controls, message=message, page=page, timeout=timeout)
+    if len(pages) <= 1:
+        controls.pop("\N{LEFTWARDS BLACK ARROW}\N{VARIATION SELECTOR-16}", None)
+        controls.pop("\N{BLACK RIGHTWARDS ARROW}\N{VARIATION SELECTOR-16}", None)
+    return await menu(ctx, pages, controls, message=message, page=0, timeout=timeout)
 
 
 # TODO
