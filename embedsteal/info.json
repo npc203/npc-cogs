@@ -2,12 +2,11 @@
     "name": "EmbedSteal",
     "short": "An embed reverser cog",
     "description": "A cog that converts embed to json.",
+    "install_msg": "This only works with discordpy 1.6 do not install this",
     "end_user_data_statement": "This cog does not persistently store any data or metadata about users.",
     "author": [
         "epic guy"
     ],
-    "required_cogs": {},
-    "requirements": [],
     "tags": [
         "fun",
         "utility"
@@ -15,6 +14,5 @@
     "min_bot_version": "3.3.10",
     "hidden": true,
     "disabled": false,
-    "install_msg": "This only works with discordpy 1.6 do not install this",
     "type": "COG"
 }
