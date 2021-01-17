@@ -6,11 +6,11 @@
     "author": [
         "epic guy","Every other bot's help menu's design"
     ],
+    "install_msg":"This is a BETA cog, so expect bugs and kindly report them to me in the cog support server",
     "requirements": ["emoji"],
     "tags": [
         "help","utility","fun"
     ],
     "min_bot_version": "3.3.10",
-    "disabled": false,
     "type": "COG"
 }
