@@ -92,7 +92,7 @@ async def react_page(
                 "\N{BLACK RIGHTWARDS ARROW}\N{VARIATION SELECTOR-16}",
             ],
         )
-    return await menu(ctx, pages, controls, message=message, page=page, timeout=timeout)
+    return await menu(ctx, pages, controls, message=message, page=0, timeout=timeout)
 
 
 class CategoryConvert(commands.Converter):
