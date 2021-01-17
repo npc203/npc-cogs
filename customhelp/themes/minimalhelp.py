@@ -17,6 +17,8 @@ from ..core.base_help import (
 
 # Note: this won't use reactions
 class MinimalHelp:
+    """This is a no embed minimal theme for the simplistic people"""
+
     async def format_bot_help(self, ctx: Context, help_settings: HelpSettings):
         description = ctx.bot.description or ""
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)

@@ -14,7 +14,7 @@ from ..core.base_help import (
 )
 
 
-class DannyHelp:
+class NadekoHelp:
     """Inspired from Nadeko's help menu"""
 
     async def format_bot_help(
@@ -34,28 +34,13 @@ class DannyHelp:
             }
 
             emb["footer"]["text"] = tagline
-            if description:
-                splitted = description.split("\n\n")
-                name = splitted[0]
-                value = "\n\n".join(splitted[1:])
-                if not value:
-                    value = EMPTY_STRING
-                field = EmbedField(name[:252], value[:1024], False)
-                emb["fields"].append(field)
 
             emb["title"] = f"{ctx.me.name} Help Menu"
+            cat_titles = ""
             for cat in GLOBAL_CATEGORIES:
-                cog_names = "`" + "` `".join(cat.cogs) + "`" if cat.cogs else ""
-                for i, page in enumerate(
-                    pagify(cog_names, page_length=1000, shorten_by=0)
-                ):
-                    if i == 0:
-                        title = (
-                            cat.reaction if cat.reaction else ""
-                        ) + f"**{cat.name.capitalize()}:**"
-                    else:
-                        title = EMPTY_STRING
-                    emb["fields"].append(EmbedField(title, cog_names, True))
+                cat_titles += f"• {cat.name}\n"
+            # TODO Dont be a moron trying to pagify this or do we?
+            emb["fields"].append(EmbedField("List of Categories", cat_titles, False))
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
             if get_pages:
                 return pages
@@ -65,7 +50,6 @@ class DannyHelp:
                     pages,
                     embed=True,
                     help_settings=help_settings,
-                    add_emojis=((await self.config.settings())["react"]) and True,
                 )
 
     async def format_category_help(
@@ -80,6 +64,7 @@ class DannyHelp:
         )
         if not coms:
             return
+
         description = ctx.bot.description or ""
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
 
@@ -93,19 +78,24 @@ class DannyHelp:
 
             emb["footer"]["text"] = tagline
             if description:
-                emb["embed"]["title"] = f"*{description[:250]}*"
+                emb["embed"]["description"] = f"*{description[:250]}*"
+
             for cog_name, data in coms:
                 if cog_name:
                     title = f"**{cog_name}**"
                 else:
                     title = _("**No Category:**")
-
-                cog_text = "\n" + " ".join(
-                    (f"`{name}`") for name, command in sorted(data.items())
+                cog_text = "\n".join(
+                    f"{ctx.prefix}{name} {'['+command.signature+']'}"
+                    for name, command in sorted(data.items())
                 )
-
-                for page in pagify(cog_text, page_length=1000, shorten_by=0):
-                    field = EmbedField(title, page, True)
+                for i, page in enumerate(
+                    pagify(cog_text, page_length=1000, shorten_by=0)
+                ):
+                    title = (
+                        title if i < 1 else _("{title} (continued)").format(title=title)
+                    )
+                    field = EmbedField(title, box(page, lang="ini"), True)
                     emb["fields"].append(field)
 
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
@@ -113,11 +103,8 @@ class DannyHelp:
                 return pages
             else:
                 await self.send_pages(
-                    ctx,
-                    pages,
-                    embed=True,
-                    help_settings=help_settings,
+                    ctx, pages, embed=True, help_settings=help_settings
                 )
-
         else:
-            await ctx.send("Please have embeds enabled")
+            # fix this
+            await ctx.send("Kindly enable embeds")

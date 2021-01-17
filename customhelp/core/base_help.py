@@ -513,7 +513,6 @@ class BaguetteHelp(commands.RedHelpFormatter):
             use_DMs = len(pages) > max_pages_in_guild
             destination = ctx.author if use_DMs else ctx.channel
             delete_delay = help_settings.delete_delay
-
             messages: List[discord.Message] = []
             for page in pages:
                 try:
