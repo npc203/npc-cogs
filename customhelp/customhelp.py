@@ -126,7 +126,6 @@ class CustomHelp(commands.Cog):
     async def _setup(self):
         """Adds the themes and loads the formatter"""
         if not (await self.config.settings.set_formatter()):
-            print("fu")
             return
         await self.refresh_cache()
         main_theme = BaguetteHelp(self.bot, self.config)

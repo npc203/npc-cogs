@@ -3,7 +3,7 @@ Couldn't get a shorter title. Anyways, the cog introduces categories, meaning yo
 Use `[p]chelp` to see what can be customised.
 
 ## Setup:
-*Note: Use [p]chelp set 1 to set your help to the custom help, else it'll remain as the normal one*
+*Note: Use `[p]chelp set 1` to set your help to the custom help, else it'll remain as the normal one*
 1. Start by doing `[p]chelp list` to list all your cogs
 ![list categories](https://i.imgur.com/tsn6Rnx.png=30x5)  
 2. Pick the cogs you need to group into a category. Then use `[p]chelp create`, now add the catergorized cogs as shown below. This is yaml syntax.  
@@ -46,7 +46,7 @@ Note: This won't revert to the previous red help, to do so use `[p]chelp set 0`
 
 ## Credits:
 - To everyone who patiently answered my noob coding questions.
-- To the other bots `R.Danny`,`Dankmemer` from which I got inspiration.
+- To the other bots `R.Danny`,`Dankmemer`, `Nadeko` from which I got inspiration.
 - `Pikachu's help menu` from [Flare](https://github.com/flaree/) which is the base help design of this cog (This isn't available anymore, cause flare requested it's removal).
 - The whole Red community cause redbot is epic and the help_formatter is God sent.
 - Special thanks to [Jackenmen](https://github.com/jack1142) who solved most of the doubts that came during the development.

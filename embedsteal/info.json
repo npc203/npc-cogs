@@ -15,5 +15,6 @@
     "min_bot_version": "3.3.10",
     "hidden": true,
     "disabled": false,
+    "install_msg":"This only works with discordpy 1.16 do not install this",
     "type": "COG"
 }

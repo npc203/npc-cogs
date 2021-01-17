@@ -25,10 +25,12 @@ class EmbedSteal(commands.Cog):
             if isinstance(msg, discord.Message):
                 if hasattr(msg, "embeds"):
                     for page in pagify(
-                        pprint.pformat(msg.embeds[0].to_dict(), indent=4),
-                        page_length=1990,
+                        pprint.pformat(msg.embeds[0].to_dict(), indent=4).replace(
+                            "`", "​`"
+                        ),
+                        page_length=1994,
                     ):
-                        await ctx.send(escape(page))
+                        await ctx.send(box(page))
                     if printit:
                         await ctx.send(
                             content="​\n\nRecreating embed..\n\n..",

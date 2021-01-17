@@ -258,6 +258,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                     for name, command in sorted(data.items())
                 )
                 all_cog_text += cog_text
+            all_cog_text = "\n".join(sorted(all_cog_text.split("\n")))
             title = obj.name.capitalize()
             for i, page in enumerate(
                 pagify(all_cog_text, page_length=1000, shorten_by=0)
