@@ -21,7 +21,7 @@ category:
  - long_desc: long description
  - reaction: reaction
 ```
-you can mix and match, as much as you want.Like the example below  
+you can mix and match, as much as you want. Like the example below  
 ![editz](https://imgur.com/m4LtUy4.png)  
 6. Now the main help menu must look a little better.  
 ![Default command](https://imgur.com/72GXRY8.png)  
@@ -48,7 +48,7 @@ An example of `[p]chelp load dank main` is shown below
 - If the owner of any bot feels that their theme needs to be removed from this cog. Please inform me, I'll remove it.
 
 ## Credits:
-- My heartfelt thanks to [Oofchair](https://github.com/OofChair) and [TwinShadow](https://github.com/TwinDragon). Both of these amazing people did some major testing and contribution to the cog.
+- My heartfelt thanks to [OofChair](https://github.com/OofChair) and [TwinShadow](https://github.com/TwinDragon). Both of these amazing people did some major testing and contribution to the cog.
 - To everyone who patiently answered my noob coding questions.
 - To the other bots `R.Danny`,`Dankmemer`, `Nadeko` from which I got inspiration.
 - `Pikachu's help menu` from [Flare](https://github.com/flaree/) which is the base help design of this cog (This isn't available anymore, cause flare requested it's removal).
