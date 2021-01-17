@@ -33,19 +33,22 @@ Introducing themes that were shamesslessly ripped off from other bots cause I'm 
 1. `[p]chelp listthemes` to get all the themes and the features available in each of them.  
 ![](https://imgur.com/m83FC1N.png)
 2. `[p]chelp load <theme> feature` to load the respective stuff.  
+*Note: you can use `[p]chelp load <theme> all` to load all the available feature in that theme(sorry Oofchair)*    
 An example of `[p]chelp load dank main` is shown below  
 ![](https://imgur.com/Fr1SS37.png)
 3. `[p]chelp show` to show what themes are loaded.  
 ![](https://imgur.com/tW7sFkX.png)
 4. `[p]chelp unload feature` to reset the given feature back to default
 5. `[p]chelp reset` to reset everything back to the default custom help  
-Note: This won't revert to the previous red help, to do so use `[p]chelp set 0`
+*Note: This won't revert to the previous red help, to do so use `[p]chelp set 0`*
+6. Take a look at `[p]chelp settings` to see what more is configurable.
 ## Additional Notes:
 - A **Good Practice** is to have the category names all **lowercased** and the category description as **Camelcase**.
 - Free to tell about new themes which you might want to see. Let me know if you think any part of the theme can be made better. I'm available in the [cog support server]( https://discord.gg/GET4DVk).
 - If the owner of any bot feels that their theme needs to be removed from this cog. Please inform me, I'll remove it.
 
 ## Credits:
+- My heartfelt thanks to [Oofchair](https://github.com/OofChair) and [TwinShadow](https://github.com/TwinDragon). Both of these amazing people did some major testing and contribution to the cog.
 - To everyone who patiently answered my noob coding questions.
 - To the other bots `R.Danny`,`Dankmemer`, `Nadeko` from which I got inspiration.
 - `Pikachu's help menu` from [Flare](https://github.com/flaree/) which is the base help design of this cog (This isn't available anymore, cause flare requested it's removal).

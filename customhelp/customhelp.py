@@ -520,7 +520,7 @@ class CustomHelp(commands.Cog):
         )
         await ctx.send(embed=emb)
 
-    @settings.command()
+    @settings.command(aliases=["usereaction"])
     async def usereactions(self, ctx, toggle: bool):
         """Toggles adding reaction for navigation."""
         async with self.config.settings() as f:
