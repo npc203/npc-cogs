@@ -1,4 +1,4 @@
-from . import danny, dank, justcore, minimalhelp, nadeko
+from . import danny, dank, justcore, minimalhelp, nadeko, twin
 
 # TODO automate the generation of this list
 list = {
@@ -7,4 +7,5 @@ list = {
     "minimal": minimalhelp.MinimalHelp,
     "nadeko": nadeko.NadekoHelp,
     "justcore": justcore.JustCore,
+    "twin": twin.TwinHelp,
 }

@@ -171,7 +171,6 @@ class JustCore:
                 pages,
                 embed=True,
                 help_settings=help_settings,
-                add_emojis=((await self.config.settings())["react"]) and True,
             )
 
     async def format_cog_help(

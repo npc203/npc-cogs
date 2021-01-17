@@ -410,7 +410,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
             for i in pagify(
                 "\n".join(
                     [
-                        f"{cat.reaction if cat.reaction else ''} `{ctx.prefix}help {cat.name:<15}:`**{cat.desc}**\n"
+                        f"{cat.reaction if cat.reaction else ''} `{ctx.prefix}help {cat.name:<10}:`**{cat.desc}**\n"
                         for cat in GLOBAL_CATEGORIES
                     ]
                 ),
@@ -418,17 +418,17 @@ class BaguetteHelp(commands.RedHelpFormatter):
             ):
                 emb["fields"].append(EmbedField("Categories:", i, False))
 
-        pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
-        if get_pages:
-            return pages
-        else:
-            await self.send_pages(
-                ctx,
-                pages,
-                embed=True,
-                help_settings=help_settings,
-                add_emojis=((await self.config.settings())["react"]) and True,
-            )
+            pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
+            if get_pages:
+                return pages
+            else:
+                await self.send_pages(
+                    ctx,
+                    pages,
+                    embed=True,
+                    help_settings=help_settings,
+                    add_emojis=((await self.config.settings())["react"]) and True,
+                )
 
     # TODO maybe try lazy loading
     async def make_embeds(
@@ -439,7 +439,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
     ):
         """Returns Embed pages (Really copy paste from core)"""
         pages = []
-
+        thumbnail_url = await self.config.settings.thumbnail()
         page_char_limit = help_settings.page_char_limit
         page_char_limit = min(page_char_limit, 5500)
         author_info = {
@@ -466,6 +466,8 @@ class BaguetteHelp(commands.RedHelpFormatter):
             embed = discord.Embed(color=color, **embed_dict["embed"])
             embed.set_author(**author_info)
             embed.set_footer(**embed_dict["footer"])
+            if thumbnail_url:
+                embed.set_thumbnail(url=thumbnail_url)
             pages.append(embed)
 
         for i, group in enumerate(field_groups, 1):
@@ -487,7 +489,8 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 embed.add_field(**field._asdict())
 
             embed.set_footer(**embed_dict["footer"])
-
+            if thumbnail_url:
+                embed.set_thumbnail(url=thumbnail_url)
             pages.append(embed)
 
         return pages

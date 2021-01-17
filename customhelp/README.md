@@ -1,4 +1,4 @@
-# A Customisable Custom Help Cog For Red (WARNING: THIS IS IN DEVELOPEMENT, DO NOT INSTALL THIS)
+# A Customisable Custom Help Cog For Red:  (WARNING: THIS IS IN BETA and requires lots of testing, do not install this in a production bot)
 Couldn't get a shorter title. Anyways, the cog introduces categories, meaning you can now bunch up cogs into one blob and give it a name, description and reaction.  
 Use `[p]chelp` to see what can be customised.
 
@@ -25,6 +25,7 @@ you can mix and match, as much as you want.Like the example below
 ![editz](https://imgur.com/m4LtUy4.png)  
 6. Now the main help menu must look a little better.  
 ![Default command](https://imgur.com/72GXRY8.png)  
+7. 
 7. *butt weight there's more.*  
 
 ## Themes:
@@ -37,7 +38,7 @@ An example of `[p]chelp load dank main` is shown below
 3. `[p]chelp show` to show what themes are loaded.  
 ![](https://imgur.com/tW7sFkX.png)
 4. `[p]chelp unload feature` to reset the given feature back to default
-5. `[p]chelp resetall` to reset everything back to the default custom help  
+5. `[p]chelp reset` to reset everything back to the default custom help  
 Note: This won't revert to the previous red help, to do so use `[p]chelp set 0`
 ## Additional Notes:
 - A **Good Practice** is to have the category names all **lowercased** and the category description as **Camelcase**.

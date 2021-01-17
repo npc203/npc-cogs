@@ -19,6 +19,8 @@ To add cogs from this repo to your instance, do these steps:
 | Weeb | Alpha |<details><summary>Bunch of Otaku emoticons</summary>Expwess youw weebness using the bunch of wandom weeb emoticons UwU</details>
 | Todo | Alpha |<details><summary>A todo cog</summary>A simple todo cog to remember your tasks</details>
 | TypeRacer | Beta |<details><summary>Typing speed test</summary>Test you typing skills with this cog</details>
+| CustomHelp | Beta |<details><summary>A category themed custom help</summary>Kindly read the cog's readme in the folder for setup</details>
+| EmbedSteal | N/A | <details><summary>THIS IS NOT A PROPER COG</summary>DO NOT INSTALL THIS</details>
                                                                                                                                                                                                                           
 ## Credits
 - Thank you Red community, you guys are awesome

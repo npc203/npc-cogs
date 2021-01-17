@@ -78,6 +78,7 @@ class CustomHelp(commands.Cog):
                 "url": None,
                 "react": True,
                 "set_formatter": False,
+                "thumbnail": None,
             },
         }
         self.config.register_global(**self.chelp_global)
@@ -306,7 +307,7 @@ class CustomHelp(commands.Cog):
             joined += "+ {}:\n".format(category["name"])
             for cog in category["cogs"]:
                 joined += "  - {}\n".format(cog)
-        joined += "\n+ {}\n".format("Uncategorised")
+        joined += "\n+ {}:\n".format("uncategorised")
         for name in uncategorised:
             joined += "  - {}\n".format(name)
         for page in pagify(joined, ["\n"], shorten_by=16):
@@ -442,7 +443,6 @@ class CustomHelp(commands.Cog):
                     await ctx.send(f"Successfully loaded {feature} from {theme}")
                     # update config
                     await getattr(self.config.theme, feature).set(theme)
-                    await ctx.tick()
                 else:
                     await ctx.send(f"{theme} doesn't have the feature {feature}")
             else:
@@ -503,6 +503,7 @@ class CustomHelp(commands.Cog):
             "react": "usereactions",
             "url": "website url",
             "set_formatter": "iscustomhelp?",
+            "thumbnail": "thumbnail",
         }
         val = await self.config.theme()
         val = "\n".join(
@@ -530,9 +531,27 @@ class CustomHelp(commands.Cog):
     async def seturl(self, ctx, url: str):
         """Set your website or support server url here."""
         # TODO maybe check valid urls? mehh
-        async with self.config.settings() as f:
-            f["url"] = url
-        await ctx.tick()
+        if url:
+            async with self.config.settings() as f:
+                f["url"] = url
+            await ctx.tick()
+        else:
+            async with self.config.settings() as f:
+                f["url"] = None
+            await ctx.send("Reset url")
+
+    @settings.command(aliases=["setthumbnail"])
+    async def thumbnail(self, ctx, url: str):
+        """Set your thumbnail image here."""
+        # TODO maybe check valid urls? mehh
+        if url:
+            async with self.config.settings() as f:
+                f["thumbnail"] = url
+            await ctx.tick()
+        else:
+            async with self.config.settings() as f:
+                f["thumbnail"] = None
+            await ctx.send("Reset thumbnail")
 
     @chelp.command(aliases=["getthemes"])
     async def listthemes(self, ctx):

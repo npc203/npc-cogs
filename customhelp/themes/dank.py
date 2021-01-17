@@ -97,7 +97,7 @@ class DankHelp:
             all_cog_text = ""
             for cog_name, data in coms:
                 all_cog_text += (
-                    ",".join(f"`{name}`" for name, command in sorted(data.items()))
+                    ", ".join(f"`{name}`" for name, command in sorted(data.items()))
                     + ","
                 )
             for i, page in enumerate(
