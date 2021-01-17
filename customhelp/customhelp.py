@@ -305,10 +305,10 @@ class CustomHelp(commands.Cog):
         )
         for category in available_categories_raw:
             joined += "+ {}:\n".format(category["name"])
-            for cog in category["cogs"]:
+            for cog in sorted(category["cogs"]):
                 joined += "  - {}\n".format(cog)
         joined += "\n+ {}:\n".format("uncategorised")
-        for name in uncategorised:
+        for name in sorted(uncategorised):
             joined += "  - {}\n".format(name)
         for page in pagify(joined, ["\n"], shorten_by=16):
             await ctx.send(box(page.lstrip(" "), lang="diff"))
