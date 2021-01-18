@@ -115,11 +115,7 @@ class CustomHelp(commands.Cog):
         uncat_config = await self.config.uncategorised()
         GLOBAL_CATEGORIES.append(
             Category(
-                name=uncat_config["name"] if uncat_config["name"] else "uncategorised",
-                desc=uncat_config["desc"]
-                if uncat_config["desc"]
-                else "No category commands",
-                reaction=uncat_config["reaction"] if uncat_config["reaction"] else None,
+                **uncat_config,
                 cogs=list(uncategorised),
             )
         )
