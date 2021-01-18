@@ -101,7 +101,7 @@ class DankHelp:
                     + ","
                 )
             for i, page in enumerate(
-                pagify(all_cog_text, page_length=1000, shorten_by=0)
+                pagify(all_cog_text, page_length=1000, delims=["`"], shorten_by=0)
             ):
                 field = EmbedField(
                     EMPTY_STRING,

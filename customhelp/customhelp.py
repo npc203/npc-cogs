@@ -1,4 +1,4 @@
-from typing import Literal, Union
+from typing import Literal, Union, List, Dict
 from itertools import chain
 import yaml
 import asyncio
@@ -344,7 +344,7 @@ class CustomHelp(commands.Cog):
 
         # twin's bug report fix
         for i in parsed_data.values():
-            if type(i) != list:
+            if type(i) != List[Dict]:
                 await ctx.send("Invalid Format!")
                 return
 
@@ -531,8 +531,8 @@ class CustomHelp(commands.Cog):
         await ctx.tick()
 
     @settings.command()
-    async def seturl(self, ctx, url: str):
-        """Set your website or support server url here."""
+    async def seturl(self, ctx, url: str = None):
+        """Set your website or support server url here.\n use `[p]chelp settings seturl` to reset this"""
         # TODO maybe check valid urls? mehh
         if url:
             async with self.config.settings() as f:
@@ -544,8 +544,8 @@ class CustomHelp(commands.Cog):
             await ctx.send("Reset url")
 
     @settings.command(aliases=["setthumbnail"])
-    async def thumbnail(self, ctx, url: str):
-        """Set your thumbnail image here."""
+    async def thumbnail(self, ctx, url: str = None):
+        """Set your thumbnail image here.\n use `[p]chelp settings thumbnail` to reset this"""
         # TODO maybe check valid urls? mehh
         if url:
             async with self.config.settings() as f:
