@@ -341,10 +341,10 @@ class CustomHelp(commands.Cog):
         parsed_data = await self.parse_yaml(ctx, content)
         if not parsed_data:
             return
-
-        # twin's bug report fix
+        print(parsed_data.values())
+        # twin's bug report fix (this need more fixes TODO important!)
         for i in parsed_data.values():
-            if type(i) != List[Dict]:
+            if type(i) != list:
                 await ctx.send("Invalid Format!")
                 return
 
