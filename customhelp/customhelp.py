@@ -118,6 +118,10 @@ class CustomHelp(commands.Cog):
                 **uncat_config,
                 cogs=list(uncategorised),
             )
+            if "name" in uncat_config
+            else Category(
+                **uncat_config, cogs=list(uncategorised), name="uncategorised"
+            )
         )
 
     async def _setup(self):
