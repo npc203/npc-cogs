@@ -1,6 +1,17 @@
-from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, BaguetteHelp,
-                              CategoryConvert, Context, EmbedField,
-                              HelpSettings, _, box, commands, discord, pagify)
+from ..core.base_help import (
+    EMPTY_STRING,
+    GLOBAL_CATEGORIES,
+    BaguetteHelp,
+    CategoryConvert,
+    Context,
+    EmbedField,
+    HelpSettings,
+    _,
+    box,
+    commands,
+    discord,
+    pagify,
+)
 
 
 class TwinHelp:
@@ -49,11 +60,13 @@ class TwinHelp:
                     f"`{name}`" for name, command in sorted(data.items())
                 )
                 for i, page in enumerate(
-                    pagify(cog_text, page_length=1000, delims=["`"], shorten_by=0)
+                    pagify(cog_text, page_length=1000, delims=["`", ","], shorten_by=0)
                 ):
                     if i > 0:
                         title = f"**{cog_name} (continued):**"
-                    field = EmbedField(title, page, False)
+                    field = EmbedField(
+                        title, page[1:] if page.startswith(",") else page, False
+                    )  # precision matters xd
                     emb["fields"].append(field)
 
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)

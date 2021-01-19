@@ -1,20 +1,21 @@
 import asyncio
+import re
 from itertools import chain
 from types import MethodType
 from typing import Dict, List, Literal, Union
 
-import discord
 import yaml
+
+import discord
 from discord.ext import commands as dpy_commands
 from emoji import UNICODE_EMOJI
-from tabulate import tabulate
-
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.i18n import Translator
 from redbot.core.utils import menus, predicates
 from redbot.core.utils.chat_formatting import box, pagify
 from redbot.core.utils.predicates import ReactionPredicate
+from tabulate import tabulate
 
 from . import themes
 from .core.base_help import BaguetteHelp
@@ -345,10 +346,9 @@ class CustomHelp(commands.Cog):
         print(parsed_data.values())
         # twin's bug report fix (this need more fixes TODO important!)
         for i in parsed_data.values():
-            if type(i) != list:
+            if type(i) != list or any(type(j) == str for j in i):
                 await ctx.send("Invalid Format!")
                 return
-
         # kill me already parsed_data = {category:[('name', 'notrandom'), ('emoji', 'asds'), ('emoji', '😓'), ('desc', 'this iasdiuasd')]}
         parsed_data = {
             i: [(k, v) for f in my_list for k, v in f.items()]
@@ -534,11 +534,17 @@ class CustomHelp(commands.Cog):
     @settings.command()
     async def seturl(self, ctx, url: str = None):
         """Set your website or support server url here.\n use `[p]chelp settings seturl` to reset this"""
-        # TODO maybe check valid urls? mehh
+        # https://www.w3resource.com/python-exercises/re/python-re-exercise-42.php
         if url:
-            async with self.config.settings() as f:
-                f["url"] = url
-            await ctx.tick()
+            if re.search(
+                "http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
+                url,
+            ):
+                async with self.config.settings() as f:
+                    f["url"] = url
+                    await ctx.tick()
+            else:
+                await ctx.send("Enter a valid url")
         else:
             async with self.config.settings() as f:
                 f["url"] = None
@@ -549,9 +555,15 @@ class CustomHelp(commands.Cog):
         """Set your thumbnail image here.\n use `[p]chelp settings thumbnail` to reset this"""
         # TODO maybe check valid urls? mehh
         if url:
-            async with self.config.settings() as f:
-                f["thumbnail"] = url
-            await ctx.tick()
+            if re.search(
+                "http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
+                url,
+            ):
+                async with self.config.settings() as f:
+                    f["thumbnail"] = url
+                await ctx.tick()
+            else:
+                await ctx.send("Enter a valid url")
         else:
             async with self.config.settings() as f:
                 f["thumbnail"] = None
@@ -595,6 +607,29 @@ class CustomHelp(commands.Cog):
                 await ctx.send("Invalid Format")
                 return
         return parsed_data
+
+    @commands.command(aliases=["findcat"])
+    async def findcategory(self, ctx, *, command):
+        if cmd := self.bot.get_command(command):
+            em = discord.Embed(title=f"{command}", color=await ctx.embed_color())
+            if cmd.cog:
+                cog_name = cmd.cog.__class__.__name__
+                for cat in GLOBAL_CATEGORIES:
+                    if cog_name in cat.cogs:
+                        em.add_field(name="Category:", value=cat.name, inline=False)
+                        em.add_field(name="Cog:", value=cog_name, inline=False)
+                        await ctx.send(embed=em)
+                        break
+                else:
+                    await ctx.send("Impossible! report this to the cog owner pls")
+            else:
+                em.add_field(
+                    name="Category:", value=GLOBAL_CATEGORIES[-1].name, inline=False
+                )
+                em.add_field(name="Cog:", value="None", inline=False)
+                await ctx.send(embed=em)
+        else:
+            await ctx.send("Command not found")
 
     async def red_delete_data_for_user(
         self, *, requester: RequestType, user_id: int
