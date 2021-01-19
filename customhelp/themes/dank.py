@@ -1,7 +1,19 @@
-from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, BaguetteHelp,
-                              CategoryConvert, Context, EmbedField,
-                              HelpSettings, _, box, cast, commands, discord,
-                              humanize_timedelta, pagify)
+from ..core.base_help import (
+    EMPTY_STRING,
+    GLOBAL_CATEGORIES,
+    BaguetteHelp,
+    CategoryConvert,
+    Context,
+    EmbedField,
+    HelpSettings,
+    _,
+    box,
+    cast,
+    commands,
+    discord,
+    humanize_timedelta,
+    pagify,
+)
 
 
 class DankHelp:
@@ -89,11 +101,11 @@ class DankHelp:
                     + ","
                 )
             for i, page in enumerate(
-                pagify(all_cog_text, page_length=1000, delims=["`"], shorten_by=0)
+                pagify(all_cog_text, page_length=1000, delims=[","], shorten_by=0)
             ):
                 field = EmbedField(
                     EMPTY_STRING,
-                    page,
+                    page[1:] if page.startswith(",") else page,
                     False,
                 )
                 emb["fields"].append(field)

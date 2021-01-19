@@ -60,7 +60,7 @@ class TwinHelp:
                     f"`{name}`" for name, command in sorted(data.items())
                 )
                 for i, page in enumerate(
-                    pagify(cog_text, page_length=1000, delims=["`", ","], shorten_by=0)
+                    pagify(cog_text, page_length=1000, delims=[","], shorten_by=0)
                 ):
                     if i > 0:
                         title = f"**{cog_name} (continued):**"

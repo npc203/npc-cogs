@@ -536,7 +536,7 @@ class CustomHelp(commands.Cog):
         # https://www.w3resource.com/python-exercises/re/python-re-exercise-42.php
         if url:
             if re.search(
-                "http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
+                r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
                 url,
             ):
                 async with self.config.settings() as f:
@@ -555,7 +555,7 @@ class CustomHelp(commands.Cog):
         # TODO maybe check valid urls? mehh
         if url:
             if re.search(
-                "http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
+                r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
                 url,
             ):
                 async with self.config.settings() as f:
