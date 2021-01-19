@@ -1,23 +1,20 @@
-from typing import Literal, Union, List, AsyncIterator, Iterable, cast
+import asyncio
 from collections import namedtuple
 from itertools import chain
-import discord
-import asyncio
-from .category import *
-import tabulate
-from redbot.core import commands, checks
-from redbot.core.commands.context import Context
-from redbot.core.commands.help import (
-    HelpSettings,
-    NoCommand,
-    NoSubCommand,
-    dpy_commands,
-    mass_purge,
-)
+from typing import AsyncIterator, Iterable, List, Literal, Union, cast
 
-from redbot.core.utils.chat_formatting import pagify, box, humanize_timedelta
+import discord
+import tabulate
+
+from redbot.core import checks, commands
+from redbot.core.commands.context import Context
+from redbot.core.commands.help import (HelpSettings, NoCommand, NoSubCommand,
+                                       dpy_commands, mass_purge)
 from redbot.core.i18n import Translator
 from redbot.core.utils import menus
+from redbot.core.utils.chat_formatting import box, humanize_timedelta, pagify
+
+from .category import *
 
 HelpTarget = Union[
     commands.Command,

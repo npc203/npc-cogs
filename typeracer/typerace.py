@@ -1,11 +1,13 @@
-from redbot.core import commands, data_manager, checks, Config
 import asyncio
-import aiohttp
-from html.parser import HTMLParser
+import difflib
 import random
 import time
-import difflib
+from html.parser import HTMLParser
+
+import aiohttp
 from tabulate import tabulate
+
+from redbot.core import Config, checks, commands, data_manager
 
 
 class HTMLFilter(HTMLParser):

@@ -1,11 +1,12 @@
+import pprint
 from typing import Literal
 
 import discord
+from discord.utils import escape_markdown as escape
+
 from redbot.core import commands
 from redbot.core.bot import Red
-import pprint
-from redbot.core.utils.chat_formatting import pagify, box
-from discord.utils import escape_markdown as escape
+from redbot.core.utils.chat_formatting import box, pagify
 
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
 

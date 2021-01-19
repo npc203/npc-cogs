@@ -1,23 +1,24 @@
-from typing import Literal, Union, List, Dict
-from itertools import chain
-import yaml
 import asyncio
+from itertools import chain
+from types import MethodType
+from typing import Dict, List, Literal, Union
+
 import discord
+import yaml
 from discord.ext import commands as dpy_commands
-from redbot.core.utils import menus, predicates
+from emoji import UNICODE_EMOJI
+from tabulate import tabulate
+
+from redbot.core import Config, checks, commands
+from redbot.core.bot import Red
 from redbot.core.i18n import Translator
-from redbot.core.utils.chat_formatting import pagify, box
+from redbot.core.utils import menus, predicates
+from redbot.core.utils.chat_formatting import box, pagify
 from redbot.core.utils.predicates import ReactionPredicate
 
-from redbot.core import commands, checks
-from redbot.core.bot import Red
-from redbot.core import Config
-from .core.base_help import BaguetteHelp
-from .core.category import Category, GLOBAL_CATEGORIES
-from emoji import UNICODE_EMOJI
 from . import themes
-from types import MethodType
-from tabulate import tabulate
+from .core.base_help import BaguetteHelp
+from .core.category import GLOBAL_CATEGORIES, Category
 
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
 

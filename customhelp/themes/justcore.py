@@ -1,18 +1,7 @@
-from ..core.base_help import (
-    BaguetteHelp,
-    pagify,
-    EmbedField,
-    EMPTY_STRING,
-    Context,
-    CategoryConvert,
-    HelpSettings,
-    _,
-    discord,
-    commands,
-    box,
-    cast,
-    GLOBAL_CATEGORIES,
-)
+from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, BaguetteHelp,
+                              CategoryConvert, Context, EmbedField,
+                              HelpSettings, _, box, cast, commands, discord,
+                              pagify)
 
 
 class JustCore:

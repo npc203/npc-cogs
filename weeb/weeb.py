@@ -1,6 +1,8 @@
-from redbot.core import commands, data_manager
-import discord
 from random import choice
+
+import discord
+
+from redbot.core import commands, data_manager
 
 
 class Weeb(commands.Cog):

@@ -1,11 +1,14 @@
+import asyncio
 from typing import Literal
-import discord, asyncio
+
+import discord
+
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.config import Config
-from redbot.core.utils.chat_formatting import pagify, box
-from redbot.core.utils.predicates import ReactionPredicate
+from redbot.core.utils.chat_formatting import box, pagify
 from redbot.core.utils.menus import start_adding_reactions
+from redbot.core.utils.predicates import ReactionPredicate
 
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
 

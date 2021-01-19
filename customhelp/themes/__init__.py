@@ -1,4 +1,4 @@
-from . import danny, dank, justcore, minimalhelp, nadeko, twin
+from . import dank, danny, justcore, minimalhelp, nadeko, twin
 
 # TODO automate the generation of this list
 list = {

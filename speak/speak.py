@@ -1,6 +1,8 @@
-from redbot.core import commands, checks, data_manager
-import discord
 from random import choice
+
+import discord
+
+from redbot.core import checks, commands, data_manager
 
 
 class Speak(commands.Cog):
