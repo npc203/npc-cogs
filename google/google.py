@@ -26,8 +26,8 @@ class Google(commands.Cog):
         self.bot = bot
 
     @commands.guild_only()
-    @commands.command(aliases=["gs"])
-    async def googles(self, ctx, *, query: str = None):
+    @commands.command()
+    async def google(self, ctx, *, query: str = None):
         """Search in google from discord
         Note: This cog is done, with major references to Kowlin's cog - https://github.com/Kowlin/refactored-cogs"""
         if not query:
