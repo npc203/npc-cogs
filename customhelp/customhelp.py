@@ -291,10 +291,33 @@ class CustomHelp(commands.Cog):
         else:
             await ctx.send(f"Invalid category name: {category}")
 
+    @chelp.command()
+    async def removecog(self, ctx, cog_name: str):
+        """remove a cog from a category"""
+        # valid cog
+        if self.bot.get_cog(cog_name):
+            for cat in GLOBAL_CATEGORIES:
+                if cog_name in cat.cogs:
+                    if cat == GLOBAL_CATEGORIES[-1]:
+                        await ctx.send(
+                            "You can't remove cogs from uncategorised category"
+                        )
+                        return
+                    async with self.config.categories() as cat_conf:
+                        cat_conf[GLOBAL_CATEGORIES.index(cat)]["cogs"].remove(cog_name)
+                    await ctx.send(f"Successfully removed {cog_name} from {cat.name}")
+                    await self.refresh_cache()
+                    return
+            else:
+                await ctx.send("Something went wrong, report to cog owner")
+        else:
+            await ctx.send(f"Invaild cog name:`{cog_name}`")
+
     # taken from api listing from core
     @chelp.command()
     async def list(self, ctx):
         """Show the list of categories and the cogs in them"""
+        # TODO maybe its a better option to read from cache than config?
         available_categories_raw = await self.config.categories()
         available_categories = (
             category["name"] for category in available_categories_raw
@@ -343,7 +366,7 @@ class CustomHelp(commands.Cog):
         parsed_data = await self.parse_yaml(ctx, content)
         if not parsed_data:
             return
-        # twin's bug report fix (this need more fixes TODO important!)
+        # twin's bug report fix
         for i in parsed_data.values():
             if type(i) != list or any(type(j) == str for j in i):
                 await ctx.send("Invalid Format!")
@@ -552,7 +575,6 @@ class CustomHelp(commands.Cog):
     @settings.command(aliases=["setthumbnail"])
     async def thumbnail(self, ctx, url: str = None):
         """Set your thumbnail image here.\n use `[p]chelp settings thumbnail` to reset this"""
-        # TODO maybe check valid urls? mehh
         if url:
             if re.search(
                 r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",

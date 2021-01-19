@@ -94,12 +94,12 @@ class DankHelp:
             if description:
                 emb["embed"]["description"] = f"*{description[:250]}*"
 
-            all_cog_text = ""
+            all_cog_text = []
             for cog_name, data in coms:
-                all_cog_text += (
+                all_cog_text.append(
                     ", ".join(f"`{name}`" for name, command in sorted(data.items()))
-                    + ","
                 )
+            all_cog_text = ", ".join(all_cog_text)
             for i, page in enumerate(
                 pagify(all_cog_text, page_length=1000, delims=[","], shorten_by=0)
             ):
