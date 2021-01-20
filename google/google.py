@@ -44,9 +44,9 @@ class Google(commands.Cog):
                         for result in group:
                             emb.add_field(
                                 name=f"{result.title}",
-                                value=f"[{result.url}]({result.url})\n{result.desc}"[
-                                    :1024
-                                ],
+                                value=f"[{result.url}]({result.url})\n"
+                                if result.url
+                                else "" f"{result.desc}"[:1024],
                                 inline=False,
                             )
                         emb.description = f"Page {num} of {len(groups)}"
@@ -63,6 +63,11 @@ class Google(commands.Cog):
         s = namedtuple("searchres", "url title desc")
         final = []
         stats = html2text.html2text(str(soup.find("div", id="result-stats")))
+        if card := soup.find("div", class_="g mnr-c g-blk"):
+            if desc := card.find("span", class_="hgKElc"):
+                final.append(
+                    s(None, "Google Info Card:", html2text.html2text(str(desc)))
+                )
         for res in soup.findAll("div", class_="g"):
             if name := res.find("div", class_="yuRUbf"):
                 url = name.a["href"]
@@ -84,6 +89,7 @@ class Google(commands.Cog):
 
     async def get_result(self, query):
         """Fetch the data"""
+        # TODO make this fetching a little better
         encoded = urllib.parse.quote_plus(query, encoding="utf-8", errors="replace")
         url = "https://www.google.com/search?q="
         options = {
