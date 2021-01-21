@@ -199,6 +199,13 @@ class CustomHelp(commands.Cog):
         parsed_data = await self.parse_yaml(ctx, content)
         if not parsed_data:
             return
+
+        # counter part of edit's yaml bug report fix
+        for i in parsed_data.values():
+            if any(type(j) != str for j in i):
+                await ctx.send("Invalid Format!")
+                return
+
         available_categories_raw = await self.config.categories()
         available_categories = [
             category["name"] for category in available_categories_raw
@@ -368,7 +375,7 @@ class CustomHelp(commands.Cog):
             return
         # twin's bug report fix
         for i in parsed_data.values():
-            if type(i) != list or any(type(j) == str for j in i):
+            if any(type(j) == str for j in i):
                 await ctx.send("Invalid Format!")
                 return
         # kill me already parsed_data = {category:[('name', 'notrandom'), ('emoji', 'asds'), ('emoji', '😓'), ('desc', 'this iasdiuasd')]}
