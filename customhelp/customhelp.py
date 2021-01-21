@@ -8,7 +8,6 @@ import yaml
 
 import discord
 from discord.ext import commands as dpy_commands
-from emoji import UNICODE_EMOJI
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.i18n import Translator
@@ -19,7 +18,7 @@ from tabulate import tabulate
 
 from . import themes
 from .core.base_help import BaguetteHelp
-from .core.category import GLOBAL_CATEGORIES, Category
+from .core.category import GLOBAL_CATEGORIES, Category, EMOJI_REGEX
 
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
 
@@ -30,6 +29,7 @@ _ = Translator("Help", __file__)
 # For all the bunch config calls, do I need it? it's just the bot owner usage!
 # Generating every category page on format_bot_help so as to save time in reaction stuff?
 # No need to fetch config uncat, when u can use global cache, but is that better?
+# TODO is rewriting everything to use global cache instead of config, better?
 """
 Config Structure:
     {
@@ -380,7 +380,7 @@ class CustomHelp(commands.Cog):
         available_categories = [
             category["name"] for category in await self.config.categories()
         ]
-        already_present_emojis = (i.reaction for i in GLOBAL_CATEGORIES)
+        already_present_emojis = list(i.reaction for i in GLOBAL_CATEGORIES)
         failed = []  # example: [('desc','categoryname')]
 
         # special naming for uncategorized stuff
@@ -394,13 +394,13 @@ class CustomHelp(commands.Cog):
                 if item[0] == "name":
                     return not (item[1] in available_categories)
                 # dupe emoji and valid emoji?
-                elif (
-                    item[0] == "reaction"
-                    and (item[1] not in already_present_emojis)
-                    and not "\U0001f3d8\U0000fe0f"  # home emoji is taken :<
-                    and (item[1] in UNICODE_EMOJI)
-                ):
-                    return True
+                elif item[0] == "reaction":
+                    if item[1] not in already_present_emojis + [
+                        "\U0001f3d8\U0000fe0f"  # home emoji is taken :<
+                    ] or re.search(EMOJI_REGEX, item[1]):
+                        return True
+                    else:
+                        return False
                 else:
                     return True
 
@@ -429,7 +429,10 @@ class CustomHelp(commands.Cog):
             if not failed
             else "The following things failed:\n"
             + "\n".join(
-                [f"{reason} failed in {category}" for reason, category in failed]
+                [
+                    f"{reason[0]}: {reason[1]}  failed in {category}"
+                    for reason, category in failed
+                ]
             )
         ):
             await ctx.send(page)

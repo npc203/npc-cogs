@@ -4,12 +4,17 @@ from itertools import chain
 from typing import AsyncIterator, Iterable, List, Literal, Union, cast
 
 import discord
-import tabulate
+import tabulate, re
 
 from redbot.core import checks, commands
 from redbot.core.commands.context import Context
-from redbot.core.commands.help import (HelpSettings, NoCommand, NoSubCommand,
-                                       dpy_commands, mass_purge)
+from redbot.core.commands.help import (
+    HelpSettings,
+    NoCommand,
+    NoSubCommand,
+    dpy_commands,
+    mass_purge,
+)
 from redbot.core.i18n import Translator
 from redbot.core.utils import menus
 from redbot.core.utils.chat_formatting import box, humanize_timedelta, pagify
@@ -563,10 +568,19 @@ class BaguetteHelp(commands.RedHelpFormatter):
             )
             # TODO important!
             if add_emojis:
-                # Adding additional category emojis
+                # Adding additional category emojis , regex from dpy server
                 for cat in GLOBAL_CATEGORIES:
                     if cat.reaction:
-                        c[cat.reaction] = react_page
+                        match = re.search(
+                            EMOJI_REGEX,
+                            cat.reaction,
+                        )
+                        if emj := (
+                            self.bot.get_emoji(int(match.group("id")))
+                            if match
+                            else cat.reaction
+                        ):
+                            c[emj] = react_page
                 c["\U0001f3d8\U0000fe0f"] = home_page
             # Allow other things to happen during menu timeout/interaction.
             asyncio.create_task(menus.menu(ctx, pages, c, message=m))

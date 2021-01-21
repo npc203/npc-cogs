@@ -16,7 +16,7 @@ Use `[p]chelp edit` to add the everything you need to customise a category.
 The format is simply:  
 ```yaml
 category:
- - name: new name (to rename)
+ - name: new name (ONLY to rename!)
  - desc: new description
  - long_desc: long description
  - reaction: reaction

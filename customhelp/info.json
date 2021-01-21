@@ -7,7 +7,7 @@
         "epic guy","Every other bot's help menu's design"
     ],
     "install_msg":"This is a BETA cog, so expect bugs and kindly report them to me in the cog support server",
-    "requirements": ["emoji"],
+    "requirements": [],
     "tags": [
         "help","utility","fun"
     ],

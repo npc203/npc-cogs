@@ -8,6 +8,7 @@ from redbot.core.commands.help import HelpSettings
 from redbot.core.utils.menus import menu, next_page, prev_page, start_adding_reactions
 
 GLOBAL_CATEGORIES = []
+EMOJI_REGEX = r"<(?P<animated>a?):(?P<name>[a-zA-Z0-9_]{2,32}):(?P<id>[0-9]{18,22})>"
 
 
 class Category:
@@ -78,9 +79,14 @@ async def react_page(
     # TODO sigh getting everything again, please optimise this IMP, maybe create pages on react itself?
     help_settings = await HelpSettings.from_context(ctx)
     for x in GLOBAL_CATEGORIES:
-        if x.reaction == emoji:
+        if x.reaction == str(emoji):  # Typecasting can suck a di--
             category = x
             break
+    else:
+        # idk maybe edge cases
+        return await menu(
+            ctx, pages, controls, message=message, page=page, timeout=timeout
+        )
     pages = await ctx.bot._help_formatter.format_category_help(
         ctx, category, help_settings, get_pages=True
     )
