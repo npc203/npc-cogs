@@ -44,9 +44,12 @@ class Google(commands.Cog):
                         for result in group:
                             emb.add_field(
                                 name=f"{result.title}",
-                                value=f"[{result.url}]({result.url})\n"
-                                if result.url
-                                else "" f"{result.desc}"[:1024],
+                                value=(
+                                    f"[{result.url}]({result.url})\n"
+                                    if result.url
+                                    else ""
+                                )
+                                + f"{result.desc}"[:1024],
                                 inline=False,
                             )
                         emb.description = f"Page {num} of {len(groups)}"
