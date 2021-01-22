@@ -123,19 +123,46 @@ class MinimalHelp:
             full_text += "**" + name[:250] + "\n" + value[:1024] + "**\n"
             if aliases:
                 full_text = "**Aliases:**\n" + (",".join(aliases)) + "\n"
+
             # Add permissions
-            if perms := command.requires.user_perms:
-                perms_list = [
-                    i for i, j in perms if j
-                ]  # TODO pls learn more to fix this
-                if perms_list:
-                    full_text += "**Permissions:**\n" + ",".join(perms_list) + "\n"
+            get_list = ["user_perms", "bot_perms"]
+            final_perms = []
+            neat_format = lambda x: " ".join(
+                i.capitalize() for i in x.replace("_", " ").split()
+            )
+            for thing in get_list:
+                if perms := getattr(command.requires, thing):
+                    perms_list = [
+                        neat_format(i) for i, j in perms if j
+                    ]  # TODO pls learn more to fix this
+                    if perms_list:
+                        final_perms += perms_list
+            if perms := command.requires.privilege_level:
+                if perms.name != "NONE":
+                    final_perms.append(neat_format(perms.name))
+            if final_perms:
+                full_text += (
+                    ("\n" if full_text[-2:] != "\n\n" else "")
+                    + "**Permissions:**\n"
+                    + ", ".join(final_perms)
+                    + "\n"
+                )
 
             # Add cooldowns
+            cooldowns = []
             if s := command._buckets._cooldown:
+                cooldowns.append(
+                    f"{s.rate} time{'s' if s.rate>1 else ''} in {humanize_timedelta(seconds=s.per)} per {s.type.name.capitalize()}"
+                )
+            if s := command._max_concurrency:
+                cooldowns.append(
+                    f"Max concurrent uses: {s.number} per {s.per.name.capitalize()}"
+                )
+            if cooldowns:
                 full_text += (
-                    "**Cooldowns:**\n"
-                    + f"{s.rate} time{'s' if s.rate>1 else ''} in {humanize_timedelta(seconds=s.per)} per {s.type.__str__().replace('BucketType.','').capitalize()}"
+                    ("\n" if full_text[-2:] != "\n\n" else "")
+                    + "**Cooldowns:**\n"
+                    + "\n".join(cooldowns)
                 )
 
         if subcommands:
@@ -147,7 +174,7 @@ class MinimalHelp:
                 if i == 0:
                     title = _("**__Subcommands:__**")
                 else:
-                    title = _(EMPTY_STRING)
+                    title = ""
                 full_text += f"{title}{page}"
         text_no = list(pagify(full_text))
         if len(text_no) > 1:
