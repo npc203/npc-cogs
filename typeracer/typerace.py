@@ -192,7 +192,7 @@ class TypeRacer(commands.Cog):
         )
         countdown = await ctx.send(
             f"A Typing speed test event will commence in 60 seconds\n"
-            f" Type `{ctx.prefix}speedevent join` to enter the race\n "
+            f" Type `{ctx.clean_prefix}speedevent join` to enter the race\n "
             f"Joined Users:\n{active}"
         )
         await asyncio.sleep(5)
@@ -205,7 +205,7 @@ class TypeRacer(commands.Cog):
             )
             await countdown.edit(
                 content=f"A Typing speed test event will commence in {i} seconds\n"
-                f" Type `{ctx.prefix}speedevent join` to enter the race\n "
+                f" Type `{ctx.clean_prefix}speedevent join` to enter the race\n "
                 f"Joined Users:\n{active}"
             )
             await asyncio.sleep(5)

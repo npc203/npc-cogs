@@ -75,7 +75,7 @@ class NadekoHelp:
                 else:
                     title = _("**No Category:**")
                 cog_text = "\n".join(
-                    f"{ctx.prefix}{name} {'['+command.signature+']'}"
+                    f"{ctx.clean_prefix}{name} {'['+command.signature+']'}"
                     for name, command in sorted(data.items())
                 )
                 for i, page in enumerate(

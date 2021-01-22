@@ -429,7 +429,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
             for i in pagify(
                 "\n".join(
                     [
-                        f"{cat.reaction if cat.reaction else ''} `{ctx.prefix}help {cat.name:<10}:`**{cat.desc}**\n"
+                        f"{cat.reaction if cat.reaction else ''} `{ctx.clean_prefix}help {cat.name:<10}:`**{cat.desc}**\n"
                         for cat in GLOBAL_CATEGORIES
                     ]
                 ),
