@@ -30,6 +30,7 @@ _ = Translator("Help", __file__)
 # Generating every category page on format_bot_help so as to save time in reaction stuff?
 # No need to fetch config uncat, when u can use global cache, but is that better?
 # TODO is rewriting everything to use global cache instead of config, better?
+# TODO Aliases to be added near the syntax itself?
 """
 Config Structure:
     {

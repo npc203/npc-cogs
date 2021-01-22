@@ -177,10 +177,14 @@ class DankHelp:
                 field = EmbedField(name[:250], value[:1024], False)
                 emb["fields"].append(EmbedField("Description:", name[:250], False))
                 emb["fields"].append(EmbedField("Usage:", signature, False))
-                if aliases:
-                    emb["fields"].append(
-                        EmbedField("Aliases:", (",".join(aliases)), False)
-                    )
+
+                # Add aliases
+                if alias := command.aliases:
+                    if ctx.invoked_with in alias:
+                        alias.remove(ctx.invoked_with)
+                        alias.append(command.name)
+                    emb["fields"].append(EmbedField("Aliases", ",".join(alias), False))
+
                 # Add permissions
                 get_list = ["user_perms", "bot_perms"]
                 final_perms = []

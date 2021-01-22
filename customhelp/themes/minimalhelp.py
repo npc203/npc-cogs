@@ -118,11 +118,16 @@ class MinimalHelp:
         if command_help:
             splitted = command_help.split("\n\n")
             name = splitted[0]
-            value = "\n\n".join(splitted[1:])
+            value = "\n".join(splitted[1:])
             full_text += "**Usage:**\n" + signature + "\n\n"
-            full_text += "**" + name[:250] + "\n" + value[:1024] + "**\n"
-            if aliases:
-                full_text = "**Aliases:**\n" + (",".join(aliases)) + "\n"
+            full_text += "**" + name[:250] + "\n" + value[:1024] + "**\n\n"
+
+            # Add aliases
+            if alias := command.aliases:
+                if ctx.invoked_with in alias:
+                    alias.remove(ctx.invoked_with)
+                    alias.append(command.name)
+                full_text += "**Aliases:** " + ",".join(alias) + "\n\n"
 
             # Add permissions
             get_list = ["user_perms", "bot_perms"]
@@ -143,7 +148,7 @@ class MinimalHelp:
             if final_perms:
                 full_text += (
                     ("\n" if full_text[-2:] != "\n\n" else "")
-                    + "**Permissions:**\n"
+                    + "**Permissions:** "
                     + ", ".join(final_perms)
                     + "\n"
                 )
