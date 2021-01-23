@@ -431,7 +431,7 @@ class CustomHelp(commands.Cog):
                         else:
                             failed.append((item, category))
             else:
-                failed.append(("Everything", category))
+                failed.append((("Everything", ""), category))
         for page in pagify(
             f"Successfully added the edits"
             if not failed

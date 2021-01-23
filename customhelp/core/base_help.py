@@ -438,6 +438,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                     [
                         f"{cat.reaction if cat.reaction else ''} `{ctx.clean_prefix}help {cat.name:<10}:`**{cat.desc}**\n"
                         for cat in GLOBAL_CATEGORIES
+                        if cat.cogs
                     ]
                 ),
                 page_length=1018,

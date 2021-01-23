@@ -38,7 +38,8 @@ class NadekoHelp:
             emb["title"] = f"{ctx.me.name} Help Menu"
             cat_titles = ""
             for cat in GLOBAL_CATEGORIES:
-                cat_titles += f"• {cat.name}\n"
+                if cat.cogs:
+                    cat_titles += f"• {cat.name}\n"
             # TODO Dont be a moron trying to pagify this or do we?
             emb["fields"].append(EmbedField("List of Categories", cat_titles, False))
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)

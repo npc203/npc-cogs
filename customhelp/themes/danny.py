@@ -1,6 +1,17 @@
-from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, BaguetteHelp,
-                              CategoryConvert, Context, EmbedField,
-                              HelpSettings, _, box, commands, discord, pagify)
+from ..core.base_help import (
+    EMPTY_STRING,
+    GLOBAL_CATEGORIES,
+    BaguetteHelp,
+    CategoryConvert,
+    Context,
+    EmbedField,
+    HelpSettings,
+    _,
+    box,
+    commands,
+    discord,
+    pagify,
+)
 
 
 class DannyHelp:
@@ -34,17 +45,18 @@ class DannyHelp:
 
             emb["title"] = f"{ctx.me.name} Help Menu"
             for cat in GLOBAL_CATEGORIES:
-                cog_names = "`" + "` `".join(cat.cogs) + "`" if cat.cogs else ""
-                for i, page in enumerate(
-                    pagify(cog_names, page_length=1000, shorten_by=0)
-                ):
-                    if i == 0:
-                        title = (
-                            cat.reaction if cat.reaction else ""
-                        ) + f"**{cat.name.capitalize()}:**"
-                    else:
-                        title = EMPTY_STRING
-                    emb["fields"].append(EmbedField(title, cog_names, True))
+                if cat.cogs:
+                    cog_names = "`" + "` `".join(cat.cogs) + "`" if cat.cogs else ""
+                    for i, page in enumerate(
+                        pagify(cog_names, page_length=1000, shorten_by=0)
+                    ):
+                        if i == 0:
+                            title = (
+                                cat.reaction if cat.reaction else ""
+                            ) + f"**{cat.name.capitalize()}:**"
+                        else:
+                            title = EMPTY_STRING
+                        emb["fields"].append(EmbedField(title, cog_names, True))
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
             if get_pages:
                 return pages

@@ -41,16 +41,17 @@ class DankHelp:
             emb["title"] = f"{ctx.me.name} Help Menu"
             # Maybe add category desc somewhere?
             for cat in GLOBAL_CATEGORIES:
-                title = (
-                    cat.reaction + " " if cat.reaction else ""
-                ) + cat.name.capitalize()
-                emb["fields"].append(
-                    EmbedField(
-                        title,
-                        f"`{ctx.clean_prefix}help {cat.name}`\n{cat.long_desc if cat.long_desc else ''}",
-                        True,
+                if cat.cogs:
+                    title = (
+                        cat.reaction + " " if cat.reaction else ""
+                    ) + cat.name.capitalize()
+                    emb["fields"].append(
+                        EmbedField(
+                            title,
+                            f"`{ctx.clean_prefix}help {cat.name}`\n{cat.long_desc if cat.long_desc else ''}",
+                            True,
+                        )
                     )
-                )
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
             if get_pages:
                 return pages
