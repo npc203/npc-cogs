@@ -359,7 +359,7 @@ class CustomHelp(commands.Cog):
                 "Your next message should be a yaml with the specfied format as in the docs\n"
                 "Example:\n"
                 "category1:\n"
-                " - name: category1\n - reaction: \U0001f604\n - desc: short description\n - long_desc: long description"
+                " - name: newname(use this ONLY for renaming)\n - reaction: \U0001f604\n - desc: short description\n - long_desc: long description (Optional,only displayed in dank theme)"
             )
             try:
                 msg = await self.bot.wait_for(

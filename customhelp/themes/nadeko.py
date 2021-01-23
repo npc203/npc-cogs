@@ -1,6 +1,17 @@
-from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, BaguetteHelp,
-                              CategoryConvert, Context, EmbedField,
-                              HelpSettings, _, box, commands, discord, pagify)
+from ..core.base_help import (
+    EMPTY_STRING,
+    GLOBAL_CATEGORIES,
+    BaguetteHelp,
+    CategoryConvert,
+    Context,
+    EmbedField,
+    HelpSettings,
+    _,
+    box,
+    commands,
+    discord,
+    pagify,
+)
 
 
 class NadekoHelp:
@@ -84,7 +95,7 @@ class NadekoHelp:
                     title = (
                         title if i < 1 else _("{title} (continued)").format(title=title)
                     )
-                    field = EmbedField(title, box(page, lang="ini"), True)
+                    field = EmbedField(title, box(page, lang="css"), True)
                     emb["fields"].append(field)
 
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)

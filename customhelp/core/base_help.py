@@ -172,7 +172,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
                 command_text = "\n".join(
                     shorten_line(
-                        f"`{name:<12}:`{command.format_shortdoc_for_context(ctx)}"
+                        f"`{name:<15}:`{command.format_shortdoc_for_context(ctx)}"
                     )
                     for name, command in sorted(coms.items())
                 )
@@ -255,7 +255,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
                 cog_text = "\n" + "\n".join(
                     shorten_line(
-                        f"`{name:<12}:`{command.format_shortdoc_for_context(ctx)}"
+                        f"`{name:<15}:`{command.format_shortdoc_for_context(ctx)}"
                     )
                     for name, command in sorted(data.items())
                 )
@@ -387,7 +387,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
                 subtext = "\n" + "\n".join(
                     shorten_line(
-                        f"`{name:<12}:`{command.format_shortdoc_for_context(ctx)}"
+                        f"`{name:<15}:`{command.format_shortdoc_for_context(ctx)}"
                     )
                     for name, command in sorted(subcommands.items())
                 )
