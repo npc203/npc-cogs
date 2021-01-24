@@ -87,10 +87,15 @@ async def react_page(
         return await menu(
             ctx, pages, controls, message=message, page=page, timeout=timeout
         )
-    pages = await ctx.bot._help_formatter.format_category_help(
+    pages_new = await ctx.bot._help_formatter.format_category_help(
         ctx, category, help_settings, get_pages=True
     )
-    if len(pages) > 1:
+    # Menus error out if a cog in category is unloaded
+    if not pages_new:
+        return await menu(
+            ctx, pages, controls, message=message, page=0, timeout=timeout
+        )
+    if len(pages_new) > 1:
         controls["\N{LEFTWARDS BLACK ARROW}\N{VARIATION SELECTOR-16}"] = prev_page
         controls["\N{BLACK RIGHTWARDS ARROW}\N{VARIATION SELECTOR-16}"] = next_page
         start_adding_reactions(
@@ -100,7 +105,9 @@ async def react_page(
                 "\N{BLACK RIGHTWARDS ARROW}\N{VARIATION SELECTOR-16}",
             ],
         )
-    return await menu(ctx, pages, controls, message=message, page=0, timeout=timeout)
+    return await menu(
+        ctx, pages_new, controls, message=message, page=0, timeout=timeout
+    )
 
 
 class CategoryConvert(commands.Converter):
