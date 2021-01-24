@@ -46,11 +46,6 @@ async def home_page(
     timeout: float,
     emoji: str,
 ):
-    perms = message.channel.permissions_for(ctx.me)
-    if perms.manage_messages:  # Can manage messages, so remove react
-        with contextlib.suppress(discord.NotFound):
-            await message.remove_reaction(emoji, ctx.author)
-
     help_settings = await HelpSettings.from_context(ctx)
     pages = await ctx.bot._help_formatter.format_bot_help(
         ctx, help_settings, get_pages=True
@@ -71,10 +66,13 @@ async def react_page(
     timeout: float,
     emoji: str,
 ):
+    # Stop, everyday people suffer from ratelimiting.
+    """
     perms = message.channel.permissions_for(ctx.me)
     if perms.manage_messages:  # Can manage messages, so remove react
         with contextlib.suppress(discord.NotFound):
             await message.remove_reaction(emoji, ctx.author)
+    """
 
     # TODO sigh getting everything again, please optimise this IMP, maybe create pages on react itself?
     help_settings = await HelpSettings.from_context(ctx)
