@@ -45,7 +45,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
         self.config = config
 
     @staticmethod
-    def parse_command(ctx, help_for: str):
+    async def parse_command(ctx, help_for: str):
         """
         Handles parsing
         """
@@ -53,10 +53,16 @@ class BaguetteHelp(commands.RedHelpFormatter):
         maybe_cog = ctx.bot.get_cog(help_for)
         if maybe_cog:
             return maybe_cog
-        # TODO check for aliases from alias cog
+
         maybe_cateory = get_category(help_for)
         if maybe_cateory:
             return maybe_cateory
+
+        # TODO does this wreck havoc?
+        if alias_cog := ctx.bot.get_cog("Alias"):
+            alias = await alias_cog._aliases.get_alias(ctx.guild, alias_name=help_for)
+            if alias:
+                help_for = alias.command
 
         com = ctx.bot
         last = None
@@ -117,7 +123,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
         if isinstance(help_for, str):
             try:
-                help_for = self.parse_command(ctx, help_for)
+                help_for = await self.parse_command(ctx, help_for)
             except NoCommand:
                 await self.command_not_found(ctx, help_for, help_settings=help_settings)
                 return
