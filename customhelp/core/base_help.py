@@ -269,7 +269,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
             all_cog_text = "\n".join(sorted(all_cog_text.split("\n")))
             title = obj.name.capitalize()
             for i, page in enumerate(
-                pagify(all_cog_text, page_length=1000, shorten_by=0)
+                pagify(all_cog_text, page_length=500, shorten_by=0)
             ):
                 field = EmbedField(title, page, False)
                 emb["fields"].append(field)
