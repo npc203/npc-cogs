@@ -36,19 +36,13 @@ class Google(commands.Cog):
             async with ctx.typing():
                 if response := await self.get_result(query):
                     pages = []
-                    groups = [
-                        response[0][n : n + 3] for n in range(0, len(response[0]), 3)
-                    ]
+                    groups = [response[0][n : n + 3] for n in range(0, len(response[0]), 3)]
                     for num, group in enumerate(groups, 1):
                         emb = discord.Embed(title=f"Google Search: {query[:50]}...")
                         for result in group:
                             emb.add_field(
                                 name=f"{result.title}",
-                                value=(
-                                    f"[{result.url}]({result.url})\n"
-                                    if result.url
-                                    else ""
-                                )
+                                value=(f"[{result.url}]({result.url})\n" if result.url else "")
                                 + f"{result.desc}"[:1024],
                                 inline=False,
                             )
@@ -68,9 +62,7 @@ class Google(commands.Cog):
         stats = html2text.html2text(str(soup.find("div", id="result-stats")))
         if card := soup.find("div", class_="g mnr-c g-blk"):
             if desc := card.find("span", class_="hgKElc"):
-                final.append(
-                    s(None, "Google Info Card:", html2text.html2text(str(desc)))
-                )
+                final.append(s(None, "Google Info Card:", html2text.html2text(str(desc))))
         for res in soup.findAll("div", class_="g"):
             if name := res.find("div", class_="yuRUbf"):
                 url = name.a["href"]

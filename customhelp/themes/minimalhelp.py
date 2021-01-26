@@ -27,9 +27,7 @@ class MinimalHelp:
         # Maybe add category desc somewhere?
         for cat in GLOBAL_CATEGORIES:
             if cat.cogs:
-                coms = await self.get_category_help_mapping(
-                    ctx, cat, help_settings=help_settings
-                )
+                coms = await self.get_category_help_mapping(ctx, cat, help_settings=help_settings)
                 all_cog_text = []
                 for _, data in coms:
                     all_cog_text.append(" · ".join(f"{name}" for name in data))
@@ -37,10 +35,7 @@ class MinimalHelp:
                 full_text += f"\n\n__**{cat.name}**__: {all_cog_text}"
         text_no = list(pagify(full_text))
         if len(text_no) > 1:
-            pages = [
-                page + f"\n\nPage:{i}/{len(text_no)}"
-                for i, page in enumerate(text_no, 1)
-            ]
+            pages = [page + f"\n\nPage:{i}/{len(text_no)}" for i, page in enumerate(text_no, 1)]
         else:
             pages = [page for i, page in enumerate(text_no, 1)]
         await self.send_pages(
@@ -53,9 +48,7 @@ class MinimalHelp:
     async def format_category_help(
         self, ctx: Context, obj: CategoryConvert, help_settings: HelpSettings
     ):
-        coms = await self.get_category_help_mapping(
-            ctx, obj, help_settings=help_settings
-        )
+        coms = await self.get_category_help_mapping(ctx, obj, help_settings=help_settings)
         if not coms:
             return
 
@@ -70,10 +63,7 @@ class MinimalHelp:
             full_text += "\n"
         text_no = list(pagify(full_text))
         if len(text_no) > 1:
-            pages = [
-                page + f"\n\nPage:{i}/{len(text_no)}"
-                for i, page in enumerate(text_no, 1)
-            ]
+            pages = [page + f"\n\nPage:{i}/{len(text_no)}" for i, page in enumerate(text_no, 1)]
         else:
             pages = [page for i, page in enumerate(text_no, 1)]
         await self.send_pages(
@@ -101,17 +91,15 @@ class MinimalHelp:
 
         description = command.description or ""
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
-        signature = _(
-            "`{ctx.clean_prefix}{command.qualified_name} {command.signature}`"
-        ).format(ctx=ctx, command=command)
+        signature = _("`{ctx.clean_prefix}{command.qualified_name} {command.signature}`").format(
+            ctx=ctx, command=command
+        )
         aliases = command.aliases
         subcommands = None
 
         if hasattr(command, "all_commands"):
             grp = cast(commands.Group, command)
-            subcommands = await self.get_group_help_mapping(
-                ctx, grp, help_settings=help_settings
-            )
+            subcommands = await self.get_group_help_mapping(ctx, grp, help_settings=help_settings)
 
         # full_text = f"{description}\n\n{tagline}\n\n"
         full_text = ""
@@ -133,9 +121,7 @@ class MinimalHelp:
             # Add permissions
             get_list = ["user_perms", "bot_perms"]
             final_perms = []
-            neat_format = lambda x: " ".join(
-                i.capitalize() for i in x.replace("_", " ").split()
-            )
+            neat_format = lambda x: " ".join(i.capitalize() for i in x.replace("_", " ").split())
             for thing in get_list:
                 if perms := getattr(command.requires, thing):
                     perms_list = [
@@ -161,9 +147,7 @@ class MinimalHelp:
                     f"{s.rate} time{'s' if s.rate>1 else ''} in {humanize_timedelta(seconds=s.per)} per {s.type.name.capitalize()}"
                 )
             if s := command._max_concurrency:
-                cooldowns.append(
-                    f"Max concurrent uses: {s.number} per {s.per.name.capitalize()}"
-                )
+                cooldowns.append(f"Max concurrent uses: {s.number} per {s.per.name.capitalize()}")
             if cooldowns:
                 full_text += (
                     ("\n" if full_text[-2:] != "\n\n" else "")
@@ -184,10 +168,7 @@ class MinimalHelp:
                 full_text += f"{title}{page}"
         text_no = list(pagify(full_text))
         if len(text_no) > 1:
-            pages = [
-                page + f"\n\nPage:{i}/{len(text_no)}"
-                for i, page in enumerate(text_no, 1)
-            ]
+            pages = [page + f"\n\nPage:{i}/{len(text_no)}" for i, page in enumerate(text_no, 1)]
         else:
             pages = [page for i, page in enumerate(text_no, 1)]
         await self.send_pages(

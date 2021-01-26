@@ -84,9 +84,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
         return com
 
-    async def get_category_help_mapping(
-        self, ctx, category, help_settings: HelpSettings
-    ):
+    async def get_category_help_mapping(self, ctx, category, help_settings: HelpSettings):
         # TODO getting every cog and checking if its in category isn't optimised.
         sorted_iterable = []
         isuncategory = False
@@ -95,9 +93,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
         for cogname, cog in (*sorted(ctx.bot.cogs.items()), (None, None)):
             # TODO test this if condition, cause i can't trust my math
             if (cogname in category.cogs) or (isuncategory and cogname == None):
-                cm = await self.get_cog_help_mapping(
-                    ctx, cog, help_settings=help_settings
-                )
+                cm = await self.get_cog_help_mapping(ctx, cog, help_settings=help_settings)
                 if cm:
                     sorted_iterable.append((cogname, cm))
         return sorted_iterable
@@ -142,9 +138,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
         else:
             await self.format_command_help(ctx, help_for, help_settings=help_settings)
 
-    async def format_cog_help(
-        self, ctx: Context, obj: commands.Cog, help_settings: HelpSettings
-    ):
+    async def format_cog_help(self, ctx: Context, obj: commands.Cog, help_settings: HelpSettings):
         coms = await self.get_cog_help_mapping(ctx, obj, help_settings=help_settings)
         if not (coms or help_settings.verify_exists):
             return
@@ -177,14 +171,10 @@ class BaguetteHelp(commands.RedHelpFormatter):
                     return a_line[:67] + "..."
 
                 command_text = "\n".join(
-                    shorten_line(
-                        f"`{name:<15}:`{command.format_shortdoc_for_context(ctx)}"
-                    )
+                    shorten_line(f"`{name:<15}:`{command.format_shortdoc_for_context(ctx)}")
                     for name, command in sorted(coms.items())
                 )
-                for i, page in enumerate(
-                    pagify(command_text, page_length=500, shorten_by=0)
-                ):
+                for i, page in enumerate(pagify(command_text, page_length=500, shorten_by=0)):
                     if i == 0:
                         title = _("**__Commands:__**")
                     else:
@@ -201,9 +191,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
             subtext_header = None
             if coms:
                 subtext_header = _("Commands:")
-                max_width = max(
-                    discord.utils._string_width(name) for name in coms.keys()
-                )
+                max_width = max(discord.utils._string_width(name) for name in coms.keys())
 
                 def width_maker(cmds):
                     doc_max_width = 80 - max_width
@@ -215,8 +203,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                         yield nm, doc, max_width - width_gap
 
                 subtext = "\n".join(
-                    f"  {name:<{width}} {doc}"
-                    for name, doc, width in width_maker(coms.items())
+                    f"  {name:<{width}} {doc}" for name, doc, width in width_maker(coms.items())
                 )
 
             to_page = "\n\n".join(filter(None, (description, subtext_header, subtext)))
@@ -230,9 +217,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
         help_settings: HelpSettings,
         get_pages: bool = False,
     ):
-        coms = await self.get_category_help_mapping(
-            ctx, obj, help_settings=help_settings
-        )
+        coms = await self.get_category_help_mapping(ctx, obj, help_settings=help_settings)
         if not coms:
             return
 
@@ -260,17 +245,13 @@ class BaguetteHelp(commands.RedHelpFormatter):
                     return a_line[:67] + ".."
 
                 cog_text = "\n" + "\n".join(
-                    shorten_line(
-                        f"`{name:<15}:`{command.format_shortdoc_for_context(ctx)}"
-                    )
+                    shorten_line(f"`{name:<15}:`{command.format_shortdoc_for_context(ctx)}")
                     for name, command in sorted(data.items())
                 )
                 all_cog_text += cog_text
             all_cog_text = "\n".join(sorted(all_cog_text.split("\n")))
             title = obj.name.capitalize()
-            for i, page in enumerate(
-                pagify(all_cog_text, page_length=500, shorten_by=0)
-            ):
+            for i, page in enumerate(pagify(all_cog_text, page_length=500, shorten_by=0)):
                 field = EmbedField(title, page, False)
                 emb["fields"].append(field)
                 title = EMPTY_STRING
@@ -279,9 +260,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
             if get_pages:
                 return pages
             else:
-                await self.send_pages(
-                    ctx, pages, embed=True, help_settings=help_settings
-                )
+                await self.send_pages(ctx, pages, embed=True, help_settings=help_settings)
         else:
             # fix this
             await ctx.send("Kindly enable embeds")
@@ -312,9 +291,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
         if hasattr(command, "all_commands"):
             grp = cast(commands.Group, command)
-            subcommands = await self.get_group_help_mapping(
-                ctx, grp, help_settings=help_settings
-            )
+            subcommands = await self.get_group_help_mapping(ctx, grp, help_settings=help_settings)
 
         if await ctx.embed_requested():
             emb = {
@@ -336,9 +313,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 value = "\n\n".join(splitted[1:])
                 if not value:
                     value = EMPTY_STRING
-                field = EmbedField(
-                    "Description", name[:250] + "\n" + value[:1024], False
-                )
+                field = EmbedField("Description", name[:250] + "\n" + value[:1024], False)
                 emb["fields"].append(field)
 
                 # Add aliases
@@ -365,9 +340,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                     if perms.name != "NONE":
                         final_perms.append(neat_format(perms.name))
                 if final_perms:
-                    emb["fields"].append(
-                        EmbedField("Permissions", ", ".join(final_perms), False)
-                    )
+                    emb["fields"].append(EmbedField("Permissions", ", ".join(final_perms), False))
 
                 # Add cooldowns
                 cooldowns = []
@@ -380,9 +353,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                         f"Max concurrent uses: {s.number} per {s.per.name.capitalize()}"
                     )
                 if cooldowns:
-                    emb["fields"].append(
-                        EmbedField("Cooldowns:", "\n".join(cooldowns), False)
-                    )
+                    emb["fields"].append(EmbedField("Cooldowns:", "\n".join(cooldowns), False))
 
             if subcommands:
 
@@ -392,14 +363,10 @@ class BaguetteHelp(commands.RedHelpFormatter):
                     return a_line[:67] + ".."
 
                 subtext = "\n" + "\n".join(
-                    shorten_line(
-                        f"`{name:<15}:`{command.format_shortdoc_for_context(ctx)}"
-                    )
+                    shorten_line(f"`{name:<15}:`{command.format_shortdoc_for_context(ctx)}")
                     for name, command in sorted(subcommands.items())
                 )
-                for i, page in enumerate(
-                    pagify(subtext, page_length=500, shorten_by=0)
-                ):
+                for i, page in enumerate(pagify(subtext, page_length=500, shorten_by=0)):
                     if i == 0:
                         title = _("**__Subcommands:__**")
                     else:
@@ -416,9 +383,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
     ):
         description = ctx.bot.description or ""
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
-        if (
-            not await ctx.embed_requested()
-        ):  # Maybe redirect to non-embed minimal format
+        if not await ctx.embed_requested():  # Maybe redirect to non-embed minimal format
             await ctx.send("You need to enable embeds to use custom help menu")
         else:
             emb = {
@@ -507,9 +472,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
             embed = discord.Embed(color=color, **embed_dict["embed"])
 
             if page_count > 1:
-                description = _(
-                    "*Page {page_num} of {page_count}*\n{content_description}"
-                ).format(
+                description = _("*Page {page_num} of {page_count}*\n{content_description}").format(
                     content_description=embed.description,
                     page_num=i,
                     page_count=page_count,
@@ -586,16 +549,12 @@ class BaguetteHelp(commands.RedHelpFormatter):
                     await asyncio.sleep(delay)
                     await mass_purge(messages, channel)
 
-                asyncio.create_task(
-                    _delete_delay_help(destination, messages, delete_delay)
-                )
+                asyncio.create_task(_delete_delay_help(destination, messages, delete_delay))
         else:
             # Specifically ensuring the menu's message is sent prior to returning
             m = await (ctx.send(embed=pages[0]) if embed else ctx.send(pages[0]))
             c = dict(
-                menus.DEFAULT_CONTROLS
-                if len(pages) > 1
-                else {"\N{CROSS MARK}": menus.close_menu}
+                menus.DEFAULT_CONTROLS if len(pages) > 1 else {"\N{CROSS MARK}": menus.close_menu}
             )
             # TODO important!
             if add_emojis:
@@ -607,9 +566,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                             cat.reaction,
                         )
                         if emj := (
-                            self.bot.get_emoji(int(match.group("id")))
-                            if match
-                            else cat.reaction
+                            self.bot.get_emoji(int(match.group("id"))) if match else cat.reaction
                         ):
                             c[emj] = react_page
                 c["\U0001f3d8\U0000fe0f"] = home_page

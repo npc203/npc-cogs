@@ -24,9 +24,7 @@ class DankHelp:
     ):
         description = ctx.bot.description or ""
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
-        if (
-            not await ctx.embed_requested()
-        ):  # Maybe redirect to non-embed minimal format
+        if not await ctx.embed_requested():  # Maybe redirect to non-embed minimal format
             await ctx.send("You need to enable embeds to use custom help menu")
         else:
             emb = {
@@ -42,9 +40,7 @@ class DankHelp:
             # Maybe add category desc somewhere?
             for cat in GLOBAL_CATEGORIES:
                 if cat.cogs:
-                    title = (
-                        cat.reaction + " " if cat.reaction else ""
-                    ) + cat.name.capitalize()
+                    title = (cat.reaction + " " if cat.reaction else "") + cat.name.capitalize()
                     emb["fields"].append(
                         EmbedField(
                             title,
@@ -71,9 +67,7 @@ class DankHelp:
         help_settings: HelpSettings,
         get_pages: bool = False,
     ):
-        coms = await self.get_category_help_mapping(
-            ctx, obj, help_settings=help_settings
-        )
+        coms = await self.get_category_help_mapping(ctx, obj, help_settings=help_settings)
         if not coms:
             return
 
@@ -143,17 +137,15 @@ class DankHelp:
         description = command.description or ""
 
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
-        signature = _(
-            "`{ctx.clean_prefix}{command.qualified_name} {command.signature}`"
-        ).format(ctx=ctx, command=command)
+        signature = _("`{ctx.clean_prefix}{command.qualified_name} {command.signature}`").format(
+            ctx=ctx, command=command
+        )
         aliases = command.aliases
         subcommands = None
 
         if hasattr(command, "all_commands"):
             grp = cast(commands.Group, command)
-            subcommands = await self.get_group_help_mapping(
-                ctx, grp, help_settings=help_settings
-            )
+            subcommands = await self.get_group_help_mapping(ctx, grp, help_settings=help_settings)
 
         if await ctx.embed_requested():
             emb = {
@@ -203,9 +195,7 @@ class DankHelp:
                     if perms.name != "NONE":
                         final_perms.append(neat_format(perms.name))
                 if final_perms:
-                    emb["fields"].append(
-                        EmbedField("Permissions", ", ".join(final_perms), False)
-                    )
+                    emb["fields"].append(EmbedField("Permissions", ", ".join(final_perms), False))
                 # Add cooldowns
                 cooldowns = []
                 if s := command._buckets._cooldown:
@@ -217,9 +207,7 @@ class DankHelp:
                         f"Max concurrent uses: {s.number} per {s.per.name.capitalize()}"
                     )
                 if cooldowns:
-                    emb["fields"].append(
-                        EmbedField("Cooldowns:", "\n".join(cooldowns), False)
-                    )
+                    emb["fields"].append(EmbedField("Cooldowns:", "\n".join(cooldowns), False))
 
             if subcommands:
 
@@ -229,14 +217,10 @@ class DankHelp:
                     return a_line[:67] + ".."
 
                 subtext = "\n" + "\n".join(
-                    shorten_line(
-                        f"`{name:<15}:`{command.format_shortdoc_for_context(ctx)}"
-                    )
+                    shorten_line(f"`{name:<15}:`{command.format_shortdoc_for_context(ctx)}")
                     for name, command in sorted(subcommands.items())
                 )
-                for i, page in enumerate(
-                    pagify(subtext, page_length=500, shorten_by=0)
-                ):
+                for i, page in enumerate(pagify(subtext, page_length=500, shorten_by=0)):
                     if i == 0:
                         title = _("**__Subcommands:__**")
                     else:

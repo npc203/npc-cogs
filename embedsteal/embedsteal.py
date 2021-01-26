@@ -26,9 +26,7 @@ class EmbedSteal(commands.Cog):
             if isinstance(msg, discord.Message):
                 if hasattr(msg, "embeds"):
                     for page in pagify(
-                        pprint.pformat(msg.embeds[0].to_dict(), indent=4).replace(
-                            "`", "​`"
-                        ),
+                        pprint.pformat(msg.embeds[0].to_dict(), indent=4).replace("`", "​`"),
                         page_length=1994,
                     ):
                         await ctx.send(box(page))
@@ -59,8 +57,6 @@ class EmbedSteal(commands.Cog):
         else:
             await ctx.send("No reply found")
 
-    async def red_delete_data_for_user(
-        self, *, requester: RequestType, user_id: int
-    ) -> None:
+    async def red_delete_data_for_user(self, *, requester: RequestType, user_id: int) -> None:
         # TODO: Replace this with the proper end user data removal handling.
         super().red_delete_data_for_user(requester=requester, user_id=user_id)

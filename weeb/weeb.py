@@ -12,17 +12,11 @@ class Weeb(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        with open(
-            data_manager.bundled_data_path(self) / "owo.txt", "r", encoding="utf8"
-        ) as f:
+        with open(data_manager.bundled_data_path(self) / "owo.txt", "r", encoding="utf8") as f:
             self.owo = f.read().splitlines()
-        with open(
-            data_manager.bundled_data_path(self) / "uwu.txt", "r", encoding="utf8"
-        ) as f:
+        with open(data_manager.bundled_data_path(self) / "uwu.txt", "r", encoding="utf8") as f:
             self.uwu = f.read().splitlines()
-        with open(
-            data_manager.bundled_data_path(self) / "xwx.txt", "r", encoding="utf8"
-        ) as f:
+        with open(data_manager.bundled_data_path(self) / "xwx.txt", "r", encoding="utf8") as f:
             self.xwx = f.read().splitlines()
 
     @commands.command(usage="[c]")
@@ -50,12 +44,8 @@ class Weeb(commands.Cog):
         await ctx.send(choice(self.xwx))
 
     async def cog_command_error(self, ctx, error):
-        if hasattr(error, "original") and isinstance(
-            error.original, discord.errors.Forbidden
-        ):
-            await ctx.send(
-                'I require the "Manage Messages" permission to execute that command.'
-            )
+        if hasattr(error, "original") and isinstance(error.original, discord.errors.Forbidden):
+            await ctx.send('I require the "Manage Messages" permission to execute that command.')
         else:
             await self.bot.on_command_error(ctx, error, unhandled_by_cog=True)
 

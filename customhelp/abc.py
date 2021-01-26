@@ -3,14 +3,12 @@ from abc import ABC, abstractmethod
 from redbot.core import Config, commands
 from redbot.core.bot import Red
 from redbot.core.commands.context import Context
-
+from redbot.core.commands.help import HelpSettings
 
 # TODO Need to enforce this on themes.
 class ThemesMeta(ABC):
     @abstractmethod
-    async def format_cog_help(
-        self, ctx: Context, obj: commands.Cog, help_settings: HelpSettings
-    ):
+    async def format_cog_help(self, ctx: Context, obj: commands.Cog, help_settings: HelpSettings):
         raise NotImplementedError
 
     @abstractmethod

@@ -37,18 +37,14 @@ class Todo(commands.Cog):
         async with self.config.user(ctx.author).todos() as todos:
             todo_id = len(todos)
             todos.append(task)
-        await ctx.send(
-            f"Your todo has been added successfully with the id: **{todo_id}**"
-        )
+        await ctx.send(f"Your todo has been added successfully with the id: **{todo_id}**")
 
     @todo.command(name="list")
     async def list_todos(self, ctx):
         """List all your todos"""
         todos = await self.config.user(ctx.author).todos()
         if todos:
-            for page in pagify(
-                box("\n".join([f"{i} - {x}" for i, x in enumerate(todos)]))
-            ):
+            for page in pagify(box("\n".join([f"{i} - {x}" for i, x in enumerate(todos)]))):
                 await ctx.send(page)
             return
         await ctx.send("Currently, you have no TODOs")
@@ -72,8 +68,7 @@ class Todo(commands.Cog):
                     removed.append(i)
             todos[:] = temp
         for page in pagify(
-            "Succesfully removed:\n"
-            + "\n".join([f"{i}. {x}" for i, x in enumerate(removed, 1)]),
+            "Succesfully removed:\n" + "\n".join([f"{i}. {x}" for i, x in enumerate(removed, 1)]),
             page_length=1970,
         ):
             await ctx.send(page)
@@ -94,8 +89,6 @@ class Todo(commands.Cog):
         else:
             await ctx.send("Cancelled.")
 
-    async def red_delete_data_for_user(
-        self, *, requester: RequestType, user_id: int
-    ) -> None:
+    async def red_delete_data_for_user(self, *, requester: RequestType, user_id: int) -> None:
         # TODO: Replace this with the proper end user data removal handling.
         super().red_delete_data_for_user(requester=requester, user_id=user_id)

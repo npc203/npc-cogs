@@ -22,9 +22,7 @@ class DannyHelp:
     ):
         description = ctx.bot.description or ""
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
-        if (
-            not await ctx.embed_requested()
-        ):  # Maybe redirect to non-embed minimal format
+        if not await ctx.embed_requested():  # Maybe redirect to non-embed minimal format
             await ctx.send("You need to enable embeds to use custom help menu")
         else:
             emb = {
@@ -47,9 +45,7 @@ class DannyHelp:
             for cat in GLOBAL_CATEGORIES:
                 if cat.cogs:
                     cog_names = "`" + "` `".join(cat.cogs) + "`" if cat.cogs else ""
-                    for i, page in enumerate(
-                        pagify(cog_names, page_length=1000, shorten_by=0)
-                    ):
+                    for i, page in enumerate(pagify(cog_names, page_length=1000, shorten_by=0)):
                         if i == 0:
                             title = (
                                 cat.reaction if cat.reaction else ""
@@ -76,9 +72,7 @@ class DannyHelp:
         help_settings: HelpSettings,
         get_pages: bool = False,
     ):
-        coms = await self.get_category_help_mapping(
-            ctx, obj, help_settings=help_settings
-        )
+        coms = await self.get_category_help_mapping(ctx, obj, help_settings=help_settings)
         if not coms:
             return
         description = ctx.bot.description or ""
@@ -101,11 +95,9 @@ class DannyHelp:
                 else:
                     title = _("**No Category:**")
 
-                cog_text = "\n" + " ".join(
-                    (f"`{name}`") for name, command in sorted(data.items())
-                )
+                cog_text = " ".join((f"`{name}`") for name, command in sorted(data.items()))
 
-                for page in pagify(cog_text, page_length=1000, shorten_by=0):
+                for page in pagify(cog_text, page_length=256, delims=[" "], shorten_by=0):
                     field = EmbedField(title, page, True)
                     emb["fields"].append(field)
 

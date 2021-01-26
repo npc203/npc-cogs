@@ -119,12 +119,8 @@ class CustomHelp(commands.Cog):
         GLOBAL_CATEGORIES.append(
             Category(
                 name=uncat_config["name"] if uncat_config["name"] else "uncategorised",
-                desc=uncat_config["desc"]
-                if uncat_config["desc"]
-                else "No category commands",
-                long_desc=uncat_config["long_desc"]
-                if uncat_config["long_desc"]
-                else "",
+                desc=uncat_config["desc"] if uncat_config["desc"] else "No category commands",
+                long_desc=uncat_config["long_desc"] if uncat_config["long_desc"] else "",
                 reaction=uncat_config["reaction"] if uncat_config["reaction"] else None,
                 cogs=list(uncategorised),
             )
@@ -208,9 +204,7 @@ class CustomHelp(commands.Cog):
                 return
 
         available_categories_raw = await self.config.categories()
-        available_categories = [
-            category["name"] for category in available_categories_raw
-        ]
+        available_categories = [category["name"] for category in available_categories_raw]
         all_cogs = set(self.bot.cogs.keys())
         uncategorised = all_cogs - set(
             chain(*(category["cogs"] for category in available_categories_raw))
@@ -307,9 +301,7 @@ class CustomHelp(commands.Cog):
             for cat in GLOBAL_CATEGORIES:
                 if cog_name in cat.cogs:
                     if cat == GLOBAL_CATEGORIES[-1]:
-                        await ctx.send(
-                            "You can't remove cogs from uncategorised category"
-                        )
+                        await ctx.send("You can't remove cogs from uncategorised category")
                         return
                     async with self.config.categories() as cat_conf:
                         cat_conf[GLOBAL_CATEGORIES.index(cat)]["cogs"].remove(cog_name)
@@ -327,17 +319,13 @@ class CustomHelp(commands.Cog):
         """Show the list of categories and the cogs in them"""
         # TODO maybe its a better option to read from cache than config?
         available_categories_raw = await self.config.categories()
-        available_categories = (
-            category["name"] for category in available_categories_raw
-        )
+        available_categories = (category["name"] for category in available_categories_raw)
         all_cogs = set(self.bot.cogs.keys())
         uncategorised = all_cogs - set(
             chain(*(category["cogs"] for category in available_categories_raw))
         )
         joined = (
-            _("Set Categories:\n")
-            if len(available_categories_raw) > 1
-            else _("Set Category:\n")
+            _("Set Categories:\n") if len(available_categories_raw) > 1 else _("Set Category:\n")
         )
         for category in available_categories_raw:
             joined += "+ {}:\n".format(category["name"])
@@ -385,17 +373,13 @@ class CustomHelp(commands.Cog):
             for i, my_list in parsed_data.items()
         }
         check = ["name", "desc", "long_desc", "reaction"]
-        available_categories = [
-            category["name"] for category in await self.config.categories()
-        ]
+        available_categories = [category["name"] for category in await self.config.categories()]
         already_present_emojis = list(i.reaction for i in GLOBAL_CATEGORIES)
         failed = []  # example: [('desc','categoryname')]
 
         # special naming for uncategorized stuff
         uncat_config = await self.config.uncategorised()
-        uncat_config["name"] = (
-            uncat_config["name"] if uncat_config["name"] else "uncategorised"
-        )
+        uncat_config["name"] = uncat_config["name"] if uncat_config["name"] else "uncategorised"
 
         def validity_checker(category, item):
             if item[0] in check:
@@ -437,10 +421,7 @@ class CustomHelp(commands.Cog):
             if not failed
             else "The following things failed:\n"
             + "\n".join(
-                [
-                    f"{reason[0]}: {reason[1]}  failed in {category}"
-                    for reason, category in failed
-                ]
+                [f"{reason[0]}: {reason[1]}  failed in {category}" for reason, category in failed]
             )
         ):
             await ctx.send(page)
@@ -457,9 +438,7 @@ class CustomHelp(commands.Cog):
         def loader(theme, feature):
             inherit_theme = themes.list[theme]
             if hasattr(inherit_theme, self.feature_list[feature]):
-                inherit_feature = getattr(
-                    themes.list[theme], self.feature_list[feature]
-                )
+                inherit_feature = getattr(themes.list[theme], self.feature_list[feature])
                 # load up the attribute,Monkey patch me daddy UwU
                 setattr(
                     self.bot._help_formatter,
@@ -490,9 +469,7 @@ class CustomHelp(commands.Cog):
     @chelp.command()
     async def reset(self, ctx):
         """Resets all settings to default **custom** help \n use `[p]chelp set 0` to revert back to the old help"""
-        msg = await ctx.send(
-            "Are you sure? This will reset everything back to the default theme."
-        )
+        msg = await ctx.send("Are you sure? This will reset everything back to the default theme.")
         menus.start_adding_reactions(msg, predicates.ReactionPredicate.YES_OR_NO_EMOJIS)
         pred = predicates.ReactionPredicate.yes_or_no(msg, ctx.author)
         await ctx.bot.wait_for("reaction_add", check=pred)
@@ -543,9 +520,7 @@ class CustomHelp(commands.Cog):
             "thumbnail": "thumbnail",
         }
         val = await self.config.theme()
-        val = "\n".join(
-            [f"`{i:<10}`: " + (j if j else "default") for i, j in val.items()]
-        )
+        val = "\n".join([f"`{i:<10}`: " + (j if j else "default") for i, j in val.items()])
         emb = discord.Embed(title="Custom help settings", color=await ctx.embed_color())
         emb.add_field(name="Theme", value=val)
         emb.add_field(
@@ -655,16 +630,12 @@ class CustomHelp(commands.Cog):
                 else:
                     await ctx.send("Impossible! report this to the cog owner pls")
             else:
-                em.add_field(
-                    name="Category:", value=GLOBAL_CATEGORIES[-1].name, inline=False
-                )
+                em.add_field(name="Category:", value=GLOBAL_CATEGORIES[-1].name, inline=False)
                 em.add_field(name="Cog:", value="None", inline=False)
                 await ctx.send(embed=em)
         else:
             await ctx.send("Command not found")
 
-    async def red_delete_data_for_user(
-        self, *, requester: RequestType, user_id: int
-    ) -> None:
+    async def red_delete_data_for_user(self, *, requester: RequestType, user_id: int) -> None:
         # TODO: Replace this with the proper end user data removal handling.
         super().red_delete_data_for_user(requester=requester, user_id=user_id)

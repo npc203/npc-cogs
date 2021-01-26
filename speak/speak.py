@@ -12,13 +12,9 @@ class Speak(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.cache = {}
-        with open(
-            data_manager.bundled_data_path(self) / "insult.txt", encoding="utf8"
-        ) as fp:
+        with open(data_manager.bundled_data_path(self) / "insult.txt", encoding="utf8") as fp:
             self.insult_list = fp.read().splitlines()
-        with open(
-            data_manager.bundled_data_path(self) / "sadme.txt", encoding="utf8"
-        ) as fp:
+        with open(data_manager.bundled_data_path(self) / "sadme.txt", encoding="utf8") as fp:
             self.sadme_list = fp.read().splitlines()
 
     @checks.bot_has_permissions(manage_webhooks=True, manage_messages=True)
@@ -85,9 +81,7 @@ class Speak(commands.Cog):
             else:
                 hook = self.cache[ctx.channel.id]
         except discord.errors.NotFound:  # Probably user deleted the hook
-            hook = await ctx.channel.create_webhook(
-                name="red_bot_hook_" + str(ctx.channel.id)
-            )
+            hook = await ctx.channel.create_webhook(name="red_bot_hook_" + str(ctx.channel.id))
 
         return hook
 

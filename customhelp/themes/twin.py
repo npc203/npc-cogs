@@ -24,9 +24,7 @@ class TwinHelp:
         help_settings: HelpSettings,
         get_pages: bool = False,
     ):
-        coms = await self.get_category_help_mapping(
-            ctx, obj, help_settings=help_settings
-        )
+        coms = await self.get_category_help_mapping(ctx, obj, help_settings=help_settings)
         if not coms:
             return
 
@@ -56,9 +54,7 @@ class TwinHelp:
                     title = f"__**{cog_name}**__"
                 else:
                     title = _("**No Category:**")
-                cog_text = ", ".join(
-                    f"`{name}`" for name, command in sorted(data.items())
-                )
+                cog_text = ", ".join(f"`{name}`" for name, command in sorted(data.items()))
                 for i, page in enumerate(
                     pagify(cog_text, page_length=1000, delims=[","], shorten_by=0)
                 ):
@@ -73,9 +69,7 @@ class TwinHelp:
             if get_pages:
                 return pages
             else:
-                await self.send_pages(
-                    ctx, pages, embed=True, help_settings=help_settings
-                )
+                await self.send_pages(ctx, pages, embed=True, help_settings=help_settings)
         else:
             # fix this
             await ctx.send("Kindly enable embeds")

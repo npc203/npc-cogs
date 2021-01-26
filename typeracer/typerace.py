@@ -100,7 +100,7 @@ class TypeRacer(commands.Cog):
         if b_string:
             result = await self.evaluate(ctx, a_string, b_string, time_taken, None)
         else:
-            await ctx.send(f'{ctx.author.display_name} didn\'t want to complete the test')
+            await ctx.send(f"{ctx.author.display_name} didn't want to complete the test")
 
     async def task_personal_race(self, ctx, a_string):
         """Personal Race"""
@@ -185,10 +185,7 @@ class TypeRacer(commands.Cog):
         """Event Race"""
 
         active = "\n".join(
-            [
-                f"{index}. {self.active[user]}"
-                for index, user in enumerate(self.active, 1)
-            ]
+            [f"{index}. {self.active[user]}" for index, user in enumerate(self.active, 1)]
         )
         countdown = await ctx.send(
             f"A Typing speed test event will commence in 60 seconds\n"
@@ -198,10 +195,7 @@ class TypeRacer(commands.Cog):
         await asyncio.sleep(5)
         for i in range(55, 0, -5):  # TODO add to config, time to start event
             active = "\n".join(
-                [
-                    f"{index}. {self.active[user]}"
-                    for index, user in enumerate(self.active, 1)
-                ]
+                [f"{index}. {self.active[user]}" for index, user in enumerate(self.active, 1)]
             )
             await countdown.edit(
                 content=f"A Typing speed test event will commence in {i} seconds\n"
@@ -222,7 +216,11 @@ class TypeRacer(commands.Cog):
                 )
                 self.active.pop(msg_result.author.id)
                 results = await self.evaluate(
-                    ctx, a_string, msg_result.content, time.time() - match_begin, msg_result.author.id
+                    ctx,
+                    a_string,
+                    msg_result.content,
+                    time.time() - match_begin,
+                    msg_result.author.id,
                 )
                 if results:
                     results.insert(0, msg_result.author.name)
@@ -236,17 +234,13 @@ class TypeRacer(commands.Cog):
             pass
 
     # Helper Functions
-    async def evaluate(
-        self, ctx, a_string: str, b_string: str, time_taken, dm_id
-    ):
+    async def evaluate(self, ctx, a_string: str, b_string: str, time_taken, dm_id):
         user_obj = ctx.guild.get_member(dm_id) if dm_id else ctx.author
         special_send = user_obj.send if dm_id else ctx.send
         # TODO
         if "​" in b_string:
             if not dm_id:
-                await special_send(
-                    "Imagine cheating bruh, c'mon atleast be honest here."
-                )
+                await special_send("Imagine cheating bruh, c'mon atleast be honest here.")
             else:
                 await special_send("You cheated and hence you are disqualified.")
             return
@@ -259,25 +253,23 @@ class TypeRacer(commands.Cog):
                     mistakes += 1
         # Analysis
         accuracy = levenshtein_match_calc(a_string, b_string)
-        wpm = (len(a_string)/5 / (time_taken/60))
+        wpm = len(a_string) / 5 / (time_taken / 60)
         if accuracy > 66:  # TODO add to config
             verdict = [
-                ("WPM (Correct Words per minute)",
-                 wpm - (mistakes/(time_taken/60))),
+                (
+                    "WPM (Correct Words per minute)",
+                    wpm - (mistakes / (time_taken / 60)),
+                ),
                 ("Raw WPM (Without accounting mistakes)", wpm),
                 ("Accuracy(Levenshtein)", accuracy),
                 ("Words Given", len(a_string.split())),
-                (f"Words from {user_obj.display_name}",
-                 len(b_string.split())),
+                (f"Words from {user_obj.display_name}", len(b_string.split())),
                 ("Characters Given", len(a_string)),
                 (f"Characters from {user_obj.display_name}", len(b_string)),
                 (f"Mistakes done by {user_obj.display_name}", mistakes),
             ]
-            await special_send(
-                content="```" +
-                tabulate(verdict, tablefmt="fancy_grid") + "```"
-            )
-            return [time_taken, wpm - (mistakes/(time_taken/60)), mistakes]
+            await special_send(content="```" + tabulate(verdict, tablefmt="fancy_grid") + "```")
+            return [time_taken, wpm - (mistakes / (time_taken / 60)), mistakes]
         else:
             await special_send(
                 f"{'You' if dm_id else user_obj.display_name}  didn't want to complete the challenge."
@@ -288,9 +280,7 @@ class TypeRacer(commands.Cog):
         # TODO add customisable length of text and difficuilty
         async with ctx.typing():
             async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    "http://www.randomtext.me/api/gibberish/p-1/25-45"
-                ) as f:
+                async with session.get("http://www.randomtext.me/api/gibberish/p-1/25-45") as f:
                     if f.status == 200:
                         resp = await f.json()
                     else:
@@ -310,12 +300,12 @@ class TypeRacer(commands.Cog):
         """Sets the time delay to start a speedtest event (max limit = 1000 seconds)"""
         if num <= 1000:
             await self.config.guild(ctx.guild).time_start.set(num)
-            await ctx.send(f'Changed delay to {num}')
+            await ctx.send(f"Changed delay to {num}")
         else:
-            await ctx.send('Max limit is 1000 seconds')
+            await ctx.send("Max limit is 1000 seconds")
 
     @commands.is_owner()  # TODO
-    @typerset.group(name='global')
+    @typerset.group(name="global")
     async def global_conf(self, ctx):
         """Global settings for the typeracer cog"""
 
