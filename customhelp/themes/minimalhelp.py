@@ -1,3 +1,4 @@
+from ..abc import ThemesMeta
 from ..core.base_help import (
     EMPTY_STRING,
     GLOBAL_CATEGORIES,
@@ -17,7 +18,7 @@ from ..core.base_help import (
 
 
 # Note: this won't use reactions
-class MinimalHelp:
+class MinimalHelp(ThemesMeta):
     """This is a no embed minimal theme for the simplistic people"""
 
     async def format_bot_help(self, ctx: Context, help_settings: HelpSettings):

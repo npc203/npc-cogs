@@ -1,3 +1,4 @@
+from ..abc import ThemesMeta
 from ..core.base_help import (
     EMPTY_STRING,
     GLOBAL_CATEGORIES,
@@ -14,10 +15,9 @@ from ..core.base_help import (
     humanize_timedelta,
     pagify,
 )
-from ..abc import ThemesMeta
 
 
-class DankHelp:
+class DankHelp(ThemesMeta):
     """Inspired from Dankmemer's help menu"""
 
     async def format_bot_help(

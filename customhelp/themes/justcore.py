@@ -1,3 +1,4 @@
+from ..abc import ThemesMeta
 from ..core.base_help import (
     EMPTY_STRING,
     GLOBAL_CATEGORIES,
@@ -15,7 +16,7 @@ from ..core.base_help import (
 )
 
 
-class JustCore:
+class JustCore(ThemesMeta):
     """This is the raw core help, but with categories"""
 
     async def format_category_help(

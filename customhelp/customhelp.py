@@ -4,21 +4,21 @@ from itertools import chain
 from types import MethodType
 from typing import Dict, List, Literal, Union
 
-import yaml
-
 import discord
+import yaml
 from discord.ext import commands as dpy_commands
+from tabulate import tabulate
+
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.i18n import Translator
 from redbot.core.utils import menus, predicates
 from redbot.core.utils.chat_formatting import box, pagify
 from redbot.core.utils.predicates import ReactionPredicate
-from tabulate import tabulate
 
 from . import themes
 from .core.base_help import BaguetteHelp
-from .core.category import GLOBAL_CATEGORIES, Category, EMOJI_REGEX
+from .core.category import EMOJI_REGEX, GLOBAL_CATEGORIES, Category
 
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
 

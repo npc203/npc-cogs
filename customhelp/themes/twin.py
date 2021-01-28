@@ -1,3 +1,4 @@
+from ..abc import ThemesMeta
 from ..core.base_help import (
     EMPTY_STRING,
     GLOBAL_CATEGORIES,
@@ -14,7 +15,7 @@ from ..core.base_help import (
 )
 
 
-class TwinHelp:
+class TwinHelp(ThemesMeta):
     """This help is made by TwinShadow a.k.a TwinShadow#0666"""
 
     async def format_category_help(

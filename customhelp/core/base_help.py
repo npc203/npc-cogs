@@ -1,10 +1,11 @@
 import asyncio
+import re
 from collections import namedtuple
 from itertools import chain
 from typing import AsyncIterator, Iterable, List, Literal, Union, cast
 
 import discord
-import tabulate, re
+import tabulate
 
 from redbot.core import checks, commands
 from redbot.core.commands.context import Context

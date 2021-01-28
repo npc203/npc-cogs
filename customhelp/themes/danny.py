@@ -1,3 +1,4 @@
+from ..abc import ThemesMeta
 from ..core.base_help import (
     EMPTY_STRING,
     GLOBAL_CATEGORIES,
@@ -14,7 +15,7 @@ from ..core.base_help import (
 )
 
 
-class DannyHelp:
+class DannyHelp(ThemesMeta):
     """Inspired from R.danny's help menu"""
 
     async def format_bot_help(
