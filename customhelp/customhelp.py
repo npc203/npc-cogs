@@ -367,7 +367,7 @@ class CustomHelp(commands.Cog):
             if any(type(j) == str for j in i):
                 await ctx.send("Invalid Format!")
                 return
-        # kill me already parsed_data = {category:[('name', 'notrandom'), ('emoji', 'asds'), ('emoji', '😓'), ('desc', 'this iasdiuasd')]}
+        # Some more rearrangement parsed_data = {category:[('name', 'notrandom'), ('emoji', 'asds'), ('emoji', '😓'), ('desc', 'this iasdiuasd')]}
         parsed_data = {
             i: [(k, v) for f in my_list for k, v in f.items()]
             for i, my_list in parsed_data.items()

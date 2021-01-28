@@ -1,4 +1,4 @@
-# A Customisable Custom Help Cog For Red:  (WARNING: THIS IS IN BETA and requires lots of testing, do not install this in a production bot)
+# A Customisable Custom Help Cog For Red: (This is a BETA cog)
 Couldn't get a shorter title. Anyways, the cog introduces categories, meaning you can now bunch up cogs into one blob and give it a name, description and reaction.  
 Use `[p]chelp` to see what can be customised.
 
@@ -32,7 +32,7 @@ Introducing themes that were shamesslessly ripped off from other bots cause I'm 
 1. `[p]chelp listthemes` to get all the themes and the features available in each of them.  
 ![](https://imgur.com/m83FC1N.png)
 2. `[p]chelp load <theme> feature` to load the respective stuff.  
-*Note: you can use `[p]chelp load <theme> all` to load all the available feature in that theme(sorry Oofchair)*    
+*Note: you can use `[p]chelp load <theme> all` to load all the available feature in that theme(sorry OofChair)*    
 An example of `[p]chelp load dank main` is shown below  
 ![](https://imgur.com/Fr1SS37.png)
 3. `[p]chelp show` to show what themes are loaded.  
@@ -44,8 +44,14 @@ An example of `[p]chelp load dank main` is shown below
 ## Additional Notes:
 - A **Good Practice** is to have the category names all **lowercased** and the category description as **Camelcase**.
 - Free to tell about new themes which you might want to see. Let me know if you think any part of the theme can be made better. I'm available in the [cog support server]( https://discord.gg/GET4DVk).
-- If the owner of any bot feels that their theme needs to be removed from this cog. Please inform me, I'll remove it.
-
+- If the owner of any bot feels that their theme needs to be removed from this cog. Please inform me, I'll remove it.  
+## FAQ:
+1. Reactions are not working, why?!  
+	1. Your bot should have the react perms
+	2. `[p]helpset menus 1` (menus must be enabled)
+2. Can I make my own theme in your cog?  
+	Well you can just learn about the help formatter api.  
+	If u really need categories as well then you can fork my repo, navigate to the themes folder, see how the themes are made and make a new file in that folder with your custom coded theme and load the cog. your theme should magically occur in the `[p]chelp listthemes`  
 ## Credits:
 - My heartfelt thanks to [OofChair](https://github.com/OofChair) and [TwinShadow](https://github.com/TwinDragon). Both of these amazing people did some major testing and contribution to the cog.
 - To everyone who patiently answered my noob coding questions.
