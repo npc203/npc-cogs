@@ -34,25 +34,25 @@ class Google(commands.Cog):
             await ctx.send("Please enter something to search")
         else:
             async with ctx.typing():
-                if response := await self.get_result(query):
-                    pages = []
-                    groups = [response[0][n : n + 3] for n in range(0, len(response[0]), 3)]
-                    for num, group in enumerate(groups, 1):
-                        emb = discord.Embed(title=f"Google Search: {query[:50]}...")
-                        for result in group:
-                            emb.add_field(
-                                name=f"{result.title}",
-                                value=(f"[{result.url}]({result.url})\n" if result.url else "")
-                                + f"{result.desc}"[:1024],
-                                inline=False,
-                            )
-                        emb.description = f"Page {num} of {len(groups)}"
-                        emb.set_footer(text=response[1])
-                        pages.append(emb)
-                else:
-                    await ctx.send("No result")
-                    return
-            await menus.menu(ctx, pages, controls=menus.DEFAULT_CONTROLS)
+                response = await self.get_result(query)
+                pages = []
+                groups = [response[0][n : n + 3] for n in range(0, len(response[0]), 3)]
+                for num, group in enumerate(groups, 1):
+                    emb = discord.Embed(title=f"Google Search: {query[:50]}...")
+                    for result in group:
+                        emb.add_field(
+                            name=f"{result.title}",
+                            value=(f"[{result.url}]({result.url})\n" if result.url else "")
+                            + f"{result.desc}"[:1024],
+                            inline=False,
+                        )
+                    emb.description = f"Page {num} of {len(groups)}"
+                    emb.set_footer(text=response[1])
+                    pages.append(emb)
+            if pages:
+                await menus.menu(ctx, pages, controls=menus.DEFAULT_CONTROLS)
+            else:
+                await ctx.send("No result")
 
     def parser(self, text):
         """My bad logic for scraping"""
@@ -94,5 +94,4 @@ class Google(commands.Cog):
             async with session.get(url + encoded, headers=options) as resp:
                 text = await resp.text()
         prep = functools.partial(self.parser, text)
-        res = await self.bot.loop.run_in_executor(None, prep)
-        return res
+        return await self.bot.loop.run_in_executor(None, prep)
