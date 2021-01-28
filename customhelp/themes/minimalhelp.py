@@ -1,20 +1,8 @@
 from ..abc import ThemesMeta
-from ..core.base_help import (
-    EMPTY_STRING,
-    GLOBAL_CATEGORIES,
-    BaguetteHelp,
-    CategoryConvert,
-    Context,
-    EmbedField,
-    HelpSettings,
-    _,
-    box,
-    cast,
-    commands,
-    discord,
-    humanize_timedelta,
-    pagify,
-)
+from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, BaguetteHelp,
+                              CategoryConvert, Context, EmbedField,
+                              HelpSettings, _, box, cast, commands, discord,
+                              humanize_timedelta, pagify)
 
 
 # Note: this won't use reactions

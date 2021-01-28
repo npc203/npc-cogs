@@ -50,10 +50,10 @@ Config Structure:
 
 class CustomHelp(commands.Cog):
     """
-    A custom customisable help
+    A custom customisable help for fun and profit
     """
 
-    __version__ = "0.2.0"
+    __version__ = "0.3.1"
 
     def __init__(self, bot: Red):
         self.bot = bot

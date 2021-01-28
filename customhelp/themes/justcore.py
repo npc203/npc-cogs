@@ -1,19 +1,8 @@
 from ..abc import ThemesMeta
-from ..core.base_help import (
-    EMPTY_STRING,
-    GLOBAL_CATEGORIES,
-    BaguetteHelp,
-    CategoryConvert,
-    Context,
-    EmbedField,
-    HelpSettings,
-    _,
-    box,
-    cast,
-    commands,
-    discord,
-    pagify,
-)
+from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, BaguetteHelp,
+                              CategoryConvert, Context, EmbedField,
+                              HelpSettings, _, box, cast, commands, discord,
+                              pagify)
 
 
 class JustCore(ThemesMeta):
