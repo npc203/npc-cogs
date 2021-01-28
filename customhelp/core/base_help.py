@@ -57,7 +57,8 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
         # TODO does this wreck havoc?
         if alias_cog := ctx.bot.get_cog("Alias"):
-            alias = await alias_cog._aliases.get_alias(ctx.guild, alias_name=help_for)
+            alias_name = help_for
+            alias = await alias_cog._aliases.get_alias(ctx.guild, alias_name=alias_name)
             if alias:
                 help_for = alias.command
 
@@ -78,7 +79,14 @@ class BaguetteHelp(commands.RedHelpFormatter):
                     raise NoCommand() from None
             else:
                 last = com
-
+        # This does take an extra 0.1 seconds to complete. but worth it?
+        if alias:
+            com_alias = com.copy()
+            com_alias.parent = None
+            com_alias.cog = com.cog
+            com_alias.name = alias_name
+            com_alias.aliases.append(com.qualified_name)
+            return com_alias
         return com
 
     async def get_category_help_mapping(self, ctx, category, help_settings: HelpSettings):

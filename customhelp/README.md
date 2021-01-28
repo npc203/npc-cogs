@@ -1,7 +1,7 @@
 # A Customisable Custom Help Cog For Red: (This is a BETA cog)
 Couldn't get a shorter title. Anyways, the cog introduces categories, meaning you can now bunch up cogs into one blob and give it a name, description and reaction.  
 Use `[p]chelp` to see what can be customised.
-
+Oh and as an additional bonus. If you have the alias cog loaded. those alias's help can also be retrieved.
 ## Setup:
 *Note: Use `[p]chelp set 1` to set your help to the custom help, else it'll remain as the normal one*
 1. Start by doing `[p]chelp list` to list all your cogs
