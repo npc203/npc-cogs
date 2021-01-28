@@ -48,7 +48,7 @@ An example of `[p]chelp load dank main` is shown below
 ## FAQ:
 1. Reactions are not working, why?!  
 	1. Your bot should have the react perms
-	2. `[p]helpset menus 1` (menus must be enabled)
+	2. `[p]helpset usemenus 1` (menus must be enabled)
 2. Can I make my own theme in your cog?  
 	Well you can just learn about the help formatter api.  
 	If u really need categories as well then you can fork my repo, navigate to the themes folder, see how the themes are made and make a new file in that folder with your custom coded theme and load the cog. your theme should magically occur in the `[p]chelp listthemes`  
