@@ -88,7 +88,7 @@ class Google(commands.Cog):
         encoded = urllib.parse.quote_plus(query, encoding="utf-8", errors="replace")
         url = "https://www.google.com/search?q="
         options = {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36"
         }
         async with aiohttp.ClientSession() as session:
             async with session.get(url + encoded, headers=options) as resp:
