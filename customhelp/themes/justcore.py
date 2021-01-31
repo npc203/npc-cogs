@@ -3,8 +3,8 @@ from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, BaguetteHelp,
                               CategoryConvert, Context, EmbedField,
                               HelpSettings, _, box, cast, commands, discord,
                               pagify)
-
-
+from redbot.core.utils.chat_formatting import humanize_list,humanize_number
+from redbot import __version__
 class JustCore(ThemesMeta):
     """This is the raw core help, but with categories"""
 
@@ -91,26 +91,56 @@ class JustCore(ThemesMeta):
 
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
         signature = _(
-            "`Syntax: {ctx.clean_prefix}{command.qualified_name} {command.signature}`"
+            "Syntax: {ctx.clean_prefix}{command.qualified_name} {command.signature}"
         ).format(ctx=ctx, command=command)
-        subcommands = None
 
+        # Backward compatible.
+        if __version__ >= "3.4.6.dev1":
+            aliases = command.aliases
+            if help_settings.show_aliases and aliases:
+                alias_fmt = _("Aliases") if len(command.aliases) > 1 else _("Alias")
+                aliases = sorted(aliases, key=len)
+
+                a_counter = 0
+                valid_alias_list = []
+                for alias in aliases:
+                    if (a_counter := a_counter + len(alias)) < 500:
+                        valid_alias_list.append(alias)
+                    else:
+                        break
+
+                a_diff = len(aliases) - len(valid_alias_list)
+                aliases_list = [
+                    f"{ctx.clean_prefix}{command.parent.qualified_name + ' ' if command.parent else ''}{alias}"
+                    for alias in valid_alias_list
+                ]
+                if len(valid_alias_list) < 10:
+                    aliases_content = humanize_list(aliases_list)
+                else:
+                    aliases_formatted_list = ", ".join(aliases_list)
+                    if a_diff > 1:
+                        aliases_content = _("{aliases} and {number} more aliases.").format(
+                            aliases=aliases_formatted_list, number=humanize_number(a_diff)
+                        )
+                    else:
+                        aliases_content = _("{aliases} and one more alias.").format(
+                            aliases=aliases_formatted_list
+                        )
+                signature += f"\n{alias_fmt}: {aliases_content}"
+
+        subcommands = None
         if hasattr(command, "all_commands"):
             grp = cast(commands.Group, command)
             subcommands = await self.get_group_help_mapping(ctx, grp, help_settings=help_settings)
 
         if await ctx.embed_requested():
-            emb = {
-                "embed": {"title": "", "description": ""},
-                "footer": {"text": ""},
-                "fields": [],
-            }
+            emb = {"embed": {"title": "", "description": ""}, "footer": {"text": ""}, "fields": []}
 
             if description:
                 emb["embed"]["title"] = f"*{description[:250]}*"
 
             emb["footer"]["text"] = tagline
-            emb["embed"]["description"] = signature
+            emb["embed"]["description"] = box(signature)
 
             command_help = command.format_help_for_context(ctx)
             if command_help:
@@ -140,7 +170,6 @@ class JustCore(ThemesMeta):
                         title = _("**__Subcommands:__** (continued)")
                     field = EmbedField(title, page, False)
                     emb["fields"].append(field)
-
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
             await self.send_pages(
                 ctx,
