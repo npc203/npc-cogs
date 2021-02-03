@@ -53,7 +53,7 @@ class CustomHelp(commands.Cog):
     A custom customisable help for fun and profit
     """
 
-    __version__ = "0.3.1"
+    __version__ = "0.4.0"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -96,12 +96,6 @@ class CustomHelp(commands.Cog):
         pre_processed = super().format_help_for_context(ctx)
         return f"{pre_processed}\n\nCog Version: {self.__version__}"
 
-    """
-    #Is this better?
-    async def cog_check(self, ctx):
-        return self.bot.is_owner(ctx.author)
-    """
-
     async def refresh_cache(self):
         """Get's the config and re-populates the GLOBAL_CATEGORIES"""
         # Blocking?
@@ -128,9 +122,10 @@ class CustomHelp(commands.Cog):
 
     async def _setup(self):
         """Adds the themes and loads the formatter"""
+        # This is needed to be on top so that Cache gets populated no matter what (supplements chelp create)
+        await self.refresh_cache()
         if not (await self.config.settings.set_formatter()):
             return
-        await self.refresh_cache()
         main_theme = BaguetteHelp(self.bot, self.config)
         theme = await self.config.theme()
         if all(theme.values()) == None:
@@ -147,6 +142,16 @@ class CustomHelp(commands.Cog):
                         MethodType(inherit_feature, main_theme),
                     )
         self.bot.set_help_formatter(main_theme)
+
+    @commands.Cog.listener("on_cog_add")
+    async def handle_new_cog_entries(self, cog: commands.Cog):
+        cog_name = cog.__class__.__name__
+        for cat in GLOBAL_CATEGORIES:
+            if cog_name in cat.cogs:
+                break
+        else:
+            if cog_name not in GLOBAL_CATEGORIES[-1].cogs:
+                GLOBAL_CATEGORIES[-1].cogs.append(cog_name)
 
     @checks.is_owner()
     @commands.group()
@@ -169,9 +174,8 @@ class CustomHelp(commands.Cog):
                     await ctx.send("Resetting formatter to default")
             except RuntimeError as e:
                 await ctx.send(str(e))
-                return
 
-    @chelp.command()
+    @chelp.command(aliases=["add"])
     async def create(self, ctx, *, yaml_txt=None):
         """Create a new category to add cogs to it using yaml"""
         if yaml_txt:
@@ -203,11 +207,13 @@ class CustomHelp(commands.Cog):
                 await ctx.send("Invalid Format!")
                 return
 
-        available_categories_raw = await self.config.categories()
-        available_categories = [category["name"] for category in available_categories_raw]
+        available_categories = [category.name for category in GLOBAL_CATEGORIES]
+        # Remove uncategorised
+        available_categories.pop(-1)
+        # Not using cache (GLOBAL_CATEGORIES[-1].cogs) cause cog unloads aren't tracked
         all_cogs = set(self.bot.cogs.keys())
         uncategorised = all_cogs - set(
-            chain(*(category["cogs"] for category in available_categories_raw))
+            chain(*(category.cogs for category in GLOBAL_CATEGORIES[:-1]))
         )
         failed_cogs = []
         success_cogs = []
@@ -224,18 +230,25 @@ class CustomHelp(commands.Cog):
                     failed_cogs.append(cog_name)
             return {"name": x, "desc": "Not provided", "cogs": cogs, "reaction": None}
 
-        # TODO bunch the config calls
+        # {"new": [{cat_conf_structure,...}, {...}] , "existing": { index: [cogs], ..}}
+        to_config = {"new": [], "existing": {}}
         for category in parsed_data:
-            # check if category does not exist
-            if category not in available_categories:
-                async with self.config.categories() as conf_cat:
-                    conf_cat.append(parse_to_config(category))
+            # check if category exist
+            if category in available_categories:
+                # update the existing category
+                index = available_categories.index(category)
+                if index in to_config["existing"]:
+                    to_config["existing"][index].extend(parse_to_config(category)["cogs"])
+                else:
+                    to_config["existing"][index] = parse_to_config(category)["cogs"]
             else:
-                # Else update the existing category
-                async with self.config.categories() as conf_cat:
-                    conf_cat[available_categories.index(category)]["cogs"].extend(
-                        parse_to_config(category)["cogs"]
-                    )
+                to_config["new"].append(parse_to_config(category))
+
+        # Writing to config
+        async with self.config.categories() as conf_cat:
+            conf_cat.extend(to_config["new"])
+            for cat_index in to_config["existing"]:
+                conf_cat[cat_index]["cogs"].extend(to_config["existing"][cat_index])
 
         for page in pagify(
             (
@@ -255,7 +268,7 @@ class CustomHelp(commands.Cog):
     @chelp.command()
     async def removeall(self, ctx):
         """This will delete all the categories"""
-        # NO i wont use the messagePredicate
+        # NO i won't use the MessagePredicate
         await ctx.send(
             "Warning: You are about to delete all your categories, type `y` to continue else this will abort"
         )
