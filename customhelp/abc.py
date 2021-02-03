@@ -10,6 +10,7 @@ from .core.category import Category
 
 class ThemesMeta:
     """This is the skeletal structure of any theme"""
+
     # Enforcing messes up the loader (loads all themes even tho they aren't present). HOTFIX
     pass
 

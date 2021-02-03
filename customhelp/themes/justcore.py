@@ -1,10 +1,13 @@
+from redbot import __version__
+from redbot.core.utils.chat_formatting import humanize_list, humanize_number
+
 from ..abc import ThemesMeta
 from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, BaguetteHelp,
                               CategoryConvert, Context, EmbedField,
                               HelpSettings, _, box, cast, commands, discord,
                               pagify)
-from redbot.core.utils.chat_formatting import humanize_list,humanize_number
-from redbot import __version__
+
+
 class JustCore(ThemesMeta):
     """This is the raw core help, but with categories"""
 
