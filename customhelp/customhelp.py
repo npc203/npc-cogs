@@ -539,6 +539,7 @@ class CustomHelp(commands.Cog):
         setting_mapping = {
             "react": "usereactions",
             "set_formatter": "iscustomhelp?",
+            "url":"This is deprecated (only here for compaitble purposes)"
             "thumbnail": "thumbnail",
         }
         val = await self.config.theme()
