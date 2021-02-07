@@ -1,10 +1,12 @@
 # This contains a bunch of menu utils
+from copy import copy
+
 import discord
 
 from redbot.core import commands
 from redbot.core.commands.help import HelpSettings
 from redbot.core.utils.menus import menu, start_adding_reactions
-from copy import copy
+
 from .category import GLOBAL_CATEGORIES
 
 # From dpy server >.<
