@@ -125,8 +125,9 @@ class CustomHelp(commands.Cog):
         await self.refresh_cache()
 
         # backward compatible removal
-        if self.__version__ <= "0.4.0" and hasattr(self.config.settings, "url"):
-            await self.config.settings.url.clear()
+        if self.__version__ <= "0.4.0" and "url" in await self.config.settings():
+            async with self.config.settings() as conf:
+                del conf["url"]
 
         if not (await self.config.settings.set_formatter()):
             return
