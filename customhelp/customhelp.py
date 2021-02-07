@@ -123,6 +123,13 @@ class CustomHelp(commands.Cog):
         """Adds the themes and loads the formatter"""
         # This is needed to be on top so that Cache gets populated no matter what (supplements chelp create)
         await self.refresh_cache()
+
+        # backward compatible removal
+        if self.__version__ <= "0.4.0" and hasattr(
+            bot.get_cog("CustomHelp").config.settings, "url"
+        ):
+            await bot.get_cog("CustomHelp").config.settings.url.clear()
+
         if not (await self.config.settings.set_formatter()):
             return
         main_theme = BaguetteHelp(self.bot, self.config)
@@ -539,7 +546,6 @@ class CustomHelp(commands.Cog):
         setting_mapping = {
             "react": "usereactions",
             "set_formatter": "iscustomhelp?",
-            "url": "This is deprecated (only here for compaitble purposes)",
             "thumbnail": "thumbnail",
         }
         val = await self.config.theme()
