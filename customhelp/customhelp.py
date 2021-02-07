@@ -125,10 +125,8 @@ class CustomHelp(commands.Cog):
         await self.refresh_cache()
 
         # backward compatible removal
-        if self.__version__ <= "0.4.0" and hasattr(
-            bot.get_cog("CustomHelp").config.settings, "url"
-        ):
-            await bot.get_cog("CustomHelp").config.settings.url.clear()
+        if self.__version__ <= "0.4.0" and hasattr(self.config.settings, "url"):
+            await self.config.settings.url.clear()
 
         if not (await self.config.settings.set_formatter()):
             return
