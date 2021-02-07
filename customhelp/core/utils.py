@@ -4,7 +4,7 @@ import discord
 from redbot.core import commands
 from redbot.core.commands.help import HelpSettings
 from redbot.core.utils.menus import menu, start_adding_reactions
-
+from copy import copy
 from .category import GLOBAL_CATEGORIES
 
 # From dpy server >.<
@@ -51,7 +51,7 @@ async def react_page(
     # TODO sigh getting everything again, please optimise this IMP, maybe create pages on react itself?
     help_settings = await HelpSettings.from_context(ctx)
     for x in GLOBAL_CATEGORIES:
-        if x.reaction == str(emoji):  # Typecasting can suck a di--
+        if x.reaction == str(emoji):
             category = x
             break
     else:
@@ -73,10 +73,11 @@ async def react_page(
                 "\N{BLACK RIGHTWARDS ARROW}\N{VARIATION SELECTOR-16}",
             ],
         )
-    return await menu(ctx, pages_new, controls, message=message, page=0, timeout=timeout)
+    # copy is needed so that the controls don't change during emoji addition (edge case)
+    return await menu(ctx, pages_new, copy(controls), message=message, page=0, timeout=timeout)
 
 
-# These methods have their message.reaction deleted cause of ratelimits.(from core)
+# These methods have their message.reaction.remove deleted cause of ratelimits.(from core)
 async def next_page(
     ctx: commands.Context,
     pages: list,

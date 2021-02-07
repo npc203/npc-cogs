@@ -1,8 +1,20 @@
 from ..abc import ThemesMeta
-from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, BaguetteHelp,
-                              CategoryConvert, Context, EmbedField,
-                              HelpSettings, _, box, cast, commands, discord,
-                              humanize_timedelta, pagify)
+from ..core.base_help import (
+    EMPTY_STRING,
+    GLOBAL_CATEGORIES,
+    BaguetteHelp,
+    CategoryConvert,
+    Context,
+    EmbedField,
+    HelpSettings,
+    _,
+    box,
+    cast,
+    commands,
+    discord,
+    humanize_timedelta,
+    pagify,
+)
 
 
 class DankHelp(ThemesMeta):
@@ -164,7 +176,7 @@ class DankHelp(ThemesMeta):
                 if ctx.invoked_with in alias:
                     alias.remove(ctx.invoked_with)
                     alias.append(command.name)
-                emb["fields"].append(EmbedField("Aliases", ",".join(alias), False))
+                emb["fields"].append(EmbedField("Aliases", ", ".join(alias), False))
 
             # Add permissions
             get_list = ["user_perms", "bot_perms"]

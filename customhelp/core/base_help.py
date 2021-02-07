@@ -9,8 +9,13 @@ import tabulate
 
 from redbot.core import checks, commands
 from redbot.core.commands.context import Context
-from redbot.core.commands.help import (HelpSettings, NoCommand, NoSubCommand,
-                                       dpy_commands, mass_purge)
+from redbot.core.commands.help import (
+    HelpSettings,
+    NoCommand,
+    NoSubCommand,
+    dpy_commands,
+    mass_purge,
+)
 from redbot.core.i18n import Translator
 from redbot.core.utils import menus
 from redbot.core.utils.chat_formatting import box, humanize_timedelta, pagify
@@ -33,7 +38,6 @@ EMPTY_STRING = "\N{ZERO WIDTH SPACE}"
 _ = Translator("Help", __file__)
 
 # Note to anyone reading this, This is the default formatter deffo, just slightly edited.
-# The copy pasta code has the comments removed from the original to save bytes(no credits were present), lmk if i should re-add them.
 class BaguetteHelp(commands.RedHelpFormatter):
     """In the memory of Jack the virgin"""
 
@@ -243,14 +247,8 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
             all_cog_text = ""
             for cog_name, data in coms:
-
-                def shorten_line(a_line: str) -> str:
-                    if len(a_line) < 70:  # embed max width needs to be lower
-                        return a_line
-                    return a_line[:67] + ".."
-
                 cog_text = "\n" + "\n".join(
-                    shorten_line(f"`{name:<15}:`{command.format_shortdoc_for_context(ctx)}")
+                    f"`{name:<15}:`{command.format_shortdoc_for_context(ctx)[:140]}"  # No more than 2 lines of desc (140 = 2 lines max embed line width)
                     for name, command in sorted(data.items())
                 )
                 all_cog_text += cog_text
