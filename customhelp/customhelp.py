@@ -18,7 +18,8 @@ from redbot.core.utils.predicates import ReactionPredicate
 
 from . import themes
 from .core.base_help import BaguetteHelp
-from .core.category import EMOJI_REGEX, GLOBAL_CATEGORIES, Category
+from .core.category import GLOBAL_CATEGORIES, Category
+from .core.utils import EMOJI_REGEX, LINK_REGEX
 
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
 
@@ -26,11 +27,10 @@ _ = Translator("Help", __file__)
 
 # Swtichable alphabetic ordered display
 # Crowdin stuff ;-;
-# For all the bunch config calls, do I need it? it's just the bot owner usage!
 # Generating every category page on format_bot_help so as to save time in reaction stuff?
 # No need to fetch config uncat, when u can use global cache, but is that better?
 # TODO is rewriting everything to use global cache instead of config, better?
-# TODO Aliases to be added near the syntax itself?
+# TODO Need to remove tons of redundant code in themes
 """
 Config Structure:
     {
@@ -150,8 +150,7 @@ class CustomHelp(commands.Cog):
             if cog_name in cat.cogs:
                 break
         else:
-            if cog_name not in GLOBAL_CATEGORIES[-1].cogs:
-                GLOBAL_CATEGORIES[-1].cogs.append(cog_name)
+            GLOBAL_CATEGORIES[-1].cogs.append(cog_name)
 
     @checks.is_owner()
     @commands.group()
@@ -555,12 +554,9 @@ class CustomHelp(commands.Cog):
     @settings.command()
     async def seturl(self, ctx, url: str = None):
         """Set your website or support server url here.\n use `[p]chelp settings seturl` to reset this"""
-        # https://www.w3resource.com/python-exercises/re/python-re-exercise-42.php
+
         if url:
-            if re.search(
-                r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
-                url,
-            ):
+            if re.search(LINK_REGEX, url):
                 async with self.config.settings() as f:
                     f["url"] = url
                     await ctx.tick()
@@ -575,10 +571,7 @@ class CustomHelp(commands.Cog):
     async def thumbnail(self, ctx, url: str = None):
         """Set your thumbnail image here.\n use `[p]chelp settings thumbnail` to reset this"""
         if url:
-            if re.search(
-                r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
-                url,
-            ):
+            if re.search(LINK_REGEX, url):
                 async with self.config.settings() as f:
                     f["thumbnail"] = url
                 await ctx.tick()
@@ -630,6 +623,8 @@ class CustomHelp(commands.Cog):
 
     @commands.command(aliases=["findcat"])
     async def findcategory(self, ctx, *, command):
+        """Get the category where the command is present"""
+        # TODO check for cog here as well.
         if cmd := self.bot.get_command(command):
             em = discord.Embed(title=f"{command}", color=await ctx.embed_color())
             if cmd.cog:

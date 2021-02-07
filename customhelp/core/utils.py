@@ -3,10 +3,14 @@ import discord
 
 from redbot.core import commands
 from redbot.core.commands.help import HelpSettings
-from redbot.core.utils.menus import (menu, next_page, prev_page,
-                                     start_adding_reactions)
+from redbot.core.utils.menus import menu, start_adding_reactions
 
 from .category import GLOBAL_CATEGORIES
+
+# From dpy server >.<
+EMOJI_REGEX = r"<(?P<animated>a?):(?P<name>[a-zA-Z0-9_]{2,32}):(?P<id>[0-9]{18,22})>"
+# https://www.w3resource.com/python-exercises/re/python-re-exercise-42.php
+LINK_REGEX = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
 
 
 async def home_page(

@@ -154,49 +154,46 @@ class DankHelp(ThemesMeta):
                 splitted = command_help.split("\n\n")
                 name = splitted[0]
                 value = "\n\n".join(splitted[1:])
-                if not value:
-                    value = EMPTY_STRING
-                field = EmbedField(name[:250], value[:1024], False)
                 emb["fields"].append(EmbedField("Description:", name[:250], False))
-                emb["fields"].append(EmbedField("Usage:", signature, False))
+            else:
+                value = ""
+            emb["fields"].append(EmbedField("Usage:", signature, False))
 
-                # Add aliases
-                if alias := command.aliases:
-                    if ctx.invoked_with in alias:
-                        alias.remove(ctx.invoked_with)
-                        alias.append(command.name)
-                    emb["fields"].append(EmbedField("Aliases", ",".join(alias), False))
+            # Add aliases
+            if alias := command.aliases:
+                if ctx.invoked_with in alias:
+                    alias.remove(ctx.invoked_with)
+                    alias.append(command.name)
+                emb["fields"].append(EmbedField("Aliases", ",".join(alias), False))
 
-                # Add permissions
-                get_list = ["user_perms", "bot_perms"]
-                final_perms = []
-                neat_format = lambda x: " ".join(
-                    i.capitalize() for i in x.replace("_", " ").split()
+            # Add permissions
+            get_list = ["user_perms", "bot_perms"]
+            final_perms = []
+            neat_format = lambda x: " ".join(i.capitalize() for i in x.replace("_", " ").split())
+            for thing in get_list:
+                if perms := getattr(command.requires, thing):
+                    perms_list = [
+                        neat_format(i) for i, j in perms if j
+                    ]  # TODO pls learn more to fix this
+                    if perms_list:
+                        final_perms += perms_list
+            if perms := command.requires.privilege_level:
+                if perms.name != "NONE":
+                    final_perms.append(neat_format(perms.name))
+            if final_perms:
+                emb["fields"].append(EmbedField("Permissions", ", ".join(final_perms), False))
+            # Add cooldowns
+            cooldowns = []
+            if s := command._buckets._cooldown:
+                cooldowns.append(
+                    f"{s.rate} time{'s' if s.rate>1 else ''} in {humanize_timedelta(seconds=s.per)} per {s.type.name.capitalize()}"
                 )
-                for thing in get_list:
-                    if perms := getattr(command.requires, thing):
-                        perms_list = [
-                            neat_format(i) for i, j in perms if j
-                        ]  # TODO pls learn more to fix this
-                        if perms_list:
-                            final_perms += perms_list
-                if perms := command.requires.privilege_level:
-                    if perms.name != "NONE":
-                        final_perms.append(neat_format(perms.name))
-                if final_perms:
-                    emb["fields"].append(EmbedField("Permissions", ", ".join(final_perms), False))
-                # Add cooldowns
-                cooldowns = []
-                if s := command._buckets._cooldown:
-                    cooldowns.append(
-                        f"{s.rate} time{'s' if s.rate>1 else ''} in {humanize_timedelta(seconds=s.per)} per {s.type.name.capitalize()}"
-                    )
-                if s := command._max_concurrency:
-                    cooldowns.append(
-                        f"Max concurrent uses: {s.number} per {s.per.name.capitalize()}"
-                    )
-                if cooldowns:
-                    emb["fields"].append(EmbedField("Cooldowns:", "\n".join(cooldowns), False))
+            if s := command._max_concurrency:
+                cooldowns.append(f"Max concurrent uses: {s.number} per {s.per.name.capitalize()}")
+            if cooldowns:
+                emb["fields"].append(EmbedField("Cooldowns:", "\n".join(cooldowns), False))
+            if value:
+                emb["fields"].append(EmbedField("Full description:", value[:1024], False))
 
             if subcommands:
 
