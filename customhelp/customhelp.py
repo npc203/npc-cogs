@@ -547,15 +547,18 @@ class CustomHelp(commands.Cog):
             "set_formatter": "iscustomhelp?",
             "thumbnail": "thumbnail",
         }
+        other_settings = []
+        # url doesnt exist now, that's why the check. sorry guys.
+        for i, j in settings.items():
+            if i in setting_mapping:
+                other_settings.append(f"`{setting_mapping[i]:<13}`: {j}")
         val = await self.config.theme()
         val = "\n".join([f"`{i:<10}`: " + (j if j else "default") for i, j in val.items()])
         emb = discord.Embed(title="Custom help settings", color=await ctx.embed_color())
         emb.add_field(name="Theme", value=val)
         emb.add_field(
             name="Other Settings",
-            value="\n".join(
-                [f"`{setting_mapping[i]:<13}`: {j}" for i, j in settings.items()],
-            ),
+            value="\n".join(other_settings),
             inline=False,
         )
         await ctx.send(embed=emb)
