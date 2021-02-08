@@ -9,8 +9,13 @@ import tabulate
 
 from redbot.core import checks, commands
 from redbot.core.commands.context import Context
-from redbot.core.commands.help import (HelpSettings, NoCommand, NoSubCommand,
-                                       dpy_commands, mass_purge)
+from redbot.core.commands.help import (
+    HelpSettings,
+    NoCommand,
+    NoSubCommand,
+    dpy_commands,
+    mass_purge,
+)
 from redbot.core.i18n import Translator
 from redbot.core.utils import menus
 from redbot.core.utils.chat_formatting import box, humanize_timedelta, pagify
@@ -54,6 +59,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
         if maybe_cateory:
             return maybe_cateory
 
+        alias = None
         # TODO does this wreck havoc?
         if alias_cog := ctx.bot.get_cog("Alias"):
             alias_name = help_for
