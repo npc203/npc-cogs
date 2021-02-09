@@ -9,6 +9,7 @@ from redbot.core.config import Config
 from redbot.core.utils.chat_formatting import box, pagify
 from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
+from redbot.core.utils.menus import menu, DEFAULT_CONTROLS
 
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
 
@@ -25,15 +26,36 @@ class Todo(commands.Cog):
             identifier=6732102719277,
             force_registration=True,
         )
-        self.config.register_user(**{"todos": []})
+        self.config.register_user(todos=[])
+        self.config.register_global(embeds=True, menus=True)
 
     @commands.group()
     async def todo(self, ctx):
         """Contains a list of commands to set and retrieve todo tasks"""
 
+    @commands.is_owner()
+    @todo.command()
+    async def embedset(self, ctx, toggle: bool):
+        """Enable/Disable embeds for todos"""
+        if toggle:
+            await self.config.embeds.set(True)
+        else:
+            await self.config.embeds.set(False)
+        await ctx.send(f'Sucessfully {"Enabled" if toggle else "Disabled"} embeds for todo lists')
+
+    @commands.is_owner()
+    @todo.command()
+    async def menuset(self, ctx, toggle: bool):
+        """Enable/Disable menus for todos"""
+        if toggle:
+            await self.config.menus.set(True)
+        else:
+            await self.config.menus.set(False)
+        await ctx.send(f'Sucessfully {"Enabled" if toggle else "Disabled"} menus for todo lists')
+
     @todo.command()
     async def add(self, ctx, *, task: str):
-        """Add a new task to your todo list"""
+        """Add a new task to your todo list, DO NOT STORE SENSITIVE INFO HERE"""
         async with self.config.user(ctx.author).todos() as todos:
             todo_id = len(todos)
             todos.append(task)
@@ -43,11 +65,40 @@ class Todo(commands.Cog):
     async def list_todos(self, ctx):
         """List all your todos"""
         todos = await self.config.user(ctx.author).todos()
-        if todos:
-            for page in pagify(box("\n".join([f"{i} - {x}" for i, x in enumerate(todos)]))):
-                await ctx.send(page)
-            return
-        await ctx.send("Currently, you have no TODOs")
+        if not todos:
+            await ctx.send("Currently, you have no TODOs")
+        else:
+            todo_text = "\n".join([f"{i} - {x}" for i, x in enumerate(todos)])
+            if await self.config.embeds():
+                pagified = tuple(pagify(todo_text, page_length=1004, shorten_by=0))
+                # embeds and menus
+                if await self.config.menus():
+                    emb_pages = [
+                        discord.Embed(
+                            title="Your TODO List",
+                            description=f"Page:{num}/{len(pagified)}\n\n{page}",
+                        )
+                        for num, page in enumerate(pagified, 1)
+                    ]
+                    await menu(ctx, emb_pages, DEFAULT_CONTROLS, timeout=120)
+                # embeds and not menus
+                else:
+                    for page in pagified:
+                        await ctx.send(
+                            embed=discord.Embed(
+                                title="Your TODO List",
+                                description=page,
+                            )
+                        )
+            else:
+                pagified = tuple(pagify(todo_text))
+                # not embeds and menus
+                if await self.config.menus():
+                    await menu(ctx, pagified, DEFAULT_CONTROLS, timeout=120)
+                # not embeds and not menus
+                else:
+                    for page in pagified:
+                        await ctx.send(page)
 
     @todo.command()
     async def remove(self, ctx, *indices: int):
@@ -75,7 +126,7 @@ class Todo(commands.Cog):
 
     @todo.command()
     async def removeall(self, ctx, *indices: int):
-        """Remove your todo tasks, supports multiple id removals as well\n eg:[p]todo remove 1 2 3"""
+        """Remove all your todo tasks"""
         msg = await ctx.send("Are you sure do you want to remove all of your todos?")
         start_adding_reactions(msg, ReactionPredicate.YES_OR_NO_EMOJIS)
         pred = ReactionPredicate.yes_or_no(msg, ctx.author)
@@ -84,11 +135,11 @@ class Todo(commands.Cog):
         except asyncio.TimeoutError:
             pass
         if pred.result is True:
-            await self.config.user(ctx.author).todos.set([])
+            await self.config.user_from_id(ctx.author.id).clear()
             await ctx.send("Successfully removed all your TODOs")
         else:
             await ctx.send("Cancelled.")
 
     async def red_delete_data_for_user(self, *, requester: RequestType, user_id: int) -> None:
-        # TODO: Replace this with the proper end user data removal handling.
-        super().red_delete_data_for_user(requester=requester, user_id=user_id)
+        # should I add anything more here?
+        await self.config.user_from_id(user_id).clear()
