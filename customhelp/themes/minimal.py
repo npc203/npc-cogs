@@ -160,13 +160,9 @@ class MinimalHelp(ThemesMeta):
                     title = ""
                 full_text += f"{title}{page}"
         text_no = list(pagify(full_text))
-        if len(text_no) > 1:
-            pages = [page + f"\n\nPage:{i}/{len(text_no)}" for i, page in enumerate(text_no, 1)]
-        else:
-            pages = [page for i, page in enumerate(text_no, 1)]
         await self.send_pages(
             ctx,
-            pages,
+            text_no,
             embed=False,
             help_settings=help_settings,
         )
