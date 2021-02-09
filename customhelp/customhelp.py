@@ -162,6 +162,14 @@ class CustomHelp(commands.Cog):
     async def chelp(self, ctx):
         """Configure your custom help"""
 
+    @chelp.command()
+    async def info(self, ctx):
+        """Short info about various themes"""
+        emb = discord.Embed(color=await ctx.embed_color(), title="All Themes")
+        for theme in themes.list:
+            emb.add_field(name=theme, value=themes.list[theme].__doc__)
+        await ctx.send(embed=emb)
+
     @chelp.command(name="set")
     async def set_formatter(self, ctx, setval: bool):
         """Set to toggle custom formatter or the default help formatter\n`[p]chelp set 0` to turn custom off \n`[p]chelp set 1` to turn it on"""
