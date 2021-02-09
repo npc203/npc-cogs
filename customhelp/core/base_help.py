@@ -148,6 +148,57 @@ class BaguetteHelp(commands.RedHelpFormatter):
         else:
             await self.format_command_help(ctx, help_for, help_settings=help_settings)
 
+    async def format_category_help(
+        self,
+        ctx: Context,
+        obj: CategoryConvert,
+        help_settings: HelpSettings,
+        get_pages: bool = False,
+    ):
+        coms = await self.get_category_help_mapping(ctx, obj, help_settings=help_settings)
+        if not coms:
+            return
+
+        description = ctx.bot.description or ""
+        tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
+
+        if await ctx.embed_requested():
+
+            emb = {
+                "embed": {"title": "", "description": ""},
+                "footer": {"text": ""},
+                "fields": [],
+            }
+
+            emb["footer"]["text"] = tagline
+            if description:
+                emb["embed"]["description"] = f"*{description[:250]}*"
+
+            all_cog_text = ""
+            spacer_list = chain(*(i[1].keys() for i in coms))
+            spacing = len(max(spacer_list, key=len))
+            for cog_name, data in coms:
+                cog_text = "\n" + "\n".join(
+                    f"`{name:<{spacing}}:`{command.format_shortdoc_for_context(ctx)[:140]}"  # No more than 2 lines of desc (140 = 2 lines max embed line width)
+                    for name, command in sorted(data.items())
+                )
+                all_cog_text += cog_text
+            all_cog_text = "\n".join(sorted(all_cog_text.split("\n")))
+            title = obj.name.capitalize()
+            for i, page in enumerate(pagify(all_cog_text, page_length=500, shorten_by=0)):
+                field = EmbedField(title, page, False)
+                emb["fields"].append(field)
+                title = EMPTY_STRING
+
+            pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
+            if get_pages:
+                return pages
+            else:
+                await self.send_pages(ctx, pages, embed=True, help_settings=help_settings)
+        else:
+            # fix this
+            await ctx.send("Kindly enable embeds")
+
     async def format_cog_help(self, ctx: Context, obj: commands.Cog, help_settings: HelpSettings):
         coms = await self.get_cog_help_mapping(ctx, obj, help_settings=help_settings)
         if not (coms or help_settings.verify_exists):
@@ -180,8 +231,9 @@ class BaguetteHelp(commands.RedHelpFormatter):
                         return a_line
                     return a_line[:67] + "..."
 
+                spacing = len(max(coms.keys(), key=len))
                 command_text = "\n".join(
-                    shorten_line(f"`{name:<15}:`{command.format_shortdoc_for_context(ctx)}")
+                    shorten_line(f"`{name:<{spacing}}:`{command.format_shortdoc_for_context(ctx)}")
                     for name, command in sorted(coms.items())
                 )
                 for i, page in enumerate(pagify(command_text, page_length=500, shorten_by=0)):
@@ -194,80 +246,8 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
             await self.send_pages(ctx, pages, embed=True, help_settings=help_settings)
-
         else:
-            # TODO remove this?
-            subtext = None
-            subtext_header = None
-            if coms:
-                subtext_header = _("Commands:")
-                max_width = max(discord.utils._string_width(name) for name in coms.keys())
-
-                def width_maker(cmds):
-                    doc_max_width = 80 - max_width
-                    for nm, com in sorted(cmds):
-                        width_gap = discord.utils._string_width(nm) - len(nm)
-                        doc = com.format_shortdoc_for_context(ctx)
-                        if len(doc) > doc_max_width:
-                            doc = doc[: doc_max_width - 3] + "..."
-                        yield nm, doc, max_width - width_gap
-
-                subtext = "\n".join(
-                    f"  {name:<{width}} {doc}" for name, doc, width in width_maker(coms.items())
-                )
-
-            to_page = "\n\n".join(filter(None, (description, subtext_header, subtext)))
-            pages = [box(p) for p in pagify(to_page)]
-            await self.send_pages(ctx, pages, embed=False, help_settings=help_settings)
-
-    async def format_category_help(
-        self,
-        ctx: Context,
-        obj: CategoryConvert,
-        help_settings: HelpSettings,
-        get_pages: bool = False,
-    ):
-        coms = await self.get_category_help_mapping(ctx, obj, help_settings=help_settings)
-        if not coms:
-            return
-
-        description = ctx.bot.description or ""
-        tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
-
-        if await ctx.embed_requested():
-
-            emb = {
-                "embed": {"title": "", "description": ""},
-                "footer": {"text": ""},
-                "fields": [],
-            }
-
-            emb["footer"]["text"] = tagline
-            if description:
-                emb["embed"]["description"] = f"*{description[:250]}*"
-
-            all_cog_text = ""
-            for cog_name, data in coms:
-                cog_text = "\n" + "\n".join(
-                    f"`{name:<15}:`{command.format_shortdoc_for_context(ctx)[:140]}"  # No more than 2 lines of desc (140 = 2 lines max embed line width)
-                    for name, command in sorted(data.items())
-                )
-                all_cog_text += cog_text
-            all_cog_text = "\n".join(sorted(all_cog_text.split("\n")))
-            title = obj.name.capitalize()
-            for i, page in enumerate(pagify(all_cog_text, page_length=500, shorten_by=0)):
-                field = EmbedField(title, page, False)
-                emb["fields"].append(field)
-                title = EMPTY_STRING
-
-            pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
-            if get_pages:
-                return pages
-            else:
-                await self.send_pages(ctx, pages, embed=True, help_settings=help_settings)
-        else:
-            # fix this
-            await ctx.send("Kindly enable embeds")
+            await ctx.send("Enable embeds pls")
 
     async def format_command_help(
         self, ctx: Context, obj: commands.Command, help_settings: HelpSettings
@@ -366,8 +346,9 @@ class BaguetteHelp(commands.RedHelpFormatter):
                         return a_line
                     return a_line[:67] + ".."
 
+                spacing = len(max(subcommands.keys(), key=len))
                 subtext = "\n" + "\n".join(
-                    shorten_line(f"`{name:<15}:`{command.format_shortdoc_for_context(ctx)}")
+                    shorten_line(f"`{name:<{spacing}}:`{command.format_shortdoc_for_context(ctx)}")
                     for name, command in sorted(subcommands.items())
                 )
                 for i, page in enumerate(pagify(subtext, page_length=500, shorten_by=0)):

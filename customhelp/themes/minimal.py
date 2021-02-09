@@ -14,12 +14,12 @@ from ..core.base_help import (
     discord,
     humanize_timedelta,
     pagify,
+    chain,
 )
 
 
-# Note: this won't use reactions
 class MinimalHelp(ThemesMeta):
-    """This is a no embed minimal theme for the simplistic people"""
+    """This is a no embed minimal theme for the simplistic people.\nThis won't use reactions.\nThanks OwO for design advices"""
 
     async def format_bot_help(self, ctx: Context, help_settings: HelpSettings):
         description = ctx.bot.description or ""
@@ -52,9 +52,12 @@ class MinimalHelp(ThemesMeta):
         description = ctx.bot.description or ""
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
         full_text = f"{description}\n\n{tagline}\n\n"
+
+        spacer_list = chain(*(i[1].keys() for i in coms))
+        spacing = len(max(spacer_list, key=len))
         for _, data in coms:
             full_text += "\n".join(
-                f"**{name}**–{command.format_shortdoc_for_context(ctx)}"
+                f"`{name:<{spacing}}`:{command.format_shortdoc_for_context(ctx)}"
                 for name, command in data.items()
             )
             full_text += "\n"
@@ -65,6 +68,22 @@ class MinimalHelp(ThemesMeta):
             embed=False,
             help_settings=help_settings,
         )
+
+    async def format_cog_help(self, ctx: Context, obj: commands.Cog, help_settings: HelpSettings):
+        coms = await self.get_cog_help_mapping(ctx, obj, help_settings=help_settings)
+        if not (coms or help_settings.verify_exists):
+            return
+        description = ctx.bot.description or ""
+        tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
+        full_text = f"{description}\n\n{tagline}\n\n"
+
+        spacing = len(max(coms.keys(), key=len))
+        full_text += "\n".join(
+            f"`{name:<{spacing}}:`{command.format_shortdoc_for_context(ctx)}"
+            for name, command in sorted(coms.items())
+        )
+        pages = list(pagify(full_text))
+        await self.send_pages(ctx, pages, embed=False, help_settings=help_settings)
 
     async def format_command_help(
         self, ctx: Context, obj: commands.Command, help_settings: HelpSettings
@@ -149,8 +168,9 @@ class MinimalHelp(ThemesMeta):
                 )
 
         if subcommands:
+            spacing = len(max(subcommands.keys(), key=len))
             subtext = "\n" + "\n".join(
-                f"**{name}**–{command.format_shortdoc_for_context(ctx)}"
+                f"`{name:<{spacing}}`:{command.format_shortdoc_for_context(ctx)}"
                 for name, command in sorted(subcommands.items())
             )
             for i, page in enumerate(pagify(subtext, shorten_by=0)):
