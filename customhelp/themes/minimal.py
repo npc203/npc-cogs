@@ -1,8 +1,20 @@
 from ..abc import ThemesMeta
-from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, BaguetteHelp,
-                              CategoryConvert, Context, EmbedField,
-                              HelpSettings, _, box, cast, commands, discord,
-                              humanize_timedelta, pagify)
+from ..core.base_help import (
+    EMPTY_STRING,
+    GLOBAL_CATEGORIES,
+    BaguetteHelp,
+    CategoryConvert,
+    Context,
+    EmbedField,
+    HelpSettings,
+    _,
+    box,
+    cast,
+    commands,
+    discord,
+    humanize_timedelta,
+    pagify,
+)
 
 
 # Note: this won't use reactions
@@ -23,13 +35,9 @@ class MinimalHelp(ThemesMeta):
                 all_cog_text = " · ".join(all_cog_text)
                 full_text += f"\n\n__**{cat.name}**__: {all_cog_text}"
         text_no = list(pagify(full_text))
-        if len(text_no) > 1:
-            pages = [page + f"\n\nPage:{i}/{len(text_no)}" for i, page in enumerate(text_no, 1)]
-        else:
-            pages = [page for i, page in enumerate(text_no, 1)]
         await self.send_pages(
             ctx,
-            pages,
+            text_no,
             embed=False,
             help_settings=help_settings,
         )
@@ -51,13 +59,9 @@ class MinimalHelp(ThemesMeta):
             )
             full_text += "\n"
         text_no = list(pagify(full_text))
-        if len(text_no) > 1:
-            pages = [page + f"\n\nPage:{i}/{len(text_no)}" for i, page in enumerate(text_no, 1)]
-        else:
-            pages = [page for i, page in enumerate(text_no, 1)]
         await self.send_pages(
             ctx,
-            pages,
+            text_no,
             embed=False,
             help_settings=help_settings,
         )
