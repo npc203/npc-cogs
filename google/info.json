@@ -3,7 +3,7 @@
     "short": "A simple google search",
     "description": "This searches google and fetches results using a custom scraper.",
     "end_user_data_statement": "This cog does not persistently store any data or metadata about users.",
-    "install_msg": "Warning: This might get your ip 429'ed from google.com (im not sure cause i havent been there yet)",
+    "install_msg": "Warning: This might get your ip 429'ed from google.com, Not Recommended for big bots",
     "author": [
         "epic guy"
     ],

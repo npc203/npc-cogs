@@ -1,18 +1,20 @@
 import asyncio
 import time
-from .utils import nocheats, evaluate, get_text
+
+from .utils import evaluate, get_text, nocheats
 
 
 class Single:
     """Single personal typing test stuff"""
 
-    def __init__(self, ctx):
+    def __init__(self, ctx, settings):
         self.ctx = ctx
+        self.settings = settings
 
     async def start(self):
         """Start the test, Display the question and get result"""
         async with self.ctx.typing():
-            a_string, status_code = await get_text()
+            a_string, status_code = await get_text(self.settings, self.ctx.guild.id)
         if status_code:
             self.task = asyncio.create_task(self.task_personal_race(self.ctx, a_string))
         else:

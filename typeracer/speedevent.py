@@ -1,20 +1,24 @@
 import asyncio
-from .utils import nocheats, get_text, evaluate
-import time
-from tabulate import tabulate
 import contextlib
+import time
+
 from discord import NotFound
+from tabulate import tabulate
+
+from .utils import evaluate, get_text, nocheats
 
 
 class Speedevent:
-    def __init__(self, ctx):
+    def __init__(self, ctx, countdown, settings):
         self.ctx = ctx
+        self.countdown = countdown
+        self.settings = settings
         self.joined = {ctx.author.id: ctx.author.display_name}
         self.event_started = False
         self.leaderboard = []
 
     async def start(self):
-        a_string, status_code = await get_text()
+        a_string, status_code = await get_text(self.settings, self.ctx.guild.id)
         if not status_code:
             await self.ctx.send("Something went wrong while getting the text")
             return
@@ -55,12 +59,12 @@ class Speedevent:
             [f"{index}. {self.joined[user]}" for index, user in enumerate(self.joined, 1)]
         )
         countdown = await self.ctx.send(
-            f"A Typing speed test event will commence in 60 seconds\n"
+            f"A Typing speed test event will commence in {self.countdown} seconds\n"
             f" Type `{self.ctx.clean_prefix}speedevent join` to enter the race\n "
             f"Joined Users:\n{active}"
         )
         await asyncio.sleep(5)
-        for i in range(55, 0, -5):  # TODO add to config, time to start event
+        for i in range(self.countdown - 5, 0, -5):  # TODO add to config, time to start event
             active = "\n".join(
                 [f"{index}. {self.joined[user]}" for index, user in enumerate(self.joined, 1)]
             )
@@ -88,7 +92,8 @@ class Speedevent:
                     a_string,
                     msg_result.content,
                     time.time() - match_begin,
-                    msg_result.author.id,
+                    msg_result.author.id if self.settings["dm"] else None,
+                    author_name=msg_result.author.display_name,
                 )
                 if results:
                     results.insert(0, msg_result.author.name)

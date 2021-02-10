@@ -9,13 +9,8 @@ import tabulate
 
 from redbot.core import checks, commands
 from redbot.core.commands.context import Context
-from redbot.core.commands.help import (
-    HelpSettings,
-    NoCommand,
-    NoSubCommand,
-    dpy_commands,
-    mass_purge,
-)
+from redbot.core.commands.help import (HelpSettings, NoCommand, NoSubCommand,
+                                       _, dpy_commands, mass_purge)
 from redbot.core.i18n import Translator
 from redbot.core.utils import menus
 from redbot.core.utils.chat_formatting import box, humanize_timedelta, pagify
@@ -35,7 +30,6 @@ HelpTarget = Union[
 EmbedField = namedtuple("EmbedField", "name value inline")
 EMPTY_STRING = "\N{ZERO WIDTH SPACE}"
 
-_ = Translator("Help", __file__)
 
 # Note to anyone reading this, This is the default formatter deffo, just slightly edited.
 class BaguetteHelp(commands.RedHelpFormatter):

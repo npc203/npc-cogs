@@ -1,16 +1,19 @@
 from difflib import ndiff
-from aiohttp import ClientSession
-from tabulate import tabulate
-from fuzzywuzzy import fuzz
-from random import randint
 from html.parser import HTMLParser
+from random import randint
+
+from aiohttp import ClientSession
+from fuzzywuzzy import fuzz
+from tabulate import tabulate
 
 
-async def evaluate(ctx, a_string: str, b_string: str, time_taken, dm_id):
+async def evaluate(ctx, a_string: str, b_string: str, time_taken, dm_id, author_name=None):
     """ Returns None on personal event, returns [time_taken,wpm,mistakes] on speedevents"""
     user_obj = ctx.guild.get_member(dm_id) if dm_id else ctx.author
     special_send = user_obj.send if dm_id else ctx.send
-    # TODO
+    if not author_name:
+        author_name = ctx.author.display_name
+
     if "​" in b_string:
         if not dm_id:
             await special_send("Imagine cheating bruh, c'mon atleast be honest here.")
@@ -36,24 +39,26 @@ async def evaluate(ctx, a_string: str, b_string: str, time_taken, dm_id):
             ("Raw WPM (Without accounting mistakes)", wpm),
             ("Accuracy(Levenshtein)", accuracy),
             ("Words Given", len(a_string.split())),
-            (f"Words from {user_obj.display_name}", len(b_string.split())),
+            (f"Words from {author_name}", len(b_string.split())),
             ("Characters Given", len(a_string)),
-            (f"Characters from {user_obj.display_name}", len(b_string)),
-            (f"Mistakes done by {user_obj.display_name}", mistakes),
+            (f"Characters from {author_name}", len(b_string)),
+            (f"Mistakes done by {author_name}", mistakes),
         ]
         await special_send(content="```" + tabulate(verdict, tablefmt="fancy_grid") + "```")
         return [time_taken, wpm - (mistakes / (time_taken / 60)), mistakes]
     else:
         await special_send(
-            f"{'You' if dm_id else user_obj.display_name}  didn't want to complete the challenge."
+            f"{'You' if dm_id else author_name}  didn't want to complete the challenge."
         )
 
 
-async def get_text(**kwargs) -> tuple:
+async def get_text(settings, guild_id: int) -> tuple:
     """Gets the paragraph for the test"""
     # TODO add customisable length of text and difficuilty
+    url = "http://www.randomtext.me/api/"
+    url += f'{settings["type"]}/p-1/{settings["text_size"][0]}-{settings["text_size"][1]}'
     async with ClientSession() as session:
-        async with session.get("http://www.randomtext.me/api/gibberish/p-1/25-45") as f:
+        async with session.get(url) as f:
             if f.status == 200:
                 resp = await f.json()
             else:

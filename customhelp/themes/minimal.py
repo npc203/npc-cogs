@@ -1,21 +1,8 @@
 from ..abc import ThemesMeta
-from ..core.base_help import (
-    EMPTY_STRING,
-    GLOBAL_CATEGORIES,
-    BaguetteHelp,
-    CategoryConvert,
-    Context,
-    EmbedField,
-    HelpSettings,
-    _,
-    box,
-    cast,
-    commands,
-    discord,
-    humanize_timedelta,
-    pagify,
-    chain,
-)
+from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, BaguetteHelp,
+                              CategoryConvert, Context, EmbedField,
+                              HelpSettings, _, box, cast, chain, commands,
+                              discord, humanize_timedelta, pagify)
 
 
 class MinimalHelp(ThemesMeta):
@@ -120,8 +107,8 @@ class MinimalHelp(ThemesMeta):
             splitted = command_help.split("\n\n")
             name = splitted[0]
             value = "\n".join(splitted[1:])
-            full_text += "**Usage:**\n" + signature + "\n\n"
-            full_text += "**" + name[:250] + "\n" + value[:1024] + "**\n\n"
+            full_text += "**Usage:**\n" + signature + "\n"
+            full_text += name[:250] + "\n" + value[:1024] + "\n"
 
             # Add aliases
             if alias := command.aliases:
