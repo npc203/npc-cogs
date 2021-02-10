@@ -1,6 +1,7 @@
 {
     "author": ["epic guy#0715"],
     "name": "Speak",
+    "install_msg": "This cog uses webhooks and thus requires manage webhook permissions to work \nThis cog comes with bundled data",
     "short": "A cog that speaks for you or speaks what you type as others",
     "description": "Ever wanted to speak as someone else or other bots? or you didn't have the right words to say? This cog speaks for you! or mimics other's identity as well, except that it adds a bot tag. It uses webhooks",
     "tags": [
