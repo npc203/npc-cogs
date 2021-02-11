@@ -9,8 +9,14 @@ import tabulate
 
 from redbot.core import checks, commands
 from redbot.core.commands.context import Context
-from redbot.core.commands.help import (HelpSettings, NoCommand, NoSubCommand,
-                                       _, dpy_commands, mass_purge)
+from redbot.core.commands.help import (
+    HelpSettings,
+    NoCommand,
+    NoSubCommand,
+    _,
+    dpy_commands,
+    mass_purge,
+)
 from redbot.core.i18n import Translator
 from redbot.core.utils import menus
 from redbot.core.utils.chat_formatting import box, humanize_timedelta, pagify
@@ -90,6 +96,8 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
     async def get_category_help_mapping(self, ctx, category, help_settings: HelpSettings):
         # TODO getting every cog and checking if its in category isn't optimised.
+        if not await self.blacklist(ctx, category.name):
+            return
         sorted_iterable = []
         isuncategory = False
         if category.name == GLOBAL_CATEGORIES[-1].name:
@@ -388,7 +396,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                     [
                         f"{cat.reaction if cat.reaction else ''} `{ctx.clean_prefix}help {cat.name:<10}:`**{cat.desc}**\n"
                         for cat in GLOBAL_CATEGORIES
-                        if cat.cogs
+                        if cat.cogs and await self.blacklist(ctx, cat.name)
                     ]
                 ),
                 page_length=1018,
@@ -547,9 +555,18 @@ class BaguetteHelp(commands.RedHelpFormatter):
                         if emj := (
                             self.bot.get_emoji(int(match.group("id"))) if match else cat.reaction
                         ):
-                            c[emj] = react_page
+                            if await self.blacklist(ctx, cat.name):
+                                c[emj] = react_page
                 c["\U0001f3d8\U0000fe0f"] = home_page
             # Allow other things to happen during menu timeout/interaction.
             asyncio.create_task(menus.menu(ctx, pages, c, message=m))
             # menu needs reactions added manually since we fed it a message
             menus.start_adding_reactions(m, c.keys())
+
+    async def blacklist(self, ctx, name) -> bool:
+        """Some blacklist checks utils
+        Returns true if needed to be hidden"""
+        blocklist = await self.config.blacklist()
+        a = ctx.channel.is_nsfw() or not name in blocklist["nsfw"]
+        b = await self.bot.is_owner(ctx.author) or not name in blocklist["dev"]
+        return a and b

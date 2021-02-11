@@ -23,7 +23,7 @@ from redbot.core.utils.predicates import ReactionPredicate
 
 from . import themes
 from .core.base_help import BaguetteHelp
-from .core.category import GLOBAL_CATEGORIES, Category, CategoryConvert
+from .core.category import GLOBAL_CATEGORIES, Category, get_category
 from .core.utils import EMOJI_REGEX, LINK_REGEX
 
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
@@ -58,7 +58,7 @@ class CustomHelp(commands.Cog):
     A custom customisable help for fun and profit
     """
 
-    __version__ = "0.4.0"
+    __version__ = "0.5.1"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -87,6 +87,7 @@ class CustomHelp(commands.Cog):
                 "set_formatter": False,
                 "thumbnail": None,
             },
+            "blacklist": {"nsfw": [], "dev": []},
         }
         self.config.register_global(**self.chelp_global)
 
@@ -172,7 +173,7 @@ class CustomHelp(commands.Cog):
         """Short info about various themes"""
         emb = discord.Embed(color=await ctx.embed_color(), title="All Themes")
         for theme in themes.list:
-            emb.add_field(name=theme, value=themes.list[theme].__doc__)
+            emb.add_field(name=theme, value=themes.list[theme].__doc__, inline=False)
         await ctx.send(embed=emb)
 
     @chelp.command(aliases=["auto", "autocat"])
@@ -209,6 +210,32 @@ class CustomHelp(commands.Cog):
             for page in pagify(yaml.dump(final), shorten_by=0, page_length=1990)
         ]:
             await ctx.send(i)
+
+    @chelp.command()
+    async def show(self, ctx):
+        """Show the current help settings"""
+        settings = await self.config.settings()
+        blocklist = await self.config.blacklist()
+        setting_mapping = {
+            "react": "usereactions",
+            "set_formatter": "iscustomhelp?",
+            "thumbnail": "thumbnail",
+        }
+        other_settings = []
+        # url doesnt exist now, that's why the check. sorry guys.
+        for i, j in settings.items():
+            if i in setting_mapping:
+                other_settings.append(f"`{setting_mapping[i]:<13}`: {j}")
+        val = await self.config.theme()
+        val = "\n".join([f"`{i:<10}`: " + (j if j else "default") for i, j in val.items()])
+        emb = discord.Embed(title="Custom help settings", color=await ctx.embed_color())
+        emb.add_field(name="Theme", value=val)
+        emb.add_field(
+            name="Other Settings",
+            value="\n".join(other_settings),
+            inline=False,
+        )
+        await ctx.send(embed=emb)
 
     @chelp.command(name="set")
     async def set_formatter(self, ctx, setval: bool):
@@ -586,31 +613,6 @@ class CustomHelp(commands.Cog):
     async def settings(self, ctx):
         """Change various help settings"""
 
-    @chelp.command()
-    async def show(self, ctx):
-        """Show the current help settings"""
-        settings = await self.config.settings()
-        setting_mapping = {
-            "react": "usereactions",
-            "set_formatter": "iscustomhelp?",
-            "thumbnail": "thumbnail",
-        }
-        other_settings = []
-        # url doesnt exist now, that's why the check. sorry guys.
-        for i, j in settings.items():
-            if i in setting_mapping:
-                other_settings.append(f"`{setting_mapping[i]:<13}`: {j}")
-        val = await self.config.theme()
-        val = "\n".join([f"`{i:<10}`: " + (j if j else "default") for i, j in val.items()])
-        emb = discord.Embed(title="Custom help settings", color=await ctx.embed_color())
-        emb.add_field(name="Theme", value=val)
-        emb.add_field(
-            name="Other Settings",
-            value="\n".join(other_settings),
-            inline=False,
-        )
-        await ctx.send(embed=emb)
-
     @settings.command(aliases=["usereaction"])
     async def usereactions(self, ctx, toggle: bool):
         """Toggles adding reaction for navigation."""
@@ -633,6 +635,74 @@ class CustomHelp(commands.Cog):
                 f["thumbnail"] = None
             await ctx.send("Reset thumbnail")
 
+    @chelp.group()
+    async def nsfw(self, ctx):
+        """Add categories to nsfw, only displayed in nsfw channels"""
+
+    @nsfw.command(name="add")
+    async def add_nsfw(self, ctx, category: str):
+        """Add categories to the nsfw list"""
+        if cat_obj := get_category(category):
+            if "Core" in cat_obj.cogs:
+                return await ctx.send(
+                    "This category contains Core cog and shouldn't be hidden under any circumstances"
+                )
+            else:
+                async with self.config.blacklist.nsfw() as conf:
+                    if category not in conf:
+                        conf.append(category)
+                        await ctx.send(f"Sucessfully added {category} to nsfw category")
+                    else:
+                        await ctx.send(f"{category} is already present in nsfw blocklist")
+        else:
+            await ctx.send("Invalid category name")
+
+    @nsfw.command(name="remove")
+    async def remove_nsfw(self, ctx, category: str):
+        if cat_obj := get_category(category):
+            async with self.config.blacklist.nsfw() as conf:
+                if category in conf:
+                    conf.remove(category)
+                    await ctx.send(f"Sucessfully removed {category} from nsfw category")
+                else:
+                    await ctx.send(f"{category} is not present in nsfw blocklist")
+        else:
+            await ctx.send("Invalid category name")
+
+    @chelp.group()
+    async def dev(self, ctx):
+        """Add categories to dev, only displayed to the bot owner(s)"""
+
+    @dev.command(name="add")
+    async def add_dev(self, ctx, category: str):
+        """Add categories to the dev list"""
+        if cat_obj := get_category(category):
+            if "Core" in cat_obj.cogs:
+                return await ctx.send(
+                    "This category contains Core cog and shouldn't be hidden under any circumstances"
+                )
+            else:
+                async with self.config.blacklist.dev() as conf:
+                    if category not in conf:
+                        conf.append(category)
+                        await ctx.send(f"Sucessfully added {category} to dev list")
+                    else:
+                        await ctx.send(f"{category} is already present in dev list")
+        else:
+            await ctx.send("Invalid category name")
+
+    @dev.command(name="remove")
+    async def remove_dev(self, ctx, category: str):
+        if cat_obj := get_category(category):
+            async with self.config.blacklist.dev() as conf:
+                if category in conf:
+                    conf.remove(category)
+                    await ctx.send(f"Sucessfully removed {category} from dev category")
+                else:
+                    await ctx.send(f"{category} is not present in dev list")
+        else:
+            await ctx.send("Invalid category name")
+
     @chelp.command(aliases=["getthemes"])
     async def listthemes(self, ctx):
         """List the themes and available features"""
@@ -651,26 +721,6 @@ class CustomHelp(commands.Cog):
         )
 
         await ctx.send(box(final))
-
-    async def parse_yaml(self, ctx, content):
-        try:
-            parsed_data = yaml.safe_load(content)
-        except yaml.parser.ParserError:
-            await ctx.send("Wrongly formatted")
-            return
-        except yaml.scanner.ScannerError as e:
-            await ctx.send(box(e))
-            return
-        if type(parsed_data) != dict:
-            await ctx.send("Invalid Format")
-            return
-
-        # TODO pls get a better type checking method
-        for i in parsed_data:
-            if type(parsed_data[i]) != list:
-                await ctx.send("Invalid Format")
-                return
-        return parsed_data
 
     @commands.command(aliases=["findcat"])
     async def findcategory(self, ctx, *, command):
@@ -694,6 +744,28 @@ class CustomHelp(commands.Cog):
                 await ctx.send(embed=em)
         else:
             await ctx.send("Command not found")
+
+    async def parse_yaml(self, ctx, content):
+        """Parse the yaml with basic structure checks"""
+        # TODO make this as an util function?
+        try:
+            parsed_data = yaml.safe_load(content)
+        except yaml.parser.ParserError:
+            await ctx.send("Wrongly formatted")
+            return
+        except yaml.scanner.ScannerError as e:
+            await ctx.send(box(e))
+            return
+        if type(parsed_data) != dict:
+            await ctx.send("Invalid Format")
+            return
+
+        # TODO pls get a better type checking method
+        for i in parsed_data:
+            if type(parsed_data[i]) != list:
+                await ctx.send("Invalid Format")
+                return
+        return parsed_data
 
     async def red_delete_data_for_user(self, *, requester: RequestType, user_id: int) -> None:
         # TODO: Replace this with the proper end user data removal handling.
