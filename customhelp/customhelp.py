@@ -1,6 +1,11 @@
 import asyncio
+import json
 import re
+from collections import Counter, defaultdict
+from inspect import getfile
 from itertools import chain
+from os import path
+from pathlib import Path
 from types import MethodType
 from typing import Dict, List, Literal, Union
 
@@ -169,6 +174,41 @@ class CustomHelp(commands.Cog):
         for theme in themes.list:
             emb.add_field(name=theme, value=themes.list[theme].__doc__)
         await ctx.send(embed=emb)
+
+    @chelp.command(aliases=["auto", "autocat"])
+    async def autocategorise(self, ctx):
+        """Auto categorise cogs based on it's tags"""
+        data = {}
+        for k, a in self.bot.cogs.items():
+            check = Path(getfile(a.__class__)).parent / "info.json"
+            if path.isfile(check):
+                with open(check, "r", encoding="utf-8") as f:
+                    tmp = json.load(f)
+                    if "tags" in tmp:
+                        data[k] = [i.lower() for i in tmp["tags"]]
+                    else:
+                        data[k] = []
+            else:
+                data[k] = []
+
+        popular = Counter(chain.from_iterable(data.values()))
+        groups = defaultdict(set)
+        for key, tags in data.items():
+            if tags:
+                tag = max(tags, key=popular.get)
+                groups[tag].add(key)
+
+        final = {"uncategorised": []}
+        for i, j in groups.items():
+            if len(j) > 1:
+                final[i] = list(j)
+            else:
+                final["uncategorised"].extend(j)
+        for i in [
+            box(page, lang="yaml")
+            for page in pagify(yaml.dump(final), shorten_by=0, page_length=1990)
+        ]:
+            await ctx.send(i)
 
     @chelp.command(name="set")
     async def set_formatter(self, ctx, setval: bool):

@@ -349,7 +349,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                     if i == 0:
                         title = _("**__Subcommands:__**")
                     else:
-                        title = _(EMPTY_STRING)
+                        title = EMPTY_STRING
                     field = EmbedField(title, page, False)
                     emb["fields"].append(field)
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
