@@ -429,7 +429,7 @@ class CustomHelp(commands.Cog):
         # Not using cache (GLOBAL_CATEGORIES[-1].cogs) cause cog unloads aren't tracked
         all_cogs = set(self.bot.cogs.keys())
         already_present_emojis = (
-            list(i.reaction for i in GLOBAL_CATEGORIES if i.reaction)
+            list(str(i.reaction) for i in GLOBAL_CATEGORIES if i.reaction)
             + (await self.config.settings.arrows()).values()
         )
         failed = []  # example: [('desc','categoryname')]
@@ -702,9 +702,9 @@ class CustomHelp(commands.Cog):
             except asyncio.TimeoutError:
                 return await ctx.send("Timed out, please try again.")
 
-        already_present_emojis = list(i.reaction for i in GLOBAL_CATEGORIES if i.reaction) + list(
-            (await self.config.settings.arrows()).values()
-        )
+        already_present_emojis = list(
+            str(i.reaction) for i in GLOBAL_CATEGORIES if i.reaction
+        ) + list((await self.config.settings.arrows()).values())
 
         async def emj_parser(data):
             parsed = {}

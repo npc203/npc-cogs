@@ -18,6 +18,8 @@ LINK_REGEX = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][
 
 
 def emoji_converter(bot, emoji):
+    if not emoji:
+        return
     if match := re.search(EMOJI_REGEX, emoji):
         if custom := bot.get_emoji(int(match.group("id"))):
             return custom
