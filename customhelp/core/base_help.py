@@ -540,9 +540,18 @@ class BaguetteHelp(commands.RedHelpFormatter):
         else:
             # Specifically ensuring the menu's message is sent prior to returning
             m = await (ctx.send(embed=pages[0]) if embed else ctx.send(pages[0]))
-            c = dict(
-                menus.DEFAULT_CONTROLS if len(pages) > 1 else {"\N{CROSS MARK}": menus.close_menu}
-            )
+            trans = {
+                "left": prev_page,
+                "cross": menus.close_menu,
+                "right": next_page,
+            }
+            raw_emjs = await self.config.settings.arrows()
+            c = {}
+            if len(pages) > 1:
+                for thing in trans:
+                    c[raw_emjs[thing]] = trans[thing]
+            else:
+                c[raw_emjs["cross"]] = trans["cross"]
             # TODO important!
             if add_emojis:
                 # Adding additional category emojis , regex from dpy server
@@ -557,7 +566,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                         ):
                             if await self.blacklist(ctx, cat.name):
                                 c[emj] = react_page
-                c["\U0001f3d8\U0000fe0f"] = home_page
+                c[raw_emjs["home"]] = home_page
             # Allow other things to happen during menu timeout/interaction.
             asyncio.create_task(menus.menu(ctx, pages, c, message=m))
             # menu needs reactions added manually since we fed it a message

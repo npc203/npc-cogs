@@ -22,7 +22,7 @@ from redbot.core.utils.chat_formatting import box, pagify
 from redbot.core.utils.predicates import ReactionPredicate
 
 from . import themes
-from .core.base_help import BaguetteHelp
+from .core.base_help import BaguetteHelp, EMPTY_STRING
 from .core.category import GLOBAL_CATEGORIES, Category, get_category
 from .core.utils import EMOJI_REGEX, LINK_REGEX
 
@@ -58,7 +58,7 @@ class CustomHelp(commands.Cog):
     A custom customisable help for fun and profit
     """
 
-    __version__ = "0.5.1"
+    __version__ = "0.5.2"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -86,6 +86,12 @@ class CustomHelp(commands.Cog):
                 "react": True,
                 "set_formatter": False,
                 "thumbnail": None,
+                "arrows": {
+                    "right": "\N{BLACK RIGHTWARDS ARROW}\N{VARIATION SELECTOR-16}",
+                    "left": "\N{LEFTWARDS BLACK ARROW}\N{VARIATION SELECTOR-16}",
+                    "cross": "\N{CROSS MARK}",
+                    "home": "\U0001f3d8\U0000fe0f",
+                },
             },
             "blacklist": {"nsfw": [], "dev": []},
         }
@@ -180,6 +186,7 @@ class CustomHelp(commands.Cog):
     async def autocategorise(self, ctx):
         """Auto categorise cogs based on it's tags"""
         data = {}
+        # Thanks trusty pathlib is awesome.
         for k, a in self.bot.cogs.items():
             check = Path(getfile(a.__class__)).parent / "info.json"
             if path.isfile(check):
@@ -192,6 +199,7 @@ class CustomHelp(commands.Cog):
             else:
                 data[k] = []
 
+        # Ofc grouping was done with the help random ppl helping me in pydis guild+stackoverflow :aha:
         popular = Counter(chain.from_iterable(data.values()))
         groups = defaultdict(set)
         for key, tags in data.items():
@@ -216,6 +224,7 @@ class CustomHelp(commands.Cog):
         """Show the current help settings"""
         settings = await self.config.settings()
         blocklist = await self.config.blacklist()
+        arrows = await self.config.settings.arrows()
         setting_mapping = {
             "react": "usereactions",
             "set_formatter": "iscustomhelp?",
@@ -233,6 +242,20 @@ class CustomHelp(commands.Cog):
         emb.add_field(
             name="Other Settings",
             value="\n".join(other_settings),
+            inline=False,
+        )
+        emb.add_field(
+            name="Arrows",
+            value="\n".join(f"`{i:<7}`: {j}" for i, j in arrows.items()),
+            inline=False,
+        )
+        emb.add_field(
+            name=EMPTY_STRING,
+            value="".join(
+                f"**{i.capitalize()} categories:**\n{', '.join(blocklist[i])}\n"
+                for i in blocklist
+                if blocklist[i]
+            ),
             inline=False,
         )
         await ctx.send(embed=emb)
@@ -385,7 +408,10 @@ class CustomHelp(commands.Cog):
         available_categories.pop(-1)
         # Not using cache (GLOBAL_CATEGORIES[-1].cogs) cause cog unloads aren't tracked
         all_cogs = set(self.bot.cogs.keys())
-        already_present_emojis = list(i.reaction for i in GLOBAL_CATEGORIES)
+        already_present_emojis = (
+            list(i.reaction for i in GLOBAL_CATEGORIES if i.reaction)
+            + (await self.config.settings.arrows()).values()
+        )
         failed = []  # example: [('desc','categoryname')]
 
         # special naming for uncategorized stuff
@@ -397,9 +423,7 @@ class CustomHelp(commands.Cog):
                     return not (item[1] in available_categories)
                 # dupe emoji and valid emoji?
                 elif item[0] == "reaction":
-                    if item[1] not in already_present_emojis + [
-                        "\U0001f3d8\U0000fe0f"  # home emoji is taken :<
-                    ] or re.search(EMOJI_REGEX, item[1]):
+                    if item[1] not in already_present_emojis or re.search(EMOJI_REGEX, item[1]):
                         return True
                     else:
                         return False
@@ -634,6 +658,62 @@ class CustomHelp(commands.Cog):
             async with self.config.settings() as f:
                 f["thumbnail"] = None
             await ctx.send("Reset thumbnail")
+
+    @settings.command(aliases=["arrow"])
+    async def arrows(self, ctx, *, correct_txt=None):
+        """Add custom arrows for fun and profit"""
+        if correct_txt:
+            content = correct_txt
+        else:
+            await ctx.send(
+                "Your next message should be with the specfied format as in the docs\n"
+                "Example:\n"
+                "left: ↖️\n"
+                "right:↗️\n"
+                "cross:❎"
+            )
+            try:
+                msg = await self.bot.wait_for(
+                    "message",
+                    timeout=180,
+                    check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
+                )
+                content = msg.content
+            except asyncio.TimeoutError:
+                return await ctx.send("Timed out, please try again.")
+
+        already_present_emojis = list(i.reaction for i in GLOBAL_CATEGORIES if i.reaction) + list(
+            (await self.config.settings.arrows()).values()
+        )
+
+        async def emj_parser(data):
+            parsed = {}
+            checks = ["left", "right", "cross", "home"]
+            raw = data.split("\n")
+            for emj in raw:
+                tmp = emj.split(":", 1)
+                tmp = [i.strip() for i in tmp]
+                if len(tmp) != 2 or tmp[0] not in checks:
+                    await ctx.send("Invalid format")
+                    return
+                else:
+                    if tmp[1] not in already_present_emojis or re.search(EMOJI_REGEX, tmp[1]):
+                        parsed[tmp[0]] = tmp[1]
+                    else:
+                        await ctx.send(f"Already present/Invalid Emoji:{tmp[1]}")
+                        return
+            return parsed
+
+        parsed_data = await emj_parser(content)
+        if not parsed_data:
+            return
+        async with self.config.settings.arrows() as conf:
+            for k, v in parsed_data.items():
+                conf[k] = v
+        await ctx.send(
+            "Successfully added the changes:\n"
+            + "\n".join(f"`{i} `: {j}" for i, j in parsed_data.items())
+        )
 
     @chelp.group()
     async def nsfw(self, ctx):
