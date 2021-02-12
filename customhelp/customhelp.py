@@ -797,6 +797,7 @@ class CustomHelp(commands.Cog):
 
     @dev.command(name="remove")
     async def remove_dev(self, ctx, category: str):
+        """Remove categories from the dev list"""
         if cat_obj := get_category(category):
             async with self.config.blacklist.dev() as conf:
                 if category in conf:
