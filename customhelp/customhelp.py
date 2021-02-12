@@ -126,6 +126,7 @@ class CustomHelp(commands.Cog):
         # Refreshing arrows idk why i made this a task tho
         asyncio.create_task(self.refresh_arrows())
         # Correct the emoji types
+        GLOBAL_CATEGORIES[:] = []
         for cat in my_categories:
             cat_obj = Category(**cat)
             cat_obj.reaction = emoji_converter(self.bot, cat_obj.reaction)
@@ -428,10 +429,9 @@ class CustomHelp(commands.Cog):
         available_categories.pop(-1)
         # Not using cache (GLOBAL_CATEGORIES[-1].cogs) cause cog unloads aren't tracked
         all_cogs = set(self.bot.cogs.keys())
-        already_present_emojis = (
-            list(str(i.reaction) for i in GLOBAL_CATEGORIES if i.reaction)
-            + (await self.config.settings.arrows()).values()
-        )
+        already_present_emojis = list(
+            str(i.reaction) for i in GLOBAL_CATEGORIES if i.reaction
+        ) + list((await self.config.settings.arrows()).values())
         failed = []  # example: [('desc','categoryname')]
 
         # special naming for uncategorized stuff
