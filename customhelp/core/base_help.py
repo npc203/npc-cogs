@@ -9,8 +9,14 @@ import tabulate
 
 from redbot.core import checks, commands
 from redbot.core.commands.context import Context
-from redbot.core.commands.help import (HelpSettings, NoCommand, NoSubCommand,
-                                       _, dpy_commands, mass_purge)
+from redbot.core.commands.help import (
+    HelpSettings,
+    NoCommand,
+    NoSubCommand,
+    _,
+    dpy_commands,
+    mass_purge,
+)
 from redbot.core.i18n import Translator
 from redbot.core.utils import menus
 from redbot.core.utils.chat_formatting import box, humanize_timedelta, pagify
@@ -563,6 +569,8 @@ class BaguetteHelp(commands.RedHelpFormatter):
         """Some blacklist checks utils
         Returns true if needed to be hidden"""
         blocklist = await self.config.blacklist()
-        a = ctx.channel.is_nsfw() or not name in blocklist["nsfw"]
+        a = (
+            ctx.channel.is_nsfw() if hasattr(ctx.channel, "is_nsfw") else True
+        ) or not name in blocklist["nsfw"]
         b = await self.bot.is_owner(ctx.author) or not name in blocklist["dev"]
         return a and b
