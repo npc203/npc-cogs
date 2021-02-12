@@ -9,14 +9,8 @@ import tabulate
 
 from redbot.core import checks, commands
 from redbot.core.commands.context import Context
-from redbot.core.commands.help import (
-    HelpSettings,
-    NoCommand,
-    NoSubCommand,
-    _,
-    dpy_commands,
-    mass_purge,
-)
+from redbot.core.commands.help import (HelpSettings, NoCommand, NoSubCommand,
+                                       _, dpy_commands, mass_purge)
 from redbot.core.i18n import Translator
 from redbot.core.utils import menus
 from redbot.core.utils.chat_formatting import box, humanize_timedelta, pagify
@@ -394,7 +388,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
             for i in pagify(
                 "\n".join(
                     [
-                        f"{cat.reaction if cat.reaction else ''} `{ctx.clean_prefix}help {cat.name:<10}:`**{cat.desc}**\n"
+                        f"{str(cat.reaction) if cat.reaction else ''} `{ctx.clean_prefix}help {cat.name:<10}:`**{cat.desc}**\n"
                         for cat in GLOBAL_CATEGORIES
                         if cat.cogs and await self.blacklist(ctx, cat.name)
                     ]
@@ -545,28 +539,21 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 "cross": menus.close_menu,
                 "right": next_page,
             }
-            raw_emjs = await self.config.settings.arrows()
+
             c = {}
             if len(pages) > 1:
                 for thing in trans:
-                    c[raw_emjs[thing]] = trans[thing]
+                    c[ARROWS[thing]] = trans[thing]
             else:
-                c[raw_emjs["cross"]] = trans["cross"]
+                c[ARROWS["cross"]] = trans["cross"]
             # TODO important!
             if add_emojis:
                 # Adding additional category emojis , regex from dpy server
                 for cat in GLOBAL_CATEGORIES:
                     if cat.reaction:
-                        match = re.search(
-                            EMOJI_REGEX,
-                            cat.reaction,
-                        )
-                        if emj := (
-                            self.bot.get_emoji(int(match.group("id"))) if match else cat.reaction
-                        ):
-                            if await self.blacklist(ctx, cat.name):
-                                c[emj] = react_page
-                c[raw_emjs["home"]] = home_page
+                        if await self.blacklist(ctx, cat.name):
+                            c[cat.reaction] = react_page
+                c[ARROWS["home"]] = home_page
             # Allow other things to happen during menu timeout/interaction.
             asyncio.create_task(menus.menu(ctx, pages, c, message=m))
             # menu needs reactions added manually since we fed it a message

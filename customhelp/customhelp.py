@@ -22,9 +22,9 @@ from redbot.core.utils.chat_formatting import box, pagify
 from redbot.core.utils.predicates import ReactionPredicate
 
 from . import themes
-from .core.base_help import BaguetteHelp, EMPTY_STRING
-from .core.category import GLOBAL_CATEGORIES, Category, get_category
-from .core.utils import EMOJI_REGEX, LINK_REGEX
+from .core.base_help import EMPTY_STRING, BaguetteHelp
+from .core.category import ARROWS, GLOBAL_CATEGORIES, Category, get_category
+from .core.utils import EMOJI_REGEX, LINK_REGEX, emoji_converter
 
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
 
@@ -52,15 +52,13 @@ Config Structure:
     }
 """
 
-ARROWS = {}
-
 
 class CustomHelp(commands.Cog):
     """
     A custom customisable help for fun and profit
     """
 
-    __version__ = "0.5.2"
+    __version__ = "0.5.3"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -109,12 +107,29 @@ class CustomHelp(commands.Cog):
         pre_processed = super().format_help_for_context(ctx)
         return f"{pre_processed}\n\nCog Version: {self.__version__}"
 
+    async def refresh_arrows(self):
+        """This is to make the emoji arrows objects be in their proper types"""
+        arrows = await self.config.settings.arrows()
+        for name, emoji in arrows.items():
+            if emj := emoji_converter(self.bot, emoji):
+                ARROWS[name] = emj
+            else:
+                # back-up measure if the something went wrong
+                ARROWS[name] = self.chelp_global["settings"]["arrows"][name]
+
     async def refresh_cache(self):
         """Get's the config and re-populates the GLOBAL_CATEGORIES"""
         # Blocking?
         # await self.config.clear_all()
         my_categories = await self.config.categories()
-        GLOBAL_CATEGORIES[:] = [Category(**i) for i in my_categories]
+        # GLOBAL_CATEGORIES[:] = [Category(**i) for i in my_categories]
+        # Refreshing arrows idk why i made this a task tho
+        asyncio.create_task(self.refresh_arrows())
+        # Correct the emoji types
+        for cat in my_categories:
+            cat_obj = Category(**cat)
+            cat_obj.reaction = emoji_converter(self.bot, cat_obj.reaction)
+            GLOBAL_CATEGORIES.append(cat_obj)
 
         # make the uncategorised cogs
         all_loaded_cogs = set(self.bot.cogs.keys())
@@ -128,7 +143,7 @@ class CustomHelp(commands.Cog):
                 name=uncat_config["name"] if uncat_config["name"] else "uncategorised",
                 desc=uncat_config["desc"] if uncat_config["desc"] else "No category commands",
                 long_desc=uncat_config["long_desc"] if uncat_config["long_desc"] else "",
-                reaction=uncat_config["reaction"] if uncat_config["reaction"] else None,
+                reaction=emoji_converter(self.bot, uncat_config["reaction"]),
                 cogs=list(uncategorised),
             )
         )
@@ -165,11 +180,13 @@ class CustomHelp(commands.Cog):
     @commands.Cog.listener("on_cog_add")
     async def handle_new_cog_entries(self, cog: commands.Cog):
         cog_name = cog.__class__.__name__
-        for cat in GLOBAL_CATEGORIES:
-            if cog_name in cat.cogs:
-                break
-        else:
-            GLOBAL_CATEGORIES[-1].cogs.append(cog_name)
+        # More work on this please
+        if GLOBAL_CATEGORIES:
+            for cat in GLOBAL_CATEGORIES:
+                if cog_name in cat.cogs:
+                    break
+            else:
+                GLOBAL_CATEGORIES[-1].cogs.append(cog_name)
 
     @checks.is_owner()
     @commands.group()
@@ -700,10 +717,14 @@ class CustomHelp(commands.Cog):
                     await ctx.send("Invalid format")
                     return
                 else:
-                    if tmp[1] not in already_present_emojis or re.search(EMOJI_REGEX, tmp[1]):
-                        parsed[tmp[0]] = tmp[1]
+                    if tmp[1] not in already_present_emojis:
+                        if emoji_converter(self.bot, tmp[1]):
+                            parsed[tmp[0]] = tmp[1]
+                        else:
+                            await ctx.send(f"Invalid Emoji:{tmp[1]}")
+                            return
                     else:
-                        await ctx.send(f"Already present/Invalid Emoji:{tmp[1]}")
+                        await ctx.send(f"Already present Emoji:{tmp[1]}")
                         return
             return parsed
 
