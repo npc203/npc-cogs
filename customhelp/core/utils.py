@@ -27,8 +27,9 @@ async def home_page(
     help_settings = await HelpSettings.from_context(ctx)
     pages = await ctx.bot._help_formatter.format_bot_help(ctx, help_settings, get_pages=True)
     if len(pages) <= 1:
-        controls.pop("\N{LEFTWARDS BLACK ARROW}\N{VARIATION SELECTOR-16}", None)
-        controls.pop("\N{BLACK RIGHTWARDS ARROW}\N{VARIATION SELECTOR-16}", None)
+        raw_emjs = await ctx.bot._help_formatter.config.settings.arrows()
+        controls.pop(raw_emjs["left"], None)
+        controls.pop(raw_emjs["right"], None)
     return await menu(ctx, pages, controls, message=message, page=0, timeout=timeout)
 
 
@@ -62,17 +63,18 @@ async def react_page(
     pages_new = await ctx.bot._help_formatter.format_category_help(
         ctx, category, help_settings, get_pages=True
     )
-    # Menus error out if a cog in category is unloaded
+    # Menus error out if all cogs in category is unloaded
     if not pages_new:
         return await menu(ctx, pages, controls, message=message, page=0, timeout=timeout)
     if len(pages_new) > 1:
-        controls["\N{LEFTWARDS BLACK ARROW}\N{VARIATION SELECTOR-16}"] = prev_page
-        controls["\N{BLACK RIGHTWARDS ARROW}\N{VARIATION SELECTOR-16}"] = next_page
+        raw_emjs = await ctx.bot._help_formatter.config.settings.arrows()
+        controls[raw_emjs["left"]] = prev_page
+        controls[raw_emjs["right"]] = next_page
         start_adding_reactions(
             message,
             [
-                "\N{LEFTWARDS BLACK ARROW}\N{VARIATION SELECTOR-16}",
-                "\N{BLACK RIGHTWARDS ARROW}\N{VARIATION SELECTOR-16}",
+                raw_emjs["left"],
+                raw_emjs["right"],
             ],
         )
     # copy is needed so that the controls don't change during emoji addition (edge case)

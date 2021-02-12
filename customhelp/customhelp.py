@@ -52,6 +52,8 @@ Config Structure:
     }
 """
 
+ARROWS = {}
+
 
 class CustomHelp(commands.Cog):
     """
@@ -255,7 +257,8 @@ class CustomHelp(commands.Cog):
                 f"**{i.capitalize()} categories:**\n{', '.join(blocklist[i])}\n"
                 for i in blocklist
                 if blocklist[i]
-            ),
+            )
+            or EMPTY_STRING,
             inline=False,
         )
         await ctx.send(embed=emb)
