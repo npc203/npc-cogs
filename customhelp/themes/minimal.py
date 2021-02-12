@@ -14,7 +14,7 @@ class MinimalHelp(ThemesMeta):
         full_text = f"{description}\n\n{tagline}"
         # Maybe add category desc somewhere?
         for cat in GLOBAL_CATEGORIES:
-            if cat.cogs:
+            if cat.cogs and await self.blacklist(ctx, cat.name):
                 coms = await self.get_category_help_mapping(ctx, cat, help_settings=help_settings)
                 all_cog_text = []
                 for _, data in coms:

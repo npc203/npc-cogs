@@ -26,7 +26,7 @@ class NadekoHelp(ThemesMeta):
             emb["title"] = f"{ctx.me.name} Help Menu"
             cat_titles = ""
             for cat in GLOBAL_CATEGORIES:
-                if cat.cogs:
+                if cat.cogs and await self.blacklist(ctx, cat.name):
                     cat_titles += f"• {cat.name}\n"
             # TODO Dont be a moron trying to pagify this or do we? yes we do, lmao.
             for i, vals in enumerate(pagify(cat_titles, page_length=1000)):

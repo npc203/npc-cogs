@@ -28,7 +28,7 @@ class DankHelp(ThemesMeta):
             emb["title"] = f"{ctx.me.name} Help Menu"
             # Maybe add category desc somewhere?
             for cat in GLOBAL_CATEGORIES:
-                if cat.cogs:
+                if cat.cogs and await self.blacklist(ctx, cat.name):
                     title = (cat.reaction + " " if cat.reaction else "") + cat.name.capitalize()
                     emb["fields"].append(
                         EmbedField(
