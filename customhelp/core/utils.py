@@ -3,7 +3,7 @@ import re
 from copy import copy
 
 import discord
-from emoji import UNICODE_EMOJI
+from emoji import UNICODE_EMOJI_ENGLISH
 
 from redbot.core import commands
 from redbot.core.commands.help import HelpSettings
@@ -20,10 +20,11 @@ LINK_REGEX = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][
 def emoji_converter(bot, emoji):
     if not emoji:
         return
+    emoji = emoji.strip()
     if match := re.search(EMOJI_REGEX, emoji):
         if custom := bot.get_emoji(int(match.group("id"))):
             return custom
-    elif emoji in UNICODE_EMOJI:
+    elif emoji in UNICODE_EMOJI_ENGLISH:
         return emoji
     else:
         return None

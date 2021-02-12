@@ -124,7 +124,6 @@ class CustomHelp(commands.Cog):
         my_categories = await self.config.categories()
         # GLOBAL_CATEGORIES[:] = [Category(**i) for i in my_categories]
         # Refreshing arrows idk why i made this a task tho
-        asyncio.create_task(self.refresh_arrows())
         # Correct the emoji types
         GLOBAL_CATEGORIES[:] = []
         for cat in my_categories:
@@ -153,7 +152,7 @@ class CustomHelp(commands.Cog):
         """Adds the themes and loads the formatter"""
         # This is needed to be on top so that Cache gets populated no matter what (supplements chelp create)
         await self.refresh_cache()
-
+        await self.refresh_arrows()
         # backward compatible removal
         if self.__version__ <= "0.4.0" and "url" in await self.config.settings():
             async with self.config.settings() as conf:
@@ -738,6 +737,7 @@ class CustomHelp(commands.Cog):
             "Successfully added the changes:\n"
             + "\n".join(f"`{i} `: {j}" for i, j in parsed_data.items())
         )
+        await self.refresh_arrows()
 
     @chelp.group()
     async def nsfw(self, ctx):
