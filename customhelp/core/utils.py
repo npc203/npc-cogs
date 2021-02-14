@@ -1,18 +1,34 @@
-# This contains a bunch of menu utils
+# This contains a bunch of utils
+import re
 from copy import copy
 
 import discord
+from emoji import UNICODE_EMOJI_ENGLISH
 
 from redbot.core import commands
 from redbot.core.commands.help import HelpSettings
 from redbot.core.utils.menus import menu, start_adding_reactions
 
-from .category import GLOBAL_CATEGORIES
+from .category import ARROWS, GLOBAL_CATEGORIES
 
 # From dpy server >.<
 EMOJI_REGEX = r"<(?P<animated>a?):(?P<name>[a-zA-Z0-9_]{2,32}):(?P<id>[0-9]{18,22})>"
 # https://www.w3resource.com/python-exercises/re/python-re-exercise-42.php
 LINK_REGEX = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
+
+
+def emoji_converter(bot, emoji):
+    """General emoji converter"""
+    if not emoji:
+        return
+    if isinstance(emoji, int) or emoji.isdigit():
+        return bot.get_emoji(int(emoji))
+    emoji = emoji.strip()
+    if match := re.search(EMOJI_REGEX, emoji):
+        if custom := bot.get_emoji(int(match.group("id"))):
+            return custom
+    else:
+        return emoji
 
 
 async def home_page(
@@ -27,8 +43,8 @@ async def home_page(
     help_settings = await HelpSettings.from_context(ctx)
     pages = await ctx.bot._help_formatter.format_bot_help(ctx, help_settings, get_pages=True)
     if len(pages) <= 1:
-        controls.pop("\N{LEFTWARDS BLACK ARROW}\N{VARIATION SELECTOR-16}", None)
-        controls.pop("\N{BLACK RIGHTWARDS ARROW}\N{VARIATION SELECTOR-16}", None)
+        controls.pop(ARROWS["left"], None)
+        controls.pop(ARROWS["right"], None)
     return await menu(ctx, pages, controls, message=message, page=0, timeout=timeout)
 
 
@@ -53,26 +69,26 @@ async def react_page(
     # TODO sigh getting everything again, please optimise this IMP, maybe create pages on react itself?
     help_settings = await HelpSettings.from_context(ctx)
     for x in GLOBAL_CATEGORIES:
-        if x.reaction == str(emoji):
+        if x.reaction == emoji:
             category = x
             break
     else:
         # idk maybe edge cases
-        return await menu(ctx, pages, controls, message=message, page=page, timeout=timeout)
+        return await menu(ctx, pages, copy(controls), message=message, page=page, timeout=timeout)
     pages_new = await ctx.bot._help_formatter.format_category_help(
         ctx, category, help_settings, get_pages=True
     )
-    # Menus error out if a cog in category is unloaded
+    # Menus error out if all cogs in category is unloaded
     if not pages_new:
         return await menu(ctx, pages, controls, message=message, page=0, timeout=timeout)
     if len(pages_new) > 1:
-        controls["\N{LEFTWARDS BLACK ARROW}\N{VARIATION SELECTOR-16}"] = prev_page
-        controls["\N{BLACK RIGHTWARDS ARROW}\N{VARIATION SELECTOR-16}"] = next_page
+        controls[ARROWS["left"]] = prev_page
+        controls[ARROWS["right"]] = next_page
         start_adding_reactions(
             message,
             [
-                "\N{LEFTWARDS BLACK ARROW}\N{VARIATION SELECTOR-16}",
-                "\N{BLACK RIGHTWARDS ARROW}\N{VARIATION SELECTOR-16}",
+                ARROWS["left"],
+                ARROWS["right"],
             ],
         )
     # copy is needed so that the controls don't change during emoji addition (edge case)

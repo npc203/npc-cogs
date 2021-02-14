@@ -38,7 +38,7 @@ class DannyHelp(ThemesMeta):
                     for i, page in enumerate(pagify(cog_names, page_length=1000, shorten_by=0)):
                         if i == 0:
                             title = (
-                                cat.reaction if cat.reaction else ""
+                                str(cat.reaction) if cat.reaction else ""
                             ) + f"**{cat.name.capitalize()}:**"
                         else:
                             title = EMPTY_STRING

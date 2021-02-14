@@ -22,9 +22,9 @@ from redbot.core.utils.chat_formatting import box, pagify
 from redbot.core.utils.predicates import ReactionPredicate
 
 from . import themes
-from .core.base_help import BaguetteHelp
-from .core.category import GLOBAL_CATEGORIES, Category, get_category
-from .core.utils import EMOJI_REGEX, LINK_REGEX
+from .core.base_help import EMPTY_STRING, BaguetteHelp
+from .core.category import ARROWS, GLOBAL_CATEGORIES, Category, get_category
+from .core.utils import EMOJI_REGEX, LINK_REGEX, emoji_converter
 
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
 
@@ -58,7 +58,7 @@ class CustomHelp(commands.Cog):
     A custom customisable help for fun and profit
     """
 
-    __version__ = "0.5.1"
+    __version__ = "0.5.5"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -106,7 +106,13 @@ class CustomHelp(commands.Cog):
         # Blocking?
         # await self.config.clear_all()
         my_categories = await self.config.categories()
-        GLOBAL_CATEGORIES[:] = [Category(**i) for i in my_categories]
+        # GLOBAL_CATEGORIES[:] = [Category(**i) for i in my_categories]
+        # Correct the emoji types
+        GLOBAL_CATEGORIES[:] = []
+        for cat in my_categories:
+            cat_obj = Category(**cat)
+            cat_obj.reaction = emoji_converter(self.bot, cat_obj.reaction)
+            GLOBAL_CATEGORIES.append(cat_obj)
 
         # make the uncategorised cogs
         all_loaded_cogs = set(self.bot.cogs.keys())
@@ -120,7 +126,7 @@ class CustomHelp(commands.Cog):
                 name=uncat_config["name"] if uncat_config["name"] else "uncategorised",
                 desc=uncat_config["desc"] if uncat_config["desc"] else "No category commands",
                 long_desc=uncat_config["long_desc"] if uncat_config["long_desc"] else "",
-                reaction=uncat_config["reaction"] if uncat_config["reaction"] else None,
+                reaction=emoji_converter(self.bot, uncat_config["reaction"]),
                 cogs=list(uncategorised),
             )
         )
@@ -129,11 +135,6 @@ class CustomHelp(commands.Cog):
         """Adds the themes and loads the formatter"""
         # This is needed to be on top so that Cache gets populated no matter what (supplements chelp create)
         await self.refresh_cache()
-
-        # backward compatible removal
-        if self.__version__ <= "0.4.0" and "url" in await self.config.settings():
-            async with self.config.settings() as conf:
-                del conf["url"]
 
         if not (await self.config.settings.set_formatter()):
             return
@@ -157,11 +158,13 @@ class CustomHelp(commands.Cog):
     @commands.Cog.listener("on_cog_add")
     async def handle_new_cog_entries(self, cog: commands.Cog):
         cog_name = cog.__class__.__name__
-        for cat in GLOBAL_CATEGORIES:
-            if cog_name in cat.cogs:
-                break
-        else:
-            GLOBAL_CATEGORIES[-1].cogs.append(cog_name)
+        # More work on this please
+        if GLOBAL_CATEGORIES:
+            for cat in GLOBAL_CATEGORIES:
+                if cog_name in cat.cogs:
+                    break
+            else:
+                GLOBAL_CATEGORIES[-1].cogs.append(cog_name)
 
     @checks.is_owner()
     @commands.group()
@@ -180,6 +183,7 @@ class CustomHelp(commands.Cog):
     async def autocategorise(self, ctx):
         """Auto categorise cogs based on it's tags"""
         data = {}
+        # Thanks trusty pathlib is awesome.
         for k, a in self.bot.cogs.items():
             check = Path(getfile(a.__class__)).parent / "info.json"
             if path.isfile(check):
@@ -192,6 +196,7 @@ class CustomHelp(commands.Cog):
             else:
                 data[k] = []
 
+        # Ofc grouping was done with the help random ppl helping me in pydis guild+stackoverflow :aha:
         popular = Counter(chain.from_iterable(data.values()))
         groups = defaultdict(set)
         for key, tags in data.items():
@@ -228,13 +233,29 @@ class CustomHelp(commands.Cog):
                 other_settings.append(f"`{setting_mapping[i]:<13}`: {j}")
         val = await self.config.theme()
         val = "\n".join([f"`{i:<10}`: " + (j if j else "default") for i, j in val.items()])
-        emb = discord.Embed(title="Custom help settings", color=await ctx.embed_color())
+        emb = discord.Embed(
+            title="Custom help settings",
+            description=f"Cog Version: {self.__version__}",
+            color=await ctx.embed_color(),
+        )
         emb.add_field(name="Theme", value=val)
         emb.add_field(
             name="Other Settings",
             value="\n".join(other_settings),
             inline=False,
         )
+
+        if blocklist["nsfw"] or blocklist["dev"]:
+            emb.add_field(
+                name=EMPTY_STRING,
+                value="".join(
+                    f"**{i.capitalize()} categories:**\n{', '.join(blocklist[i])}\n"
+                    for i in blocklist
+                    if blocklist[i]
+                )
+                or EMPTY_STRING,
+                inline=False,
+            )
         await ctx.send(embed=emb)
 
     @chelp.command(name="set")
@@ -289,6 +310,7 @@ class CustomHelp(commands.Cog):
         available_categories = [category.name for category in GLOBAL_CATEGORIES]
         # Remove uncategorised
         available_categories.pop(-1)
+        uncat_name = GLOBAL_CATEGORIES[-1].name
         # Not using cache (GLOBAL_CATEGORIES[-1].cogs) cause cog unloads aren't tracked
         all_cogs = set(self.bot.cogs.keys())
         uncategorised = all_cogs - set(
@@ -312,6 +334,9 @@ class CustomHelp(commands.Cog):
         # {"new": [{cat_conf_structure,...}, {...}] , "existing": { index: [cogs], ..}}
         to_config = {"new": [], "existing": {}}
         for category in parsed_data:
+            if uncat_name == category:
+                failed_cogs.append(category)
+                continue
             # check if category exist
             if category in available_categories:
                 # update the existing category
@@ -336,7 +361,7 @@ class CustomHelp(commands.Cog):
                 else "Nothing successful"
             )
             + (
-                f"\n\nThe following cogs failed due to invalid or already present in a category: `{'`,`'.join(failed_cogs)}` "
+                f"\n\nThe following categorie(s)/cog(s) failed due to invalid or already present in a category: `{'`,`'.join(failed_cogs)}` "
                 if failed_cogs
                 else ""
             )
@@ -385,7 +410,9 @@ class CustomHelp(commands.Cog):
         available_categories.pop(-1)
         # Not using cache (GLOBAL_CATEGORIES[-1].cogs) cause cog unloads aren't tracked
         all_cogs = set(self.bot.cogs.keys())
-        already_present_emojis = list(i.reaction for i in GLOBAL_CATEGORIES)
+        already_present_emojis = list(
+            str(i.reaction) for i in GLOBAL_CATEGORIES if i.reaction
+        ) + list(ARROWS.values())
         failed = []  # example: [('desc','categoryname')]
 
         # special naming for uncategorized stuff
@@ -397,12 +424,10 @@ class CustomHelp(commands.Cog):
                     return not (item[1] in available_categories)
                 # dupe emoji and valid emoji?
                 elif item[0] == "reaction":
-                    if item[1] not in already_present_emojis + [
-                        "\U0001f3d8\U0000fe0f"  # home emoji is taken :<
-                    ] or re.search(EMOJI_REGEX, item[1]):
-                        return True
-                    else:
-                        return False
+                    return (
+                        emoji_converter(self.bot, item[1])
+                        and item[1] not in already_present_emojis
+                    )
                 else:
                     return True
 
@@ -432,7 +457,10 @@ class CustomHelp(commands.Cog):
             if not failed
             else "The following things failed:\n"
             + "\n".join(
-                [f"{reason[0]}: {reason[1]}  failed in {category}" for reason, category in failed]
+                [
+                    f"`{reason[0]}`: {reason[1]}  failed in `{category}`"
+                    for reason, category in failed
+                ]
             )
         ):
             await ctx.send(page)
@@ -456,7 +484,9 @@ class CustomHelp(commands.Cog):
             joined += "+ {}:\n".format(category["name"])
             for cog in sorted(category["cogs"]):
                 joined += "  - {}\n".format(cog)
-        joined += "\n+ {}:\n".format("uncategorised")
+        joined += "\n+ {}: (This is where the uncategorised cogs go in)\n".format(
+            GLOBAL_CATEGORIES[-1].name
+        )
         for name in sorted(uncategorised):
             joined += "  - {}\n".format(name)
         for page in pagify(joined, ["\n"], shorten_by=16):
@@ -501,7 +531,7 @@ class CustomHelp(commands.Cog):
         else:
             await ctx.send("Theme not found")
 
-    @chelp.command()
+    @chelp.group(invoke_without_command=True)
     async def reset(self, ctx):
         """Resets all settings to default **custom** help \n use `[p]chelp set 0` to revert back to the old help"""
         msg = await ctx.send("Are you sure? This will reset everything back to the default theme.")
@@ -514,7 +544,31 @@ class CustomHelp(commands.Cog):
             await self.config.theme.set(
                 {"cog": None, "category": None, "command": None, "main": None}
             )
+            await self.refresh_cache()
             await ctx.send("Reset successful")
+        else:
+            await ctx.send("Aborted")
+
+    @reset.command(hidden=True)
+    async def hard(self, ctx):
+        """Hard reset, clear everything"""
+        await ctx.send(
+            "Warning: You are about to delete EVERYTHING!, type `y` to continue else this will abort"
+        )
+        try:
+            msg = await self.bot.wait_for(
+                "message",
+                check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
+                timeout=60,
+            )
+        except asyncio.TimeoutError:
+            return await ctx.send("Timed out, please try again.")
+        if msg.content == "y":
+            # TODO there must be a better method in getting the defaults. remember?
+            await self.config.clear_all()
+            self.config.register_global(**self.chelp_global)
+            await self._setup()
+            await ctx.send("Cleared everything.")
         else:
             await ctx.send("Aborted")
 
@@ -561,8 +615,7 @@ class CustomHelp(commands.Cog):
             return await ctx.send("Timed out, please try again.")
         if msg.content == "y":
             # TODO there must be a better method in getting the defaults. remember?
-            await self.config.clear_all()
-            self.config.register_global(**self.chelp_global)
+            await self.config.categories.clear()
             await ctx.send("Cleared all categories")
             await self.refresh_cache()
             return
@@ -659,7 +712,11 @@ class CustomHelp(commands.Cog):
 
     @nsfw.command(name="remove")
     async def remove_nsfw(self, ctx, category: str):
-        if cat_obj := get_category(category):
+        """Remove categories from the nsfw list"""
+        cat_obj = get_category(category) or (
+            category if category in await self.config.blacklist.nsfw() else None
+        )
+        if cat_obj:
             async with self.config.blacklist.nsfw() as conf:
                 if category in conf:
                     conf.remove(category)
@@ -693,7 +750,11 @@ class CustomHelp(commands.Cog):
 
     @dev.command(name="remove")
     async def remove_dev(self, ctx, category: str):
-        if cat_obj := get_category(category):
+        """Remove categories from the dev list"""
+        cat_obj = get_category(category) or (
+            category if category in await self.config.blacklist.dev() else None
+        )
+        if cat_obj:
             async with self.config.blacklist.dev() as conf:
                 if category in conf:
                     conf.remove(category)

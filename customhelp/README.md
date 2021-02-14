@@ -16,10 +16,10 @@ Use `[p]chelp edit` to add the everything you need to customise a category.
 The format is simply:  
 ```yaml
 category:
- - name: new name (ONLY to rename!)
+ - name: new name (ONLY use this to rename! else this isn't necessary)
  - desc: new description
  - long_desc: long description
- - reaction: reaction
+ - reaction: reaction emoji
 ```
 you can mix and match, as much as you want. Like the example below  
 ![editz](https://imgur.com/m4LtUy4.png)  
@@ -40,9 +40,17 @@ An example of `[p]chelp load dank main` is shown below
 4. `[p]chelp unload feature` to reset the given feature back to default
 5. `[p]chelp reset` to reset everything back to the default custom help  
 *Note: This won't revert to the previous red help, to do so use `[p]chelp set 0`*
-6. Take a look at `[p]chelp settings` to see what more is configurable.
+6. wew, wait you thought we are done? *or are we*
+
+## More configurablity:
+1. `[p]chelp dev` to add categories that can only be visible by the owner.
+2. `[p]chelp nsfw` to add categories that can only be visible in nsfw channels.
+3. `[p]chelp auto` to automatically make categories for you based on the tags in cogs!.
+4. `[p]chelp info` to see a brief description of categories.
+
 ## Additional Notes:
 - A **Good Practice** is to have the category names all **lowercased** and the category description as **Camelcase**.
+- All the reactions and arrow emojis can be custom and even animated.
 - Free to tell about new themes which you might want to see. Let me know if you think any part of the theme can be made better. I'm available in the [cog support server]( https://discord.gg/GET4DVk).
 - If the owner of any bot feels that their theme needs to be removed from this cog. Please inform me, I'll remove it.  
 ## FAQ:

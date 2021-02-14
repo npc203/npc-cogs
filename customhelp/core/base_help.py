@@ -9,14 +9,8 @@ import tabulate
 
 from redbot.core import checks, commands
 from redbot.core.commands.context import Context
-from redbot.core.commands.help import (
-    HelpSettings,
-    NoCommand,
-    NoSubCommand,
-    _,
-    dpy_commands,
-    mass_purge,
-)
+from redbot.core.commands.help import (HelpSettings, NoCommand, NoSubCommand,
+                                       _, dpy_commands, mass_purge)
 from redbot.core.i18n import Translator
 from redbot.core.utils import menus
 from redbot.core.utils.chat_formatting import box, humanize_timedelta, pagify
@@ -394,7 +388,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
             for i in pagify(
                 "\n".join(
                     [
-                        f"{cat.reaction if cat.reaction else ''} `{ctx.clean_prefix}help {cat.name:<10}:`**{cat.desc}**\n"
+                        f"{str(cat.reaction) if cat.reaction else ''} `{ctx.clean_prefix}help {cat.name:<10}:`**{cat.desc}**\n"
                         for cat in GLOBAL_CATEGORIES
                         if cat.cogs and await self.blacklist(ctx, cat.name)
                     ]
@@ -540,24 +534,26 @@ class BaguetteHelp(commands.RedHelpFormatter):
         else:
             # Specifically ensuring the menu's message is sent prior to returning
             m = await (ctx.send(embed=pages[0]) if embed else ctx.send(pages[0]))
-            c = dict(
-                menus.DEFAULT_CONTROLS if len(pages) > 1 else {"\N{CROSS MARK}": menus.close_menu}
-            )
+            trans = {
+                "left": prev_page,
+                "cross": menus.close_menu,
+                "right": next_page,
+            }
+
+            c = {}
+            if len(pages) > 1:
+                for thing in trans:
+                    c[ARROWS[thing]] = trans[thing]
+            else:
+                c[ARROWS["cross"]] = trans["cross"]
             # TODO important!
             if add_emojis:
                 # Adding additional category emojis , regex from dpy server
                 for cat in GLOBAL_CATEGORIES:
                     if cat.reaction:
-                        match = re.search(
-                            EMOJI_REGEX,
-                            cat.reaction,
-                        )
-                        if emj := (
-                            self.bot.get_emoji(int(match.group("id"))) if match else cat.reaction
-                        ):
-                            if await self.blacklist(ctx, cat.name):
-                                c[emj] = react_page
-                c["\U0001f3d8\U0000fe0f"] = home_page
+                        if await self.blacklist(ctx, cat.name):
+                            c[cat.reaction] = react_page
+                c[ARROWS["home"]] = home_page
             # Allow other things to happen during menu timeout/interaction.
             asyncio.create_task(menus.menu(ctx, pages, c, message=m))
             # menu needs reactions added manually since we fed it a message
@@ -567,6 +563,8 @@ class BaguetteHelp(commands.RedHelpFormatter):
         """Some blacklist checks utils
         Returns true if needed to be hidden"""
         blocklist = await self.config.blacklist()
-        a = ctx.channel.is_nsfw() or not name in blocklist["nsfw"]
+        a = (
+            ctx.channel.is_nsfw() if hasattr(ctx.channel, "is_nsfw") else True
+        ) or not name in blocklist["nsfw"]
         b = await self.bot.is_owner(ctx.author) or not name in blocklist["dev"]
         return a and b
