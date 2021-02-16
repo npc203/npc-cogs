@@ -28,7 +28,7 @@ from .core.utils import EMOJI_REGEX, LINK_REGEX, emoji_converter
 
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
 
-_ = Translator("Help", __file__)
+_ = Translator("CustomHelp", __file__)
 
 # Swtichable alphabetic ordered display
 # Crowdin stuff ;-;
@@ -53,6 +53,7 @@ Config Structure:
 """
 
 
+@cog_i18n(_)
 class CustomHelp(commands.Cog):
     """
     A custom customisable help for fun and profit

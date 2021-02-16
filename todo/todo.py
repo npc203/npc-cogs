@@ -2,7 +2,6 @@ import asyncio
 from typing import Literal
 
 import discord
-
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.config import Config
@@ -29,9 +28,14 @@ class Todo(commands.Cog):
         self.config.register_user(todos=[])
         self.config.register_global(embeds=True, menus=True)
 
-    @commands.group()
-    async def todo(self, ctx):
-        """Contains a list of commands to set and retrieve todo tasks"""
+    @commands.group(invoke_without_command=True)
+    async def todo(self, ctx, id_: int):
+        """Contains a list of commands to set and retrieve todo tasks \n Use todo <id> to get a specific todo"""
+        todos = await self.config.user(ctx.author).todos()
+        if -len(todos) < id_ < len(todos):
+            await ctx.send(todos[id_])
+        else:
+            await ctx.send(f"Invalid ID: {id_}")
 
     @commands.is_owner()
     @todo.command()
@@ -99,6 +103,18 @@ class Todo(commands.Cog):
                 else:
                     for page in pagified:
                         await ctx.send(page)
+
+    @todo.command(aliases=["rearrange"])
+    async def reorder(self, ctx, from_: int, to: int):
+        async with self.config.user(ctx.author).todos() as todos:
+            if -len(todos) < from_ < len(todos):
+                if -len(todos) < to < len(todos):
+                    todos[from_], todos[to] = todos[to], todos[from_]
+                    await ctx.send(f"Sucessfully swapped {from_} and {to}")
+                else:
+                    await ctx.send(f"Invaild ID: {to}")
+            else:
+                await ctx.send(f"Invaild ID: {from_}")
 
     @todo.command()
     async def remove(self, ctx, *indices: int):

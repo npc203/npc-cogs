@@ -1,0 +1,172 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2021-02-15 00:33+0530\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: redgettext 3.3\n"
+
+#: customhelp\customhelp.py:58
+#, docstring
+msgid ""
+"\n"
+"    A custom customisable help for fun and profit\n"
+"    "
+msgstr ""
+
+#: customhelp\customhelp.py:173
+#, docstring
+msgid "Configure your custom help"
+msgstr ""
+
+#: customhelp\customhelp.py:177
+#, docstring
+msgid "Short info about various themes"
+msgstr ""
+
+#: customhelp\customhelp.py:185
+#, docstring
+msgid "Auto categorise cogs based on it's tags"
+msgstr ""
+
+#: customhelp\customhelp.py:222
+#, docstring
+msgid "Show the current help settings"
+msgstr ""
+
+#: customhelp\customhelp.py:264
+#, docstring
+msgid ""
+"Set to toggle custom formatter or the default help formatter\n"
+"`[p]chelp set 0` to turn custom off \n"
+"`[p]chelp set 1` to turn it on"
+msgstr ""
+
+#: customhelp\customhelp.py:281
+#, docstring
+msgid "Create a new category to add cogs to it using yaml"
+msgstr ""
+
+#: customhelp\customhelp.py:375
+#, docstring
+msgid "Add reactions and descriptions to the category"
+msgstr ""
+
+#: customhelp\customhelp.py:473
+#, docstring
+msgid "Show the list of categories and the cogs in them"
+msgstr ""
+
+#: customhelp\customhelp.py:482
+msgid "Set Categories:\n"
+msgstr ""
+
+#: customhelp\customhelp.py:482
+msgid "Set Category:\n"
+msgstr ""
+
+#: customhelp\customhelp.py:498
+#, docstring
+msgid ""
+"Load another preset theme.\n"
+"Use `[p]chelp load <theme> all` to load everything from that theme"
+msgstr ""
+
+#: customhelp\customhelp.py:537
+#, docstring
+msgid ""
+"Resets all settings to default **custom** help \n"
+" use `[p]chelp set 0` to revert back to the old help"
+msgstr ""
+
+#: customhelp\customhelp.py:555
+#, docstring
+msgid "Hard reset, clear everything"
+msgstr ""
+
+#: customhelp\customhelp.py:578
+#, docstring
+msgid "Unloads the given feature, this will reset to default"
+msgstr ""
+
+#: customhelp\customhelp.py:600
+#, docstring
+msgid "Remove categories/cogs or everything"
+msgstr ""
+
+#: customhelp\customhelp.py:604
+#, docstring
+msgid "This will delete all the categories"
+msgstr ""
+
+#: customhelp\customhelp.py:628
+#, docstring
+msgid "Remove a single category"
+msgstr ""
+
+#: customhelp\customhelp.py:647
+#, docstring
+msgid "Remove a cog from a category"
+msgstr ""
+
+#: customhelp\customhelp.py:668
+#, docstring
+msgid "Change various help settings"
+msgstr ""
+
+#: customhelp\customhelp.py:672
+#, docstring
+msgid "Toggles adding reaction for navigation."
+msgstr ""
+
+#: customhelp\customhelp.py:679
+#, docstring
+msgid ""
+"Set your thumbnail image here.\n"
+" use `[p]chelp settings thumbnail` to reset this"
+msgstr ""
+
+#: customhelp\customhelp.py:694
+#, docstring
+msgid "Add categories to nsfw, only displayed in nsfw channels"
+msgstr ""
+
+#: customhelp\customhelp.py:698
+#, docstring
+msgid "Add categories to the nsfw list"
+msgstr ""
+
+#: customhelp\customhelp.py:716
+#, docstring
+msgid "Remove categories from the nsfw list"
+msgstr ""
+
+#: customhelp\customhelp.py:732
+#, docstring
+msgid "Add categories to dev, only displayed to the bot owner(s)"
+msgstr ""
+
+#: customhelp\customhelp.py:736
+#, docstring
+msgid "Add categories to the dev list"
+msgstr ""
+
+#: customhelp\customhelp.py:754
+#, docstring
+msgid "Remove categories from the dev list"
+msgstr ""
+
+#: customhelp\customhelp.py:770
+#, docstring
+msgid "List the themes and available features"
+msgstr ""
+
+#: customhelp\customhelp.py:789
+#, docstring
+msgid "Get the category where the command is present"
+msgstr ""
