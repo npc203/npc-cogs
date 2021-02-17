@@ -1,4 +1,3 @@
-
 from redbot.core import Config, commands
 from redbot.core.bot import Red
 from redbot.core.commands.context import Context

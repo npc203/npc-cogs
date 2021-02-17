@@ -1,4 +1,3 @@
-
 from discord import Embed
 from tabulate import tabulate
 

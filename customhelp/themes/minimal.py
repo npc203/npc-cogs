@@ -1,21 +1,8 @@
 from ..abc import ThemesMeta
-from ..core.base_help import (
-    EMPTY_STRING,
-    GLOBAL_CATEGORIES,
-    BaguetteHelp,
-    CategoryConvert,
-    Context,
-    EmbedField,
-    HelpSettings,
-    _,
-    box,
-    cast,
-    chain,
-    commands,
-    discord,
-    humanize_timedelta,
-    pagify,
-)
+from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, BaguetteHelp,
+                              CategoryConvert, Context, EmbedField,
+                              HelpSettings, _, box, cast, chain, commands,
+                              discord, humanize_timedelta, pagify)
 
 
 class MinimalHelp(ThemesMeta):

@@ -1,20 +1,8 @@
 from ..abc import ThemesMeta
-from ..core.base_help import (
-    EMPTY_STRING,
-    GLOBAL_CATEGORIES,
-    BaguetteHelp,
-    CategoryConvert,
-    Context,
-    EmbedField,
-    HelpSettings,
-    _,
-    box,
-    cast,
-    commands,
-    discord,
-    humanize_timedelta,
-    pagify,
-)
+from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, BaguetteHelp,
+                              CategoryConvert, Context, EmbedField,
+                              HelpSettings, _, box, cast, commands, discord,
+                              humanize_timedelta, pagify)
 
 
 class DankHelp(ThemesMeta):
@@ -142,7 +130,6 @@ class DankHelp(ThemesMeta):
         signature = _("`{ctx.clean_prefix}{command.qualified_name} {command.signature}`").format(
             ctx=ctx, command=command
         )
-        aliases = command.aliases
         subcommands = None
 
         if hasattr(command, "all_commands"):

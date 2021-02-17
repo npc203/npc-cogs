@@ -8,14 +8,8 @@ import tabulate
 
 from redbot.core import commands
 from redbot.core.commands.context import Context
-from redbot.core.commands.help import (
-    HelpSettings,
-    NoCommand,
-    NoSubCommand,
-    _,
-    dpy_commands,
-    mass_purge,
-)
+from redbot.core.commands.help import (HelpSettings, NoCommand, NoSubCommand,
+                                       _, dpy_commands, mass_purge)
 from redbot.core.i18n import Translator
 from redbot.core.utils import menus
 from redbot.core.utils.chat_formatting import box, humanize_timedelta, pagify
