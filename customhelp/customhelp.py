@@ -16,7 +16,7 @@ from tabulate import tabulate
 
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
-from redbot.core.i18n import Translator
+from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.utils import menus, predicates
 from redbot.core.utils.chat_formatting import box, pagify
 from redbot.core.utils.predicates import ReactionPredicate
