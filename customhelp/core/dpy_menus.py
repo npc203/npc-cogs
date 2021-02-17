@@ -8,8 +8,8 @@ from redbot import __version__
 from redbot.core import commands
 from redbot.vendored.discord.ext import menus
 
-# None of the below classes are done by me, it's mostly copy paste/ edited from a piece of code owo shared to me
-# And owo took the code from trusty, so the actual credit goes to Trusty, Thanks trusty.
+# None of the below classes are done by me, it's mostly copy paste/ edited from a piece of code
+# from trusty which got circulated around to me from !nowo. All credits go to him.
 # Not using an AsyncIterator cause even the core help loads all the commands at once.
 # TODO remove redundant code
 

@@ -3,6 +3,7 @@ import re
 from copy import copy
 
 import discord
+import asyncio
 from emoji import UNICODE_EMOJI_ENGLISH
 from redbot.core import commands
 from redbot.core.commands.help import HelpSettings
@@ -50,8 +51,11 @@ async def react_page(ctx, emoji, help_settings):
     async def action(menu, payload):
         menu._source = ListPages(pages)
         if len(pages) > 1:
-            await menu.add_button(prev_page(ARROWS["left"]), react=True)
-            await menu.add_button(next_page(ARROWS["right"]), react=True)
+            asyncio.create_task(menu.add_button(prev_page(ARROWS["left"]), react=True))
+            asyncio.create_task(menu.add_button(next_page(ARROWS["right"]), react=True))
+        else:
+            asyncio.create_task(menu.add_button(empty_button(ARROWS["left"]), react=True))
+            asyncio.create_task(menu.add_button(empty_button(ARROWS["right"]), react=True))
         await menu.show_page(0)
 
     return menus.Button(emoji, action)
@@ -62,6 +66,12 @@ async def home_page(ctx, emoji, help_settings):
 
     async def action(menu, payload):
         menu._source = ListPages(pages)
+        if len(pages) > 1:
+            asyncio.create_task(menu.add_button(prev_page(ARROWS["left"]), react=True))
+            asyncio.create_task(menu.add_button(next_page(ARROWS["right"]), react=True))
+        else:
+            asyncio.create_task(menu.add_button(empty_button(ARROWS["left"]), react=True))
+            asyncio.create_task(menu.add_button(empty_button(ARROWS["right"]), react=True))
         await menu.show_page(0)
 
     return menus.Button(emoji, action)
@@ -90,3 +100,10 @@ def close_menu(emoji):
         await self.message.delete()
 
     return menus.Button(emoji, stop_pages)
+
+
+def empty_button(emoji):
+    async def action(x, y):
+        pass
+
+    return menus.Button(emoji, action)
