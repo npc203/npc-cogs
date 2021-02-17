@@ -1,4 +1,3 @@
-from types import FunctionType
 
 from redbot.core import Config, commands
 from redbot.core.bot import Red

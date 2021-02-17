@@ -1,6 +1,3 @@
-import asyncio
-import random
-import time
 
 from discord import Embed
 from tabulate import tabulate

@@ -1,7 +1,18 @@
 from ..abc import ThemesMeta
-from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, BaguetteHelp,
-                              CategoryConvert, Context, EmbedField,
-                              HelpSettings, _, box, commands, discord, pagify)
+from ..core.base_help import (
+    EMPTY_STRING,
+    GLOBAL_CATEGORIES,
+    BaguetteHelp,
+    CategoryConvert,
+    Context,
+    EmbedField,
+    HelpSettings,
+    _,
+    box,
+    commands,
+    discord,
+    pagify,
+)
 
 
 class NadekoHelp(ThemesMeta):
@@ -22,7 +33,7 @@ class NadekoHelp(ThemesMeta):
             }
 
             emb["footer"]["text"] = tagline
-
+            emb["embed"]["description"] = description
             emb["title"] = f"{ctx.me.name} Help Menu"
             cat_titles = ""
             for cat in GLOBAL_CATEGORIES:

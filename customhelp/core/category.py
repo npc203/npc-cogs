@@ -1,11 +1,11 @@
-import contextlib
 from typing import Optional
 
 import discord
 
 from redbot.core import commands
 from redbot.core.commands.help import HelpSettings
-from redbot.core.utils.menus import menu, next_page, prev_page, start_adding_reactions
+from redbot.core.utils.menus import (menu, next_page, prev_page,
+                                     start_adding_reactions)
 
 # Keeping all global vars in one place
 GLOBAL_CATEGORIES = []

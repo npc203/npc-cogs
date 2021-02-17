@@ -1,8 +1,20 @@
 from ..abc import ThemesMeta
-from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, BaguetteHelp,
-                              CategoryConvert, Context, EmbedField,
-                              HelpSettings, _, box, cast, commands, discord,
-                              humanize_timedelta, pagify)
+from ..core.base_help import (
+    EMPTY_STRING,
+    GLOBAL_CATEGORIES,
+    BaguetteHelp,
+    CategoryConvert,
+    Context,
+    EmbedField,
+    HelpSettings,
+    _,
+    box,
+    cast,
+    commands,
+    discord,
+    humanize_timedelta,
+    pagify,
+)
 
 
 class DankHelp(ThemesMeta):
@@ -24,7 +36,6 @@ class DankHelp(ThemesMeta):
 
             emb["footer"]["text"] = tagline
             emb["embed"]["description"] = description
-            category_text = ""
             emb["title"] = f"{ctx.me.name} Help Menu"
             # Maybe add category desc somewhere?
             for cat in GLOBAL_CATEGORIES:

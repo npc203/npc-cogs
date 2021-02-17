@@ -1,8 +1,21 @@
 from ..abc import ThemesMeta
-from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, BaguetteHelp,
-                              CategoryConvert, Context, EmbedField,
-                              HelpSettings, _, box, cast, chain, commands,
-                              discord, humanize_timedelta, pagify)
+from ..core.base_help import (
+    EMPTY_STRING,
+    GLOBAL_CATEGORIES,
+    BaguetteHelp,
+    CategoryConvert,
+    Context,
+    EmbedField,
+    HelpSettings,
+    _,
+    box,
+    cast,
+    chain,
+    commands,
+    discord,
+    humanize_timedelta,
+    pagify,
+)
 
 
 class MinimalHelp(ThemesMeta):
@@ -88,26 +101,24 @@ class MinimalHelp(ThemesMeta):
 
         command = obj
 
-        description = command.description or ""
-        tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
+        description = command.description + "\n" if command.description else ""
         signature = _("`{ctx.clean_prefix}{command.qualified_name} {command.signature}`").format(
             ctx=ctx, command=command
         )
-        aliases = command.aliases
         subcommands = None
 
         if hasattr(command, "all_commands"):
             grp = cast(commands.Group, command)
             subcommands = await self.get_group_help_mapping(ctx, grp, help_settings=help_settings)
 
-        # full_text = f"{description}\n\n{tagline}\n\n"
         full_text = ""
         command_help = command.format_help_for_context(ctx)
         if command_help:
             splitted = command_help.split("\n\n")
             name = splitted[0]
             value = "\n".join(splitted[1:])
-            full_text += "**Usage:**\n" + signature + "\n"
+        full_text += "**Usage:**\n" + signature + "\n\n"
+        if command_help:
             full_text += name[:250] + "\n" + value[:1024] + "\n"
 
             # Add aliases
@@ -117,42 +128,42 @@ class MinimalHelp(ThemesMeta):
                     alias.append(command.name)
                 full_text += "**Aliases:** " + ",".join(alias) + "\n\n"
 
-            # Add permissions
-            get_list = ["user_perms", "bot_perms"]
-            final_perms = []
-            neat_format = lambda x: " ".join(i.capitalize() for i in x.replace("_", " ").split())
-            for thing in get_list:
-                if perms := getattr(command.requires, thing):
-                    perms_list = [
-                        neat_format(i) for i, j in perms if j
-                    ]  # TODO pls learn more to fix this
-                    if perms_list:
-                        final_perms += perms_list
-            if perms := command.requires.privilege_level:
-                if perms.name != "NONE":
-                    final_perms.append(neat_format(perms.name))
-            if final_perms:
-                full_text += (
-                    ("\n" if full_text[-2:] != "\n\n" else "")
-                    + "**Permissions:** "
-                    + ", ".join(final_perms)
-                    + "\n"
-                )
+        # Add permissions
+        get_list = ["user_perms", "bot_perms"]
+        final_perms = []
+        neat_format = lambda x: " ".join(i.capitalize() for i in x.replace("_", " ").split())
+        for thing in get_list:
+            if perms := getattr(command.requires, thing):
+                perms_list = [
+                    neat_format(i) for i, j in perms if j
+                ]  # TODO pls learn more to fix this
+                if perms_list:
+                    final_perms += perms_list
+        if perms := command.requires.privilege_level:
+            if perms.name != "NONE":
+                final_perms.append(neat_format(perms.name))
+        if final_perms:
+            full_text += (
+                ("\n" if full_text[-2:] != "\n\n" else "")
+                + "**Permissions:** "
+                + ", ".join(final_perms)
+                + "\n"
+            )
 
-            # Add cooldowns
-            cooldowns = []
-            if s := command._buckets._cooldown:
-                cooldowns.append(
-                    f"{s.rate} time{'s' if s.rate>1 else ''} in {humanize_timedelta(seconds=s.per)} per {s.type.name.capitalize()}"
-                )
-            if s := command._max_concurrency:
-                cooldowns.append(f"Max concurrent uses: {s.number} per {s.per.name.capitalize()}")
-            if cooldowns:
-                full_text += (
-                    ("\n" if full_text[-2:] != "\n\n" else "")
-                    + "**Cooldowns:**\n"
-                    + "\n".join(cooldowns)
-                )
+        # Add cooldowns
+        cooldowns = []
+        if s := command._buckets._cooldown:
+            cooldowns.append(
+                f"{s.rate} time{'s' if s.rate>1 else ''} in {humanize_timedelta(seconds=s.per)} per {s.type.name.capitalize()}"
+            )
+        if s := command._max_concurrency:
+            cooldowns.append(f"Max concurrent uses: {s.number} per {s.per.name.capitalize()}")
+        if cooldowns:
+            full_text += (
+                ("\n" if full_text[-2:] != "\n\n" else "")
+                + "**Cooldowns:**\n"
+                + "\n".join(cooldowns)
+            )
 
         if subcommands:
             spacing = len(max(subcommands.keys(), key=len))

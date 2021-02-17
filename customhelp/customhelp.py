@@ -7,7 +7,7 @@ from itertools import chain
 from os import path
 from pathlib import Path
 from types import MethodType
-from typing import Dict, List, Literal, Union
+from typing import Literal
 
 import discord
 import yaml
@@ -87,6 +87,7 @@ class CustomHelp(commands.Cog):
                 "react": True,
                 "set_formatter": False,
                 "thumbnail": None,
+                "timeout": 30,
             },
             "blacklist": {"nsfw": [], "dev": []},
         }
@@ -226,6 +227,7 @@ class CustomHelp(commands.Cog):
             "react": "usereactions",
             "set_formatter": "iscustomhelp?",
             "thumbnail": "thumbnail",
+            "timeout": "Timeout(secs)",
         }
         other_settings = []
         # url doesnt exist now, that's why the check. sorry guys.
@@ -321,7 +323,6 @@ class CustomHelp(commands.Cog):
         success_cogs = []
 
         def parse_to_config(x):
-            name = x
             cogs = []
             for cog_name in parsed_data[x]:
                 if cog_name in uncategorised:
@@ -409,15 +410,12 @@ class CustomHelp(commands.Cog):
         available_categories = [category.name for category in GLOBAL_CATEGORIES]
         # Remove uncategorised
         available_categories.pop(-1)
-        # Not using cache (GLOBAL_CATEGORIES[-1].cogs) cause cog unloads aren't tracked
-        all_cogs = set(self.bot.cogs.keys())
+        # special naming for uncategorized stuff
+        uncat_name = GLOBAL_CATEGORIES[-1].name
         already_present_emojis = list(
             str(i.reaction) for i in GLOBAL_CATEGORIES if i.reaction
         ) + list(ARROWS.values())
         failed = []  # example: [('desc','categoryname')]
-
-        # special naming for uncategorized stuff
-        uncat_name = GLOBAL_CATEGORIES[-1].name
 
         def validity_checker(category, item):
             if item[0] in check:
@@ -473,7 +471,6 @@ class CustomHelp(commands.Cog):
         """Show the list of categories and the cogs in them"""
         # TODO maybe its a better option to read from cache than config?
         available_categories_raw = await self.config.categories()
-        available_categories = (category["name"] for category in available_categories_raw)
         all_cogs = set(self.bot.cogs.keys())
         uncategorised = all_cogs - set(
             chain(*(category["cogs"] for category in available_categories_raw))
@@ -688,6 +685,15 @@ class CustomHelp(commands.Cog):
             async with self.config.settings() as f:
                 f["thumbnail"] = None
             await ctx.send("Reset thumbnail")
+
+    @settings.command()
+    async def timeout(self, ctx, wait: int):
+        """Set how long the help menu must stay active"""
+        if wait > 20:
+            await self.config.settings.timeout.set(wait)
+            await ctx.send(f"Sucessfully set timeout to {wait}")
+        else:
+            await ctx.send("Timeout must be atleast 20 seconds")
 
     @chelp.group()
     async def nsfw(self, ctx):
