@@ -417,25 +417,25 @@ class CustomHelp(commands.Cog):
         failed = []  # example: [('desc','categoryname')]
 
         def validity_checker(category, item):
+            """Returns the thing needs to be saved on config if valid, else None"""
             if item[0] in check:
                 if item[0] == "name":
-                    return not (item[1] in available_categories)
+                    if not (item[1] in available_categories):
+                        return item[1]
                 # dupe emoji and valid emoji?
                 elif item[0] == "reaction":
-                    return (
-                        emoji_converter(self.bot, item[1])
-                        and item[1] not in already_present_emojis
-                    )
+                    if item[1] not in already_present_emojis:
+                        return str(emoji_converter(self.bot, item[1]))
                 else:
-                    return True
+                    return item[1]
 
         # TODO bunch the config calls?
         for category in parsed_data:
             if uncat_name == category:
                 async with self.config.uncategorised() as unconf_cat:
                     for item in parsed_data[category]:
-                        if validity_checker(category, item):
-                            unconf_cat[item[0]] = item[1]
+                        if tmp := validity_checker(category, item):
+                            unconf_cat[item[0]] = tmp
                         else:
                             failed.append((item, category))
                         continue
@@ -443,8 +443,8 @@ class CustomHelp(commands.Cog):
                 async with self.config.categories() as conf_cat:
                     cat_index = available_categories.index(category)
                     for item in parsed_data[category]:
-                        if validity_checker(category, item):
-                            conf_cat[cat_index][item[0]] = item[1]
+                        if tmp := validity_checker(category, item):
+                            conf_cat[cat_index][item[0]] = tmp
                         else:
                             failed.append((item, category))
             else:

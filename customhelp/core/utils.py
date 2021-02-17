@@ -16,7 +16,7 @@ EMOJI_REGEX = r"<(?P<animated>a?):(?P<name>[a-zA-Z0-9_]{2,32}):(?P<id>[0-9]{18,2
 # https://www.w3resource.com/python-exercises/re/python-re-exercise-42.php
 LINK_REGEX = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
 
-
+# TODO find a way to detect unicode emojis properly
 def emoji_converter(bot, emoji):
     """General emoji converter"""
     if not emoji:
@@ -24,11 +24,13 @@ def emoji_converter(bot, emoji):
     if isinstance(emoji, int) or emoji.isdigit():
         return bot.get_emoji(int(emoji))
     emoji = emoji.strip()
+    return emoji
+    """
     if match := re.search(EMOJI_REGEX, emoji):
-        if custom := bot.get_emoji(int(match.group("id"))):
-            return custom
+        return emoji
     else:
         return emoji
+    """
 
 
 # dpy menus helpers
