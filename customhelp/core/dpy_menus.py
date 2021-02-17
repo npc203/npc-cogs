@@ -1,0 +1,154 @@
+from __future__ import annotations
+
+import logging
+from typing import Any, List, Optional, Union
+
+import discord
+from redbot import __version__
+from redbot.core import commands
+from redbot.vendored.discord.ext import menus
+
+# None of the below classes are done by me, it's mostly copy paste/ edited from a piece of code owo shared to me
+# And owo took the code from trusty, so the actual credit goes to Trusty, Thanks trusty.
+# Not using an AsyncIterator cause even the core help loads all the commands at once.
+# TODO remove redundant code
+
+
+class ListPages(menus.ListPageSource):
+    def __init__(self, pages: List[Union[discord.Embed, str]]):
+        super().__init__(pages, per_page=1)
+
+    def is_paginating(self):
+        return True
+
+    async def format_page(self, menu: menus.MenuPages, page: Union[discord.Embed, str]):
+        return page
+
+
+if __version__ >= "3.4.6":
+
+    class BaseMenu(menus.MenuPages, inherit_buttons=False):
+        def __init__(
+            self,
+            source: menus.PageSource,
+            # cog: commands.Cog,
+            clear_reactions_after: bool = True,
+            delete_message_after: bool = False,
+            timeout: int = 60,
+            message: discord.Message = None,
+            page_start: int = 0,
+            **kwargs: Any,
+        ) -> None:
+            super().__init__(
+                source,
+                clear_reactions_after=clear_reactions_after,
+                delete_message_after=delete_message_after,
+                timeout=timeout,
+                message=message,
+                **kwargs,
+            )
+            # self.cog = cog
+            self.page_start = page_start
+
+        async def send_initial_message(self, ctx, channel):
+            page = await self._source.get_page(0)
+            kwargs = await self._get_kwargs_from_page(page)
+            return await ctx.reply(**kwargs)
+
+        async def _get_kwargs_from_page(self, page):
+            # Do this if you dont want to ping the user
+            no_ping = {"allowed_mentions": discord.AllowedMentions(replied_user=False)}
+            value = await discord.utils.maybe_coroutine(self._source.format_page, self, page)
+            if isinstance(value, dict):
+                no_ping.update(value)
+            elif isinstance(value, str):
+                no_ping.update({"content": value})
+            elif isinstance(value, discord.Embed):
+                no_ping.update({"embed": value})
+            return no_ping
+
+        async def show_checked_page(self, page_number: int) -> None:
+            max_pages = self._source.get_max_pages()
+            try:
+                if max_pages is None:
+                    # If it doesn't give maximum pages, it cannot be checked
+                    await self.show_page(page_number)
+                elif page_number >= max_pages:
+                    await self.show_page(0)
+                elif page_number < 0:
+                    await self.show_page(max_pages - 1)
+                elif max_pages > page_number >= 0:
+                    await self.show_page(page_number)
+            except IndexError:
+                # An error happened that can be handled, so ignore it.
+                pass
+
+        def reaction_check(self, payload):
+            """Just extends the default reaction_check to use owner_ids"""
+            if payload.message_id != self.message.id:
+                return False
+            if payload.user_id not in (*self.bot.owner_ids, self._author_id):
+                return False
+            return payload.emoji in self.buttons
+
+
+else:
+
+    class BaseMenu(menus.MenuPages, inherit_buttons=False):
+        def __init__(
+            self,
+            source: menus.PageSource,
+            # cog: commands.Cog,
+            clear_reactions_after: bool = True,
+            delete_message_after: bool = False,
+            timeout: int = 60,
+            message: discord.Message = None,
+            page_start: int = 0,
+            **kwargs: Any,
+        ) -> None:
+            super().__init__(
+                source,
+                clear_reactions_after=clear_reactions_after,
+                delete_message_after=delete_message_after,
+                timeout=timeout,
+                message=message,
+                **kwargs,
+            )
+            # self.cog = cog
+            self.page_start = page_start
+
+        async def _get_kwargs_from_page(self, page):
+            # Do this if you dont want to ping the user
+            no_ping = {"allowed_mentions": discord.AllowedMentions(replied_user=False)}
+            value = await discord.utils.maybe_coroutine(self._source.format_page, self, page)
+            if isinstance(value, dict):
+                no_ping.update(value)
+            elif isinstance(value, str):
+                no_ping.update({"content": value})
+            elif isinstance(value, discord.Embed):
+                no_ping.update({"embed": value})
+            return no_ping
+
+        async def show_checked_page(self, page_number: int) -> None:
+            max_pages = self._source.get_max_pages()
+            try:
+                if max_pages is None:
+                    # If it doesn't give maximum pages, it cannot be checked
+                    await self.show_page(page_number)
+                elif page_number >= max_pages:
+                    await self.show_page(0)
+                elif page_number < 0:
+                    await self.show_page(max_pages - 1)
+                elif max_pages > page_number >= 0:
+                    await self.show_page(page_number)
+            except IndexError:
+                # An error happened that can be handled, so ignore it.
+                pass
+
+        def reaction_check(self, payload):
+            """Just extends the default reaction_check to use owner_ids"""
+            if payload.message_id != self.message.id:
+                return False
+            if payload.user_id not in (*self.bot.owner_ids, self._author_id):
+                return False
+            return payload.emoji in self.buttons

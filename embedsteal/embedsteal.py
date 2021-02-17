@@ -3,7 +3,6 @@ from typing import Literal
 
 import discord
 from discord.utils import escape_markdown as escape
-
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, pagify

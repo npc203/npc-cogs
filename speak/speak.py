@@ -1,7 +1,6 @@
 from random import choice
 
 import discord
-
 from redbot.core import checks, commands, data_manager
 
 

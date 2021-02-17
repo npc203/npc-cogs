@@ -12,14 +12,13 @@ from typing import Literal
 import discord
 import yaml
 from discord.ext import commands as dpy_commands
-from tabulate import tabulate
-
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.utils import menus, predicates
 from redbot.core.utils.chat_formatting import box, pagify
 from redbot.core.utils.predicates import ReactionPredicate
+from tabulate import tabulate
 
 from . import themes
 from .core.base_help import EMPTY_STRING, BaguetteHelp
@@ -59,7 +58,7 @@ class CustomHelp(commands.Cog):
     A custom customisable help for fun and profit
     """
 
-    __version__ = "0.5.5"
+    __version__ = "0.6.0"
 
     def __init__(self, bot: Red):
         self.bot = bot

@@ -6,7 +6,6 @@ import aiohttp
 import discord
 import html2text
 from bs4 import BeautifulSoup
-
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils import menus

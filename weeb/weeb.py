@@ -3,7 +3,6 @@ from random import choice
 
 import discord
 from discord import NotFound
-
 from redbot.core import commands, data_manager
 
 

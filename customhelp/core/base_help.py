@@ -1,12 +1,12 @@
 import asyncio
+import re
 from collections import namedtuple
 from itertools import chain
-from typing import List, Union, cast
+from typing import AsyncIterator, Iterable, List, Literal, Union, cast
 
 import discord
 import tabulate
-
-from redbot.core import commands
+from redbot.core import checks, commands
 from redbot.core.commands.context import Context
 from redbot.core.commands.help import (HelpSettings, NoCommand, NoSubCommand,
                                        _, dpy_commands, mass_purge)
@@ -15,6 +15,7 @@ from redbot.core.utils import menus
 from redbot.core.utils.chat_formatting import box, humanize_timedelta, pagify
 
 from .category import *
+from .dpy_menus import BaseMenu, ListPages
 from .utils import *
 
 HelpTarget = Union[
@@ -39,7 +40,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
         self.config = config
 
     @staticmethod
-    async def parse_command(ctx, help_for: str, show_aliases: bool = False):
+    async def parse_command(ctx, help_for: str):
         """
         Handles parsing
         """
@@ -54,7 +55,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
         alias = None
         # TODO does this wreck havoc?
-        if show_aliases and (alias_cog := ctx.bot.get_cog("Alias")):
+        if alias_cog := ctx.bot.get_cog("Alias"):
             alias_name = help_for
             alias = await alias_cog._aliases.get_alias(ctx.guild, alias_name=alias_name)
             if alias:
@@ -124,12 +125,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
         if isinstance(help_for, str):
             try:
-                if hasattr(help_settings, "show_aliases"):
-                    help_for = await self.parse_command(
-                        ctx, help_for, show_aliases=help_settings.show_aliases
-                    )
-                else:
-                    help_for = await self.parse_command(ctx, help_for)
+                help_for = await self.parse_command(ctx, help_for)
             except NoCommand:
                 await self.command_not_found(ctx, help_for, help_settings=help_settings)
                 return
@@ -387,6 +383,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 field = EmbedField(name[:252], value[:1024], False)
                 emb["fields"].append(field)
 
+            category_text = ""
             emb["title"] = f"{ctx.me.name} Help Menu"
             for i in pagify(
                 "\n".join(
@@ -536,37 +533,30 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 asyncio.create_task(_delete_delay_help(destination, messages, delete_delay))
         else:
             # Specifically ensuring the menu's message is sent prior to returning
-            m = await (ctx.send(embed=pages[0]) if embed else ctx.send(pages[0]))
+            # m = await (ctx.send(embed=pages[0]) if embed else ctx.send(pages[0]))
             trans = {
                 "left": prev_page,
-                "cross": menus.close_menu,
+                "cross": close_menu,
                 "right": next_page,
             }
-
-            c = {}
-            if len(pages) > 1:
-                for thing in trans:
-                    c[ARROWS[thing]] = trans[thing]
-            else:
-                c[ARROWS["cross"]] = trans["cross"]
+            final_menu = BaseMenu(ListPages(pages))
+            for thing in trans:
+                final_menu.add_button(trans[thing](ARROWS[thing]))
             # TODO important!
             if add_emojis:
                 # Adding additional category emojis , regex from dpy server
                 for cat in GLOBAL_CATEGORIES:
                     if cat.reaction:
                         if await self.blacklist(ctx, cat.name):
-                            c[cat.reaction] = react_page
-                c[ARROWS["home"]] = home_page
-            # Allow other things to happen during menu timeout/interaction.
-            asyncio.create_task(
-                menus.menu(ctx, pages, c, message=m, timeout=await self.config.settings.timeout())
-            )
-            # menu needs reactions added manually since we fed it a message
-            menus.start_adding_reactions(m, c.keys())
+                            final_menu.add_button(
+                                await react_page(ctx, cat.reaction, help_settings)
+                            )
+                final_menu.add_button(await home_page(ctx, ARROWS["home"], help_settings))
+            await final_menu.start(ctx)
 
     async def blacklist(self, ctx, name) -> bool:
         """Some blacklist checks utils
-        Returns true if needed to be hidden"""
+        Returns true if needed to be shown"""
         blocklist = await self.config.blacklist()
         a = (
             ctx.channel.is_nsfw() if hasattr(ctx.channel, "is_nsfw") else True

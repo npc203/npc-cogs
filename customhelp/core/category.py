@@ -1,7 +1,6 @@
 from typing import Optional
 
 import discord
-
 from redbot.core import commands
 from redbot.core.commands.help import HelpSettings
 from redbot.core.utils.menus import (menu, next_page, prev_page,

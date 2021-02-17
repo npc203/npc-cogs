@@ -1,7 +1,6 @@
 from discord import Embed
-from tabulate import tabulate
-
 from redbot.core import Config, checks, commands, data_manager
+from tabulate import tabulate
 
 from .single import Single
 from .speedevent import Speedevent
