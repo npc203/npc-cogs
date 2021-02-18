@@ -7,22 +7,17 @@ import discord
 import tabulate
 from redbot.core import checks, commands
 from redbot.core.commands.context import Context
-from redbot.core.commands.help import (
-    HelpSettings,
-    NoCommand,
-    NoSubCommand,
-    _,
-    dpy_commands,
-    mass_purge,
-)
+from redbot.core.commands.help import (HelpSettings, NoCommand, NoSubCommand,
+                                       _, dpy_commands, mass_purge)
 from redbot.core.i18n import Translator
 from redbot.core.utils import menus
 from redbot.core.utils.chat_formatting import box, humanize_timedelta, pagify
 
+from . import ARROWS, GLOBAL_CATEGORIES, get_menu
 from .category import Category, CategoryConvert, get_category
-from . import GLOBAL_CATEGORIES, ARROWS, BaseMenu
 from .dpy_menus import ListPages
-from .utils import *
+from .utils import (close_menu, emoji_converter, home_page, next_page,
+                    prev_page, react_page)
 
 HelpTarget = Union[
     commands.Command,
@@ -544,7 +539,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 "cross": close_menu,
                 "right": next_page,
             }
-            final_menu = BaseMenu[0](ListPages(pages))
+            final_menu = get_menu()(ListPages(pages))
             for thing in trans:
                 final_menu.add_button(trans[thing](ARROWS[thing]))
             # TODO important!

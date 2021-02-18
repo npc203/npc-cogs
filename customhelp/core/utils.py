@@ -1,12 +1,14 @@
 # This contains a bunch of utils
 
-import discord
 import asyncio
+
+import discord
 from emoji import UNICODE_EMOJI_ENGLISH
 from redbot.core import commands
 from redbot.core.commands.help import HelpSettings
+
+from . import ARROWS, GLOBAL_CATEGORIES
 from .dpy_menus import ListPages, menus
-from . import GLOBAL_CATEGORIES, ARROWS
 
 # From dpy server >.<
 EMOJI_REGEX = r"<(?P<animated>a?):(?P<name>[a-zA-Z0-9_]{2,32}):(?P<id>[0-9]{18,22})>"
@@ -46,10 +48,15 @@ async def react_page(ctx, emoji, help_settings):
     )
 
     async def action(menu, payload):
-        menu._source = ListPages(pages)
-        asyncio.create_task(menu.add_button(prev_page(ARROWS["left"]), react=True))
-        asyncio.create_task(menu.add_button(next_page(ARROWS["right"]), react=True))
-        await menu.show_page(0)
+        await menu.change_source(ListPages(pages))
+        if len(pages) == 1:
+            # If any one button is present, disable it's functionality cause its a 1 page menu.
+            if ARROWS["left"] in map(str, menu._buttons.keys()):
+                menu.add_button(empty_button(ARROWS["left"]))
+                menu.add_button(empty_button(ARROWS["right"]))
+        else:
+            asyncio.create_task(menu.add_button(prev_page(ARROWS["left"]), react=True))
+            asyncio.create_task(menu.add_button(next_page(ARROWS["right"]), react=True))
 
     return menus.Button(emoji, action)
 
@@ -58,10 +65,11 @@ async def home_page(ctx, emoji, help_settings):
     pages = await ctx.bot._help_formatter.format_bot_help(ctx, help_settings, get_pages=True)
 
     async def action(menu, payload):
-        menu._source = ListPages(pages)
-        asyncio.create_task(menu.add_button(prev_page(ARROWS["left"]), react=True))
-        asyncio.create_task(menu.add_button(next_page(ARROWS["right"]), react=True))
-        await menu.show_page(0)
+        await menu.change_source(ListPages(pages))
+        if len(pages) == 1:
+            if ARROWS["left"] in map(str, menu._buttons.keys()):
+                menu.add_button(empty_button(ARROWS["left"]))
+                menu.add_button(empty_button(ARROWS["right"]))
 
     return menus.Button(emoji, action)
 

@@ -20,7 +20,7 @@ from redbot.core.utils.predicates import ReactionPredicate
 from tabulate import tabulate
 
 from . import themes
-from .core import GLOBAL_CATEGORIES, ARROWS, BaseMenu, set_menu
+from .core import ARROWS, GLOBAL_CATEGORIES, set_menu
 from .core.base_help import EMPTY_STRING, BaguetteHelp
 from .core.category import Category, get_category
 from .core.utils import EMOJI_REGEX, LINK_REGEX, emoji_converter
