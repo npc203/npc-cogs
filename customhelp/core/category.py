@@ -3,17 +3,8 @@ from typing import Optional
 import discord
 from redbot.core import commands
 from redbot.core.commands.help import HelpSettings
-from redbot.core.utils.menus import (menu, next_page, prev_page,
-                                     start_adding_reactions)
-
-# Keeping all global vars in one place
-GLOBAL_CATEGORIES = []
-ARROWS = {
-    "right": "\N{BLACK RIGHTWARDS ARROW}\N{VARIATION SELECTOR-16}",
-    "left": "\N{LEFTWARDS BLACK ARROW}\N{VARIATION SELECTOR-16}",
-    "cross": "\N{CROSS MARK}",
-    "home": "\U0001f3d8\U0000fe0f",
-}
+from redbot.core.utils.menus import menu, next_page, prev_page, start_adding_reactions
+from . import GLOBAL_CATEGORIES
 
 
 class Category:

@@ -1,21 +1,27 @@
 import asyncio
-import re
 from collections import namedtuple
 from itertools import chain
-from typing import AsyncIterator, Iterable, List, Literal, Union, cast
+from typing import List, Union, cast
 
 import discord
 import tabulate
 from redbot.core import checks, commands
 from redbot.core.commands.context import Context
-from redbot.core.commands.help import (HelpSettings, NoCommand, NoSubCommand,
-                                       _, dpy_commands, mass_purge)
+from redbot.core.commands.help import (
+    HelpSettings,
+    NoCommand,
+    NoSubCommand,
+    _,
+    dpy_commands,
+    mass_purge,
+)
 from redbot.core.i18n import Translator
 from redbot.core.utils import menus
 from redbot.core.utils.chat_formatting import box, humanize_timedelta, pagify
 
-from .category import *
-from .dpy_menus import BaseMenu, ListPages
+from .category import Category, CategoryConvert, get_category
+from . import GLOBAL_CATEGORIES, ARROWS, BaseMenu
+from .dpy_menus import ListPages
 from .utils import *
 
 HelpTarget = Union[
@@ -383,7 +389,6 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 field = EmbedField(name[:252], value[:1024], False)
                 emb["fields"].append(field)
 
-            category_text = ""
             emb["title"] = f"{ctx.me.name} Help Menu"
             for i in pagify(
                 "\n".join(
@@ -539,7 +544,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 "cross": close_menu,
                 "right": next_page,
             }
-            final_menu = BaseMenu(ListPages(pages))
+            final_menu = BaseMenu[0](ListPages(pages))
             for thing in trans:
                 final_menu.add_button(trans[thing](ARROWS[thing]))
             # TODO important!

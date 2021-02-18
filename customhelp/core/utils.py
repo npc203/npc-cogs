@@ -1,15 +1,12 @@
 # This contains a bunch of utils
-import re
-from copy import copy
 
 import discord
 import asyncio
 from emoji import UNICODE_EMOJI_ENGLISH
 from redbot.core import commands
 from redbot.core.commands.help import HelpSettings
-
-from .category import ARROWS, GLOBAL_CATEGORIES
 from .dpy_menus import ListPages, menus
+from . import GLOBAL_CATEGORIES, ARROWS
 
 # From dpy server >.<
 EMOJI_REGEX = r"<(?P<animated>a?):(?P<name>[a-zA-Z0-9_]{2,32}):(?P<id>[0-9]{18,22})>"
@@ -36,8 +33,6 @@ def emoji_converter(bot, emoji):
 # dpy menus helpers
 def _skip_single_arrows(self):
     max_pages = self._source.get_max_pages()
-    if max_pages is None:
-        return True
     return max_pages == 1
 
 
@@ -52,12 +47,8 @@ async def react_page(ctx, emoji, help_settings):
 
     async def action(menu, payload):
         menu._source = ListPages(pages)
-        if len(pages) > 1:
-            asyncio.create_task(menu.add_button(prev_page(ARROWS["left"]), react=True))
-            asyncio.create_task(menu.add_button(next_page(ARROWS["right"]), react=True))
-        else:
-            asyncio.create_task(menu.add_button(empty_button(ARROWS["left"]), react=True))
-            asyncio.create_task(menu.add_button(empty_button(ARROWS["right"]), react=True))
+        asyncio.create_task(menu.add_button(prev_page(ARROWS["left"]), react=True))
+        asyncio.create_task(menu.add_button(next_page(ARROWS["right"]), react=True))
         await menu.show_page(0)
 
     return menus.Button(emoji, action)
@@ -68,12 +59,8 @@ async def home_page(ctx, emoji, help_settings):
 
     async def action(menu, payload):
         menu._source = ListPages(pages)
-        if len(pages) > 1:
-            asyncio.create_task(menu.add_button(prev_page(ARROWS["left"]), react=True))
-            asyncio.create_task(menu.add_button(next_page(ARROWS["right"]), react=True))
-        else:
-            asyncio.create_task(menu.add_button(empty_button(ARROWS["left"]), react=True))
-            asyncio.create_task(menu.add_button(empty_button(ARROWS["right"]), react=True))
+        asyncio.create_task(menu.add_button(prev_page(ARROWS["left"]), react=True))
+        asyncio.create_task(menu.add_button(next_page(ARROWS["right"]), react=True))
         await menu.show_page(0)
 
     return menus.Button(emoji, action)

@@ -11,7 +11,6 @@ from typing import Literal
 
 import discord
 import yaml
-from discord.ext import commands as dpy_commands
 from redbot.core import Config, checks, commands
 from redbot.core.bot import Red
 from redbot.core.i18n import Translator, cog_i18n
@@ -21,8 +20,9 @@ from redbot.core.utils.predicates import ReactionPredicate
 from tabulate import tabulate
 
 from . import themes
+from .core import GLOBAL_CATEGORIES, ARROWS, BaseMenu, set_menu
 from .core.base_help import EMPTY_STRING, BaguetteHelp
-from .core.category import ARROWS, GLOBAL_CATEGORIES, Category, get_category
+from .core.category import Category, get_category
 from .core.utils import EMOJI_REGEX, LINK_REGEX, emoji_converter
 
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
@@ -58,7 +58,7 @@ class CustomHelp(commands.Cog):
     A custom customisable help for fun and profit
     """
 
-    __version__ = "0.6.0"
+    __version__ = "0.6.1"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -87,6 +87,7 @@ class CustomHelp(commands.Cog):
                 "set_formatter": False,
                 "thumbnail": None,
                 "timeout": 30,
+                "replies": False,
             },
             "blacklist": {"nsfw": [], "dev": []},
         }
@@ -136,8 +137,9 @@ class CustomHelp(commands.Cog):
         """Adds the themes and loads the formatter"""
         # This is needed to be on top so that Cache gets populated no matter what (supplements chelp create)
         await self.refresh_cache()
-
-        if not (await self.config.settings.set_formatter()):
+        settings = await self.config.settings()
+        set_menu(settings["replies"])
+        if not settings["set_formatter"]:
             return
         main_theme = BaguetteHelp(self.bot, self.config)
         theme = await self.config.theme()
@@ -227,6 +229,7 @@ class CustomHelp(commands.Cog):
             "set_formatter": "iscustomhelp?",
             "thumbnail": "thumbnail",
             "timeout": "Timeout(secs)",
+            "replies": "Use replies",
         }
         other_settings = []
         # url doesnt exist now, that's why the check. sorry guys.
@@ -564,6 +567,7 @@ class CustomHelp(commands.Cog):
             # TODO there must be a better method in getting the defaults. remember?
             await self.config.clear_all()
             self.config.register_global(**self.chelp_global)
+            self.bot.reset_help_formatter()
             await self._setup()
             await ctx.send("Cleared everything.")
         else:
@@ -684,6 +688,14 @@ class CustomHelp(commands.Cog):
             async with self.config.settings() as f:
                 f["thumbnail"] = None
             await ctx.send("Reset thumbnail")
+
+    @settings.command(aliases=["usereplies", "reply"])
+    async def usereply(self, ctx, option: bool):
+        """Enable/Disable help menus to use replies"""
+        res = set_menu(option)
+        if res[1]:
+            await self.config.settings.replies(option)
+        await ctx.send(res[0])
 
     @settings.command()
     async def timeout(self, ctx, wait: int):
