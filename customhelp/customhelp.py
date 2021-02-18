@@ -694,7 +694,7 @@ class CustomHelp(commands.Cog):
         """Enable/Disable help menus to use replies"""
         res = set_menu(option)
         if res[1]:
-            await self.config.settings.replies(option)
+            await self.config.settings.replies.set(option)
         await ctx.send(res[0])
 
     @settings.command()
