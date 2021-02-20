@@ -2,10 +2,21 @@ from redbot import __version__
 from redbot.core.utils.chat_formatting import humanize_list, humanize_number
 
 from ..abc import ThemesMeta
-from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, BaguetteHelp,
-                              CategoryConvert, Context, EmbedField,
-                              HelpSettings, _, box, cast, commands, discord,
-                              pagify)
+from ..core.base_help import (
+    EMPTY_STRING,
+    GLOBAL_CATEGORIES,
+    BaguetteHelp,
+    CategoryConvert,
+    Context,
+    EmbedField,
+    HelpSettings,
+    _,
+    box,
+    cast,
+    commands,
+    discord,
+    pagify,
+)
 
 
 class JustCore(ThemesMeta):
@@ -36,14 +47,13 @@ class JustCore(ThemesMeta):
             if description:
                 emb["embed"]["title"] = f"*{description[:250]}*"
 
+            def shorten_line(a_line: str) -> str:
+                if len(a_line) < 70:  # embed max width needs to be lower
+                    return a_line
+                return a_line[:67] + "..."
+
             for cog_name, data in coms:
                 title = f"**__{cog_name}:__**"
-
-                def shorten_line(a_line: str) -> str:
-                    if len(a_line) < 70:  # embed max width needs to be lower
-                        return a_line
-                    return a_line[:67] + "..."
-
                 cog_text = "\n".join(
                     shorten_line(f"**{name}** {command.format_shortdoc_for_context(ctx)}")
                     for name, command in sorted(data.items())
