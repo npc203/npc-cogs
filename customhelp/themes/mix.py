@@ -55,7 +55,7 @@ class Mixture(ThemesMeta):
                         ", ".join(f"{name}" for name in data) for _, data in coms
                     )
                     for i, page in enumerate(
-                        pagify(commands_list, page_length=1000, shorten_by=0)
+                        pagify(commands_list, page_length=1000, delims=[","], shorten_by=0)
                     ):
                         if i == 0:
                             title = (
