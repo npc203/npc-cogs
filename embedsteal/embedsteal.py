@@ -48,9 +48,18 @@ class EmbedSteal(commands.Cog):
             msg = ctx.message.reference.resolved
             if isinstance(msg, discord.Message):
                 check = msg.content
-                if "eval" in check.split("\n", 1)[0]:
-                    check = check.split("\n", 1)[1]
-                await ctx.invoke(ctx.bot.get_command("eval"), body=check)
+                # eval stuff
+                if check.count("\n") > 1:
+                    ind = check.find("eval")
+                    if ind != -1 and ind < 17:
+                        check = check[ind + 4 :]
+                    return await ctx.invoke(ctx.bot.get_command("eval"), body=check.strip("\n"))
+                # debug stuff
+                else:
+                    ind = check.find("debug")
+                    if ind != -1 and ind < 17:
+                        check = check[ind + 5 :]
+                    return await ctx.invoke(ctx.bot.get_command("debug"), code=check)
             else:
                 await ctx.send("Message isn't reachable")
         else:
