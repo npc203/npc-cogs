@@ -49,8 +49,8 @@ class EmbedSteal(commands.Cog):
             if isinstance(msg, discord.Message):
                 check = msg.content
                 # eval stuff
-                if check.count("\n") > 1:
-                    ind = check.find("eval")
+                ind = check.find("eval")
+                if check.count("\n") > 1 or ind != -1:
                     if ind != -1 and ind < 17:
                         check = check[ind + 4 :]
                     return await ctx.invoke(ctx.bot.get_command("eval"), body=check.strip("\n"))
