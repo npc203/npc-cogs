@@ -9,7 +9,6 @@ from bs4 import BeautifulSoup
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils import menus
-from redbot.core.utils.chat_formatting import pagify
 
 
 # TODO Add optional way to use from google search api
