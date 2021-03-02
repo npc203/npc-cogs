@@ -1,21 +1,7 @@
 from ..abc import ThemesMeta
 from ..core.base_help import (
-    EMPTY_STRING,
-    GLOBAL_CATEGORIES,
-    BaguetteHelp,
-    CategoryConvert,
-    Context,
-    EmbedField,
-    HelpSettings,
-    _,
-    box,
-    cast,
-    commands,
-    discord,
-    humanize_timedelta,
-    pagify,
-    chain,
-)
+    EMPTY_STRING, GLOBAL_CATEGORIES, CategoryConvert, Context, EmbedField,
+    HelpSettings, _, chain, commands, pagify)
 
 
 class Mixture(ThemesMeta):
@@ -151,12 +137,6 @@ class Mixture(ThemesMeta):
             if description:
                 emb["embed"]["description"] = "**" + description + "**"
             if coms:
-
-                def shorten_line(a_line: str) -> str:
-                    if len(a_line) < 70:  # embed max width needs to be lower
-                        return a_line
-                    return a_line[:67] + "..."
-
                 for name, command in sorted(coms.items()):
                     emb["fields"].append(
                         EmbedField(name, command.format_shortdoc_for_context(ctx), False)

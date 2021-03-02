@@ -3,8 +3,6 @@ from __future__ import annotations
 from typing import Any, List, Union
 
 import discord
-from redbot import __version__
-from redbot.core import commands
 from redbot.vendored.discord.ext import menus
 
 # None of the below classes are done by me, it's mostly copy paste/ edited from a piece of code
@@ -74,7 +72,7 @@ class ReplyMenus(menus.MenuPages, inherit_buttons=False):
                 await self.show_page(0)
             elif page_number < 0:
                 await self.show_page(max_pages - 1)
-            elif max_pages > page_number >= 0:
+            else:
                 await self.show_page(page_number)
         except IndexError:
             # An error happened that can be handled, so ignore it.
@@ -122,7 +120,7 @@ class NoReplyMenus(menus.MenuPages, inherit_buttons=False):
                 await self.show_page(0)
             elif page_number < 0:
                 await self.show_page(max_pages - 1)
-            elif max_pages > page_number >= 0:
+            else:
                 await self.show_page(page_number)
         except IndexError:
             # An error happened that can be handled, so ignore it.

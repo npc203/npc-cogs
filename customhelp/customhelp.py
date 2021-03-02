@@ -16,14 +16,13 @@ from redbot.core.bot import Red
 from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.utils import menus, predicates
 from redbot.core.utils.chat_formatting import box, pagify
-from redbot.core.utils.predicates import ReactionPredicate
 from tabulate import tabulate
 
 from . import themes
 from .core import ARROWS, GLOBAL_CATEGORIES, set_menu
 from .core.base_help import EMPTY_STRING, BaguetteHelp
 from .core.category import Category, get_category
-from .core.utils import EMOJI_REGEX, LINK_REGEX, emoji_converter
+from .core.utils import LINK_REGEX, emoji_converter
 
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
 
@@ -143,7 +142,7 @@ class CustomHelp(commands.Cog):
             return
         main_theme = BaguetteHelp(self.bot, self.config)
         theme = await self.config.theme()
-        if all(theme.values()) == None:
+        if all(theme.values()) is None:
             pass
         else:
             for feature in theme:
@@ -182,9 +181,9 @@ class CustomHelp(commands.Cog):
             emb.add_field(name=theme, value=themes.list[theme].__doc__, inline=False)
         await ctx.send(embed=emb)
 
-    @chelp.command(aliases=["auto", "autocat"])
-    async def autocategorise(self, ctx):
-        """Auto categorise cogs based on it's tags"""
+    @chelp.command()
+    async def auto(self, ctx):
+        """Auto categorise cogs based on it's tags and display them"""
         data = {}
         # Thanks trusty pathlib is awesome.
         for k, a in self.bot.cogs.items():
@@ -622,46 +621,104 @@ class CustomHelp(commands.Cog):
             return
         await ctx.send("Aborted")
 
-    # TODO need to remove multiple categories?
-    @remove.command()
-    async def category(self, ctx, category: str):
-        """Remove a single category"""
-        all_cat = await self.config.categories()
-        all_cat = [i["name"] for i in all_cat]
-        if category in all_cat:
-            async with self.config.categories() as conf_cat:
-                conf_cat.pop(all_cat.index(category))
-            await self.refresh_cache()
-            await ctx.send(f"Successfully removed {category}")
-        # uncategorised
-        elif category == GLOBAL_CATEGORIES[-1].name:
-            await ctx.send(
-                f"You can't remove {category} cause it is where the uncategorised cogs go into"
-            )
-        else:
-            await ctx.send(f"Invalid category name: {category}")
+    @remove.command(aliases=["categories", "cat"])
+    async def category(self, ctx, *categories: str):
+        """Remove a multiple categories"""
+        # from [p]load
+        category_names = set(map(lambda cat: cat.rstrip(","), categories))
 
-    # TODO need to remove multiple cogs?
-    @remove.command()
-    async def cog(self, ctx, cog_name: str):
-        """Remove a cog from a category"""
-        # valid cog
-        if self.bot.get_cog(cog_name):
-            for cat in GLOBAL_CATEGORIES:
-                if cog_name in cat.cogs:
-                    if cat == GLOBAL_CATEGORIES[-1]:
-                        await ctx.send("You can't remove cogs from uncategorised category")
-                        return
-                    async with self.config.categories() as cat_conf:
-                        cat_conf[GLOBAL_CATEGORIES.index(cat)]["cogs"].remove(cog_name)
-                    await ctx.send(f"Successfully removed {cog_name} from {cat.name}")
-                    await self.refresh_cache()
-                    return
+        to_config = []
+        invalid = []
+        all_cat = [i.name for i in GLOBAL_CATEGORIES]
+        all_cat.pop(-1)
+        text = ""
+        for category in categories:
+            for ind in range(len(all_cat)):
+                if category in all_cat[ind]:
+                    to_config.append(ind)
+                    break
             else:
-                # idk when this might happen, so having it.
-                await ctx.send("Something went wrong, report to cog owner")
-        else:
-            await ctx.send(f"Invaild cog name:`{cog_name}`")
+                # uncategorised
+                if category == GLOBAL_CATEGORIES[-1].name:
+                    text += _(
+                        "You can't remove {} cause it is where the uncategorised cogs go into\n\n"
+                    ).format(category)
+                else:
+                    invalid.append(category)
+
+        async with self.config.categories() as conf_cat:
+            for index in to_config:
+                conf_cat.pop(index)
+
+        text += (
+            _("Sucessfully removed: ") + (", ".join(map(lambda x: all_cat[x], to_config)) + "\n")
+            if to_config
+            else ""
+        )
+        if invalid:
+            text += _("These categories aren't present in the list:\n" + ",".join(invalid))
+        await self.refresh_cache()
+        await ctx.send(text)
+
+    @remove.command(aliases=["cogs"])
+    async def cog(self, ctx, *cog_names: str):
+        """Remove a cog(s) from across categories"""
+        # From Core [p]load xD, using set to avoid dupes
+        cog_names = set(map(lambda cog: cog.rstrip(","), cog_names))
+
+        to_config = []  # [(index_of_category,cog_name),()] (maybe use namedtuples here?)
+        uncat = []
+        invalid = []
+        # wait ctx.send("You can't remove cogs from uncategorised category")
+        def get_category_util(name):
+            for ind in range(len(GLOBAL_CATEGORIES)):
+                if name in GLOBAL_CATEGORIES[ind].cogs:
+                    return ind
+
+        for cog_name in cog_names:
+            # valid cog
+            if self.bot.get_cog(cog_name):
+                index = get_category_util(cog_name)
+                # cog is present in a category
+                if index is not None:
+                    if GLOBAL_CATEGORIES[index] == GLOBAL_CATEGORIES[-1]:
+                        uncat.append(cog_name)
+                    else:
+                        to_config.append((index, cog_name))
+                else:
+                    # This is a rare case to occur, basically "cog is loaded and valid but it didn't get registered in the GLOBAL_CATEGORIES cache"
+                    # Never came to this point, but having it as a check
+                    await ctx.send(
+                        f"Something errored out, kindly report to the owner of this cog, \ncog name:{cog_name}"
+                    )
+            else:
+                invalid.append(cog_name)
+        async with self.config.categories() as cat_conf:
+            for thing in to_config:
+                cat_conf[thing[0]]["cogs"].remove(thing[1])
+        text = ""
+        if to_config:
+            text = "Successfully removed the following\n"
+            last = None
+            for thing in sorted(to_config, key=lambda x: x[0]):
+                if last == thing[0]:
+                    text += " - {}\n".format(thing[1])
+                else:
+                    text += _("From {}:\n - {}\n").format(
+                        GLOBAL_CATEGORIES[thing[0]].name, thing[1]
+                    )
+                    last = thing[0]
+        if uncat:
+            text += (
+                "The following cogs are present in 'uncategorised' and cannot be removed:\n"
+                + (", ".join(uncat))
+            )
+        if invalid:
+            text += "The following cogs are invalid or unloaded:\n" + (", ".join(invalid))
+
+        await self.refresh_cache()
+        for page in pagify(text, page_length=1985, shorten_by=0):
+            await ctx.send(box(page, lang="yaml"))
 
     @chelp.group()
     async def settings(self, ctx):

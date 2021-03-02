@@ -3,9 +3,6 @@
 import asyncio
 
 import discord
-from emoji import UNICODE_EMOJI_ENGLISH
-from redbot.core import commands
-from redbot.core.commands.help import HelpSettings
 
 from . import ARROWS, GLOBAL_CATEGORIES
 from .dpy_menus import ListPages, menus

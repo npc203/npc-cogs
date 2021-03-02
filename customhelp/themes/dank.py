@@ -1,8 +1,7 @@
 from ..abc import ThemesMeta
-from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, BaguetteHelp,
-                              CategoryConvert, Context, EmbedField,
-                              HelpSettings, _, box, cast, commands, discord,
-                              humanize_timedelta, pagify)
+from ..core.base_help import (
+    EMPTY_STRING, GLOBAL_CATEGORIES, CategoryConvert, Context, EmbedField,
+    HelpSettings, _, cast, commands, humanize_timedelta, pagify)
 
 
 class DankHelp(ThemesMeta):

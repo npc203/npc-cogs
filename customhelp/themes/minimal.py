@@ -1,8 +1,7 @@
 from ..abc import ThemesMeta
-from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, BaguetteHelp,
-                              CategoryConvert, Context, EmbedField,
-                              HelpSettings, _, box, cast, chain, commands,
-                              discord, humanize_timedelta, pagify)
+from ..core.base_help import (GLOBAL_CATEGORIES, CategoryConvert, Context,
+                              HelpSettings, _, cast, chain, commands,
+                              humanize_timedelta, pagify)
 
 
 class MinimalHelp(ThemesMeta):
@@ -88,7 +87,6 @@ class MinimalHelp(ThemesMeta):
 
         command = obj
 
-        description = command.description + "\n" if command.description else ""
         signature = _("`{ctx.clean_prefix}{command.qualified_name} {command.signature}`").format(
             ctx=ctx, command=command
         )

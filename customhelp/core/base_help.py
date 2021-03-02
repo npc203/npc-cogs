@@ -4,20 +4,16 @@ from itertools import chain
 from typing import List, Union, cast
 
 import discord
-import tabulate
-from redbot.core import checks, commands
+from redbot.core import commands
 from redbot.core.commands.context import Context
 from redbot.core.commands.help import (HelpSettings, NoCommand, NoSubCommand,
                                        _, dpy_commands, mass_purge)
-from redbot.core.i18n import Translator
-from redbot.core.utils import menus
-from redbot.core.utils.chat_formatting import box, humanize_timedelta, pagify
+from redbot.core.utils.chat_formatting import humanize_timedelta, pagify
 
 from . import ARROWS, GLOBAL_CATEGORIES, get_menu
 from .category import Category, CategoryConvert, get_category
 from .dpy_menus import ListPages
-from .utils import (close_menu, emoji_converter, home_page, next_page,
-                    prev_page, react_page)
+from .utils import close_menu, home_page, next_page, prev_page, react_page
 
 HelpTarget = Union[
     commands.Command,
@@ -99,7 +95,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
             isuncategory = True
         for cogname, cog in (*sorted(ctx.bot.cogs.items()), (None, None)):
             # TODO test this if condition, cause i can't trust my math
-            if (cogname in category.cogs) or (isuncategory and cogname == None):
+            if (cogname in category.cogs) or (isuncategory and cogname is None):
                 cm = await self.get_cog_help_mapping(ctx, cog, help_settings=help_settings)
                 if cm:
                     sorted_iterable.append((cogname, cm))
