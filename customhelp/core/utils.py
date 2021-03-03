@@ -22,6 +22,7 @@ def emoji_converter(bot, emoji):
     emoji = emoji.strip()
     return emoji
     """
+    #TODO Can't be bothered with extra computation for a bot owner command, look at this later 
     if match := re.search(EMOJI_REGEX, emoji):
         return emoji
     else:

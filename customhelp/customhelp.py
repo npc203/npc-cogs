@@ -632,7 +632,7 @@ class CustomHelp(commands.Cog):
         all_cat = [i.name for i in GLOBAL_CATEGORIES]
         all_cat.pop(-1)
         text = ""
-        for category in categories:
+        for category in category_names:
             for ind in range(len(all_cat)):
                 if category in all_cat[ind]:
                     to_config.append(ind)

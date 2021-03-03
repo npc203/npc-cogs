@@ -8,7 +8,7 @@
         "Every other bot's help menu's design"
     ],
     "install_msg": "This is a BETA cog, so expect bugs and kindly report them to me in the cog support server\n The docs for this cog can be found here: https://github.com/npc203/npc-cogs/blob/main/customhelp/README.md",
-    "requirements": ["tabulate","emoji"],
+    "requirements": ["tabulate"],
     "tags": [
         "help",
         "utility",

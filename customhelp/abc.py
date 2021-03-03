@@ -1,6 +1,3 @@
-from .core.category import Category
-
-
 class ThemesMeta:
     """This is the skeletal structure of any theme"""
 
