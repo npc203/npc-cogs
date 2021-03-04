@@ -190,7 +190,11 @@ class CustomHelp(commands.Cog):
             check = Path(getfile(a.__class__)).parent / "info.json"
             if path.isfile(check):
                 with open(check, "r", encoding="utf-8") as f:
-                    tmp = json.load(f)
+                    try:
+                        tmp = json.load(f)
+                    except json.JSONDecodeError:
+                        # TODO Implement logger you lazy bum <_<
+                        print("[ERROR] Invaild JSON in cog {}".format(k))
                     if "tags" in tmp:
                         data[k] = [i.lower() for i in tmp["tags"]]
                     else:
