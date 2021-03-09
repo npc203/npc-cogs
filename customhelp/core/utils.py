@@ -22,11 +22,10 @@ def emoji_converter(bot, emoji):
     emoji = emoji.strip()
     return emoji
     """
-    #TODO Can't be bothered with extra computation for a bot owner command, look at this later 
-    if match := re.search(EMOJI_REGEX, emoji):
-        return emoji
-    else:
-        return emoji
+    # TODO Can't be bothered with extra computation for a bot owner command, look at this later 
+    if match := re.search(EMOJI_REGEX, emoji): return emoji
+    elif "Check for unicode emoji here" return emoji
+    else return None
     """
 
 
@@ -36,13 +35,13 @@ def _skip_single_arrows(self):
     return max_pages == 1
 
 
-async def react_page(ctx, emoji, help_settings):
+async def react_page(ctx, emoji, help_settings, bypass_checks=False):
     for x in GLOBAL_CATEGORIES:
         if x.reaction == emoji:
             category = x
             break
     pages = await ctx.bot._help_formatter.format_category_help(
-        ctx, category, help_settings, get_pages=True
+        ctx, category, help_settings, get_pages=True, bypass_checks=bypass_checks
     )
     if pages:
 

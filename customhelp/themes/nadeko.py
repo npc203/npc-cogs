@@ -13,7 +13,7 @@ class NadekoHelp(ThemesMeta):
         description = ctx.bot.description or ""
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
         if not await ctx.embed_requested():  # Maybe redirect to non-embed minimal format
-            await ctx.send("You need to enable embeds to use custom help menu")
+            await ctx.send(_("You need to enable embeds to use custom help menu"))
         else:
             emb = {
                 "embed": {"title": "", "description": ""},
@@ -23,16 +23,18 @@ class NadekoHelp(ThemesMeta):
 
             emb["footer"]["text"] = tagline
             emb["embed"]["description"] = description
-            emb["title"] = f"{ctx.me.name} Help Menu"
+            emb["title"] = _("{} Help Menu").format(ctx.me.name)
             cat_titles = ""
-            for cat in GLOBAL_CATEGORIES:
-                if cat.cogs and await self.blacklist(ctx, cat.name):
+
+            filtered_categories = await self.filter_categories(ctx, GLOBAL_CATEGORIES)
+            for cat in filtered_categories:
+                if cat.cogs:
                     cat_titles += f"• {cat.name}\n"
             # TODO Dont be a moron trying to pagify this or do we? yes we do, lmao.
             for i, vals in enumerate(pagify(cat_titles, page_length=1000)):
                 emb["fields"].append(
                     EmbedField(
-                        ("List of Categories" if i < 1 else EMPTY_STRING + " "), vals, False
+                        (_("List of Categories") if i < 1 else EMPTY_STRING + " "), vals, False
                     )
                 )
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
@@ -44,6 +46,7 @@ class NadekoHelp(ThemesMeta):
                     pages,
                     embed=True,
                     help_settings=help_settings,
+                    emoji_mapping=filtered_categories,
                 )
 
     async def format_category_help(
@@ -52,8 +55,11 @@ class NadekoHelp(ThemesMeta):
         obj: CategoryConvert,
         help_settings: HelpSettings,
         get_pages: bool = False,
+        **kwargs,
     ):
-        coms = await self.get_category_help_mapping(ctx, obj, help_settings=help_settings)
+        coms = await self.get_category_help_mapping(
+            ctx, obj, help_settings=help_settings, **kwargs
+        )
         if not coms:
             return
 

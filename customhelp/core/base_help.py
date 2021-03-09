@@ -85,20 +85,26 @@ class BaguetteHelp(commands.RedHelpFormatter):
             return com_alias
         return com
 
-    async def get_category_help_mapping(self, ctx, category, help_settings: HelpSettings):
-        # TODO getting every cog and checking if its in category isn't optimised.
-        if not await self.blacklist(ctx, category.name):
+    async def get_category_help_mapping(
+        self, ctx, category, help_settings: HelpSettings, bypass_checks=False
+    ):
+        # Having bypass_checks to prevent triggering self.blacklist many times.
+        if not bypass_checks and not await self.blacklist(ctx, category.name):
             return
         sorted_iterable = []
+        sorted_cogs = sorted(category.cogs)
         isuncategory = False
         if category.name == GLOBAL_CATEGORIES[-1].name:
             isuncategory = True
-        for cogname, cog in (*sorted(ctx.bot.cogs.items()), (None, None)):
-            # TODO test this if condition, cause i can't trust my math
-            if (cogname in category.cogs) or (isuncategory and cogname is None):
-                cm = await self.get_cog_help_mapping(ctx, cog, help_settings=help_settings)
-                if cm:
-                    sorted_iterable.append((cogname, cm))
+            sorted_cogs.append(None)  # Need to add commands with no category here as well >_>
+        for cogname in sorted_cogs:
+            cog = ctx.bot.get_cog(cogname)
+            # Simple kmaps for these conditions, math is dark magic
+            if (not cogname) or cog:
+                if (isuncategory and cogname is None) or (cogname in category.cogs):
+                    cm = await self.get_cog_help_mapping(ctx, cog, help_settings=help_settings)
+                    if cm:
+                        sorted_iterable.append((cogname, cm))
         return sorted_iterable
 
     async def send_help(
@@ -147,8 +153,11 @@ class BaguetteHelp(commands.RedHelpFormatter):
         obj: CategoryConvert,
         help_settings: HelpSettings,
         get_pages: bool = False,
+        **kwargs,
     ):
-        coms = await self.get_category_help_mapping(ctx, obj, help_settings=help_settings)
+        coms = await self.get_category_help_mapping(
+            ctx, obj, help_settings=help_settings, **kwargs
+        )
         if not coms:
             return
 
@@ -362,7 +371,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
         description = ctx.bot.description or ""
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
         if not await ctx.embed_requested():  # Maybe redirect to non-embed minimal format
-            await ctx.send("You need to enable embeds to use custom help menu")
+            await ctx.send(_("You need to enable embeds to use custom help menu"))
         else:
             emb = {
                 "embed": {"title": "", "description": ""},
@@ -380,13 +389,14 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 field = EmbedField(name[:252], value[:1024], False)
                 emb["fields"].append(field)
 
-            emb["title"] = f"{ctx.me.name} Help Menu"
+            emb["title"] = _("{} Help Menu").format(ctx.me.name)
+            filtered_categories = await self.filter_categories(ctx, GLOBAL_CATEGORIES)
             for i in pagify(
                 "\n".join(
                     [
                         f"{str(cat.reaction) if cat.reaction else ''} `{ctx.clean_prefix}help {cat.name:<10}:`**{cat.desc}**\n"
-                        for cat in GLOBAL_CATEGORIES
-                        if cat.cogs and await self.blacklist(ctx, cat.name)
+                        for cat in filtered_categories
+                        if cat.cogs
                     ]
                 ),
                 page_length=1018,
@@ -403,6 +413,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                     embed=True,
                     help_settings=help_settings,
                     add_emojis=((await self.config.settings())["react"]) and True,
+                    emoji_mapping=filtered_categories,
                 )
 
     # TODO maybe try lazy loading
@@ -475,6 +486,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
         embed: bool = True,
         help_settings: HelpSettings = None,
         add_emojis: bool = False,
+        emoji_mapping: list = None,
     ):
         """
         Sends pages based on settings.
@@ -540,13 +552,12 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 final_menu.add_button(trans[thing](ARROWS[thing]))
             # TODO important!
             if add_emojis:
-                # Adding additional category emojis , regex from dpy server
-                for cat in GLOBAL_CATEGORIES:
+                # Adding additional category emojis
+                for cat in emoji_mapping:
                     if cat.reaction:
-                        if await self.blacklist(ctx, cat.name):
-                            final_menu.add_button(
-                                await react_page(ctx, cat.reaction, help_settings)
-                            )
+                        final_menu.add_button(
+                            await react_page(ctx, cat.reaction, help_settings, bypass_checks=True)
+                        )
                 final_menu.add_button(await home_page(ctx, ARROWS["home"], help_settings))
             await final_menu.start(ctx)
 
@@ -559,3 +570,17 @@ class BaguetteHelp(commands.RedHelpFormatter):
         ) or not name in blocklist["nsfw"]
         b = await self.bot.is_owner(ctx.author) or not name in blocklist["dev"]
         return a and b
+
+    async def filter_categories(self, ctx, categories: list) -> list:
+        """Applies blacklist to all the categories, Filters based on the current context"""
+        blocklist = await self.config.blacklist()
+        is_owner = await self.bot.is_owner(ctx.author)
+        final = []
+        for name in categories:
+            # This condition is made using a simple kmap.
+            if (
+                (ctx.channel.is_nsfw() if hasattr(ctx.channel, "is_nsfw") else True)
+                or not name in blocklist["nsfw"]
+            ) and (is_owner or not name in blocklist["dev"]):
+                final.append(name)
+        return final

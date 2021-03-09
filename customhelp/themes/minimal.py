@@ -11,9 +11,11 @@ class MinimalHelp(ThemesMeta):
         description = ctx.bot.description or ""
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
         full_text = f"{description}\n\n{tagline}"
+
+        filtered_categories = await self.filter_categories(ctx, GLOBAL_CATEGORIES)
         # Maybe add category desc somewhere?
-        for cat in GLOBAL_CATEGORIES:
-            if cat.cogs and await self.blacklist(ctx, cat.name):
+        for cat in filtered_categories:
+            if cat.cogs:
                 coms = await self.get_category_help_mapping(ctx, cat, help_settings=help_settings)
                 all_cog_text = []
                 for _, data in coms:
@@ -26,12 +28,15 @@ class MinimalHelp(ThemesMeta):
             text_no,
             embed=False,
             help_settings=help_settings,
+            emoji_mapping=filtered_categories,
         )
 
     async def format_category_help(
-        self, ctx: Context, obj: CategoryConvert, help_settings: HelpSettings
+        self, ctx: Context, obj: CategoryConvert, help_settings: HelpSettings, **kwargs
     ):
-        coms = await self.get_category_help_mapping(ctx, obj, help_settings=help_settings)
+        coms = await self.get_category_help_mapping(
+            ctx, obj, help_settings=help_settings, **kwargs
+        )
         if not coms:
             return
 

@@ -16,8 +16,11 @@ class JustCore(ThemesMeta):
         obj: CategoryConvert,
         help_settings: HelpSettings,
         get_pages: bool = False,
+        **kwargs,
     ):
-        coms = await self.get_category_help_mapping(ctx, obj, help_settings=help_settings)
+        coms = await self.get_category_help_mapping(
+            ctx, obj, help_settings=help_settings, **kwargs
+        )
         if not coms:
             return
         description = ctx.bot.description or ""

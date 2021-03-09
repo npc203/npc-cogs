@@ -13,7 +13,7 @@ class Mixture(ThemesMeta):
         description = ctx.bot.description or ""
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
         if not await ctx.embed_requested():  # Maybe redirect to non-embed minimal format
-            await ctx.send("You need to enable embeds to use custom help menu")
+            await ctx.send(_("You need to enable embeds to use custom help menu"))
         else:
             emb = {
                 "embed": {"title": "", "description": ""},
@@ -31,9 +31,11 @@ class Mixture(ThemesMeta):
                 field = EmbedField(name[:252], value[:1024], False)
                 emb["fields"].append(field)
 
-            emb["title"] = f"{ctx.me.name} Help Menu"
-            for cat in GLOBAL_CATEGORIES:
-                if cat.cogs and await self.blacklist(ctx, cat.name):
+            emb["title"] = _("{} Help Menu").format(ctx.me.name)
+
+            filtered_categories = await self.filter_categories(ctx, GLOBAL_CATEGORIES)
+            for cat in filtered_categories:
+                if cat.cogs:
                     coms = await self.get_category_help_mapping(
                         ctx, cat, help_settings=help_settings
                     )
@@ -60,6 +62,7 @@ class Mixture(ThemesMeta):
                     embed=True,
                     help_settings=help_settings,
                     add_emojis=((await self.config.settings())["react"]) and True,
+                    emoji_mapping=filtered_categories,
                 )
 
     async def format_category_help(
@@ -68,8 +71,11 @@ class Mixture(ThemesMeta):
         obj: CategoryConvert,
         help_settings: HelpSettings,
         get_pages: bool = False,
+        **kwargs,
     ):
-        coms = await self.get_category_help_mapping(ctx, obj, help_settings=help_settings)
+        coms = await self.get_category_help_mapping(
+            ctx, obj, help_settings=help_settings, **kwargs
+        )
         if not coms:
             return
 
