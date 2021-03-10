@@ -890,7 +890,7 @@ class CustomHelp(commands.Cog):
         # TODO make this as an util function?
         try:
             parsed_data = yaml.safe_load(content)
-        except yaml.parser.ParserError:
+        except (yaml.parser.ParserError, yaml.constructor.ConstructorError):
             await ctx.send("Wrongly formatted")
             return
         except yaml.scanner.ScannerError as e:
