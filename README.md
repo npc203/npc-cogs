@@ -1,11 +1,10 @@
-# Npc-Cogs V3 (Discontinued)
+# Npc-Cogs V3
 [![Red-DiscordBot](https://img.shields.io/badge/Red--DiscordBot-V3-red.svg)](https://github.com/Cog-Creators/Red-DiscordBot) 
 [![Discord.py](https://img.shields.io/badge/Discord.py-rewrite-blue.svg)](https://github.com/Rapptz/discord.py/tree/rewrite)
 [![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)  
 
-**Note: I'm taking a break from coding and won't be available in the cog support server or the main server.  
-All the cogs are functional and is actively used by me, any kind of suggestions/bugfixes are always welcome in the form of issues or PRs.  
-Any doubts regarding setup can either be asked in my DMs or an issue can be opened in this repo.**
+**Note: This is an unapproved repo, meaning no one formally reviewed this repo yet and any loss of data in your bot isn't my fault (well maybe not, I mean, I use my cogs for my bot as well)  
+but hey, if at all you come across a bug, report it to me in discord.**
 
 A fun oriented list of Red-Cogs made for fun ofc.  
 Discord User: epic guy#0715  
