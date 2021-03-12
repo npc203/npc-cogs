@@ -12,9 +12,33 @@ from redbot.core.utils import menus
 
 
 # TODO Add optional way to use from google search api
+
+
+def nsfwcheck():
+    """This check is taken from Preda's NSFW cog, https://github.com/PredaaA/predacogs/blob/219e83da1e75539f8a25b7d9192e8f99d21edae9/nsfw/core.py#L206"""
+
+    async def predicate(ctx: commands.Context):
+
+        if not ctx.guild:
+            return True
+        if ctx.channel.is_nsfw():
+            return True
+
+        msg = "You can't use this command in a non-NSFW channel !"
+        try:
+            embed = discord.Embed(title="\N{LOCK} " + msg, color=0xAA0000)
+            await ctx.send(embed=embed)
+        except discord.Forbidden:
+            await ctx.send(msg)
+        finally:
+            return False
+
+    return commands.check(predicate)
+
+
 class Google(commands.Cog):
     """
-    A Simple google search
+    A Simple google search with image support as well
     A fair bit of querying stuff is taken from  Kowlin's cog - https://github.com/Kowlin/refactored-cogs
     """
 
@@ -22,7 +46,7 @@ class Google(commands.Cog):
         self.bot = bot
 
     @commands.guild_only()
-    @commands.command()
+    @commands.group(invoke_without_command=True)
     async def google(self, ctx, *, query: str = None):
         """Search in google from discord"""
         if not query:
@@ -49,7 +73,25 @@ class Google(commands.Cog):
             else:
                 await ctx.send("No result")
 
-    def parser(self, text):
+    @nsfwcheck()
+    @google.command(alias="images")
+    async def image(self, ctx, *, query: str = None):
+        """Search google images from discord"""
+        if not query:
+            await ctx.send("Please enter some image name to search")
+        else:
+            async with ctx.typing():
+                response = await self.get_result(query, images=True)
+                size = len(tuple(response))
+                pages = []
+                for i, j in enumerate(response, 1):
+                    pages.append(discord.Embed(title=f"Pages: {i}/{size}").set_image(url=j))
+            if pages:
+                await menus.menu(ctx, pages, controls=menus.DEFAULT_CONTROLS)
+            else:
+                await ctx.send("No result")
+
+    def parser_text(self, text):
         """My bad logic for scraping"""
         soup = BeautifulSoup(text, features="html.parser")
         s = namedtuple("searchres", "url title desc")
@@ -77,16 +119,28 @@ class Google(commands.Cog):
                 final.append(s(url, title, desc))
         return final, stats
 
-    async def get_result(self, query):
+    def parser_image(self, html):
+        soup = BeautifulSoup(html, features="html.parser")
+        return [x.get("src", "https://http.cat/404") for x in soup.findAll("img", class_="t0fcAb")]
+
+    async def get_result(self, query, images=False):
         """Fetch the data"""
         # TODO make this fetching a little better
         encoded = urllib.parse.quote_plus(query, encoding="utf-8", errors="replace")
-        url = "https://www.google.com/search?q="
         options = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36"
         }
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url + encoded, headers=options) as resp:
-                text = await resp.text()
-        prep = functools.partial(self.parser, text)
+        if not images:
+            url = "https://www.google.com/search?q="
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url + encoded, headers=options) as resp:
+                    text = await resp.text()
+            prep = functools.partial(self.parser_text, text)
+        else:
+            # TYSM fixator, for the non-js query url
+            url = "https://www.google.com/search?tbm=isch&sfr=gws&gbv=1&q="
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url + encoded, headers=options) as resp:
+                    text = await resp.text()
+            prep = functools.partial(self.parser_image, text)
         return await self.bot.loop.run_in_executor(None, prep)
