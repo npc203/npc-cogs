@@ -45,7 +45,6 @@ class Google(commands.Cog):
     def __init__(self, bot: Red) -> None:
         self.bot = bot
 
-    @commands.guild_only()
     @commands.group(invoke_without_command=True)
     async def google(self, ctx, *, query: str = None):
         """Search in google from discord"""
