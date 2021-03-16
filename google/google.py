@@ -178,6 +178,7 @@ class Google(commands.Cog):
                         + "\n\N{ZWSP}"
                     )
                 final.append(s(None, "Unit Conversion", final_text))
+                return
 
             # Definition cards
             if card := soup.find("div", class_="KIy09e"):
@@ -192,6 +193,18 @@ class Google(commands.Cog):
                     for text in definition.findAll("div")[:2]:
                         final_text += "`" + h2t(str(text)).strip("\n") + "`" + "\n"
                 final.append(s(None, "Definition", final_text))
+                return
+
+            # single answer card
+            if card := soup.find("div", class_="ayRjaf"):
+                final.append(
+                    s(
+                        None,
+                        h2t(str(card.find("div", class_="zCubwf"))).replace("\n", ""),
+                        h2t(str(card.find("span").find("span"))).strip("\n") + "\n\N{ZWSP}",
+                    )
+                )
+                return
 
         get_card()
         for res in soup.findAll("div", class_="g"):
