@@ -184,6 +184,8 @@ class Google(commands.Cog):
             if card := soup.find("div", class_="KIy09e"):
                 final_text = ""
                 if word := card.find("div", class_="DgZBFd XcVN5d frCXef"):
+                    if sup := word.find("sup"):
+                        sup.decompose()
                     final_text += "`" + word.text + "`"
                 if pronounciate := card.find("div", class_="S23sjd g30o5d"):
                     final_text += "   |   " + pronounciate.text
@@ -191,7 +193,9 @@ class Google(commands.Cog):
                     final_text += "   |   " + type_.text + "\n\n"
                 if definition := card.find("div", class_="L1jWkf h3TRxf"):
                     for text in definition.findAll("div")[:2]:
-                        final_text += "`" + h2t(str(text)).strip("\n") + "`" + "\n"
+                        tmp = h2t(str(text))
+                        if tmp.count("\n") < 5:
+                            final_text += "`" + tmp.strip("\n").replace("\n", " ") + "`" + "\n"
                 final.append(s(None, "Definition", final_text))
                 return
 
