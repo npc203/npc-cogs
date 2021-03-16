@@ -41,10 +41,12 @@ class Google(commands.Cog):
                 for num, group in enumerate(groups, 1):
                     emb = discord.Embed(title=f"Google Search: {query[:50]}...")
                     for result in group:
+                        desc = (
+                            f"[{result.url[:60]}]({result.url})\n" if result.url else ""
+                        ) + f"{result.desc}"[:1024]
                         emb.add_field(
                             name=f"{result.title}",
-                            value=(f"[{result.url[:60]}]({result.url})\n" if result.url else "")
-                            + f"{result.desc}"[:1024],
+                            value=desc or "Nothing",
                             inline=False,
                         )
                     emb.description = f"Page {num} of {len(groups)}"
@@ -57,7 +59,7 @@ class Google(commands.Cog):
             else:
                 await ctx.send("No result")
 
-    @google.command(alias="images")
+    @google.command(aliases=["img"])
     async def image(self, ctx, *, query: str = None):
         """Search google images from discord"""
         if not query:
@@ -178,7 +180,7 @@ class Google(commands.Cog):
                 final.append(s(None, "Unit Conversion", final_text))
 
             # Definition cards
-            if card := soup.find("div", class_="ULSxyf"):
+            if card := soup.find("div", class_="KIy09e"):
                 final_text = ""
                 if word := card.find("div", class_="DgZBFd XcVN5d frCXef"):
                     final_text += "`" + word.text + "`"
