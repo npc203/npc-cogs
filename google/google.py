@@ -79,6 +79,7 @@ class Google(commands.Cog):
             else:
                 await ctx.send("No result")
 
+    @commands.is_owner()
     @google.command(hidden=True)
     async def debug(self, ctx, *, url):
         options = {
@@ -99,7 +100,7 @@ class Google(commands.Cog):
         stats = h2t(str(soup.find("div", id="result-stats")))
 
         def get_card():
-            """Getting cards if present"""
+            """Getting cards if present, here started the pain"""
             # common card
             if card := soup.find("div", class_="g mnr-c g-blk"):
                 if desc := card.find("span", class_="hgKElc"):

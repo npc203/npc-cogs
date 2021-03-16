@@ -3,9 +3,10 @@
     "short": "A simple google search",
     "description": "This searches google and fetches results using a custom scraper.",
     "end_user_data_statement": "This cog does not persistently store any data or metadata about users.",
-    "install_msg": "Warning: This might get your ip 429'ed from google.com, Not Recommended for big bots",
+    "install_msg": "Warning: This might get your ip 429'ed from google.com for a day or so at max. (Haven't gotten to that despite testing hard)\nFixator helped me so much, with the query url and in many many other things.",
     "author": [
-        "epic guy"
+        "epic guy",
+        "fixator"
     ],
     "required_cogs": {},
     "requirements": ["html2text","beautifulsoup4"],
