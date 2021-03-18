@@ -150,16 +150,9 @@ class Google(commands.Cog):
                 dest_lang = "**" + langs.find("span", class_="target-language").text + "**"
                 final_text = ""
                 if source := card.find("div", id="KnM9nf"):
-                    final_text += (
-                        src_lang
-                        + "\n`"
-                        + source.find("div", class_="tw-ta-container hide-focus-ring tw-nfl")
-                        .find("textarea")
-                        .text
-                    ) + "`\n"
-
+                    final_text += (src_lang + "\n`" + source.find("pre").text) + "`\n"
                 if dest := card.find("div", id="kAz1tf"):
-                    final_text += dest_lang + "\n`" + h2t(str(dest.find("span"))).strip("\n") + "`"
+                    final_text += dest_lang + "\n`" + dest.find("pre").text.strip("\n") + "`"
                 final.append(s(None, "Google Translator", final_text))
                 return
 
