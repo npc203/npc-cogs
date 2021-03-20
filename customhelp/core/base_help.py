@@ -100,11 +100,12 @@ class BaguetteHelp(commands.RedHelpFormatter):
         for cogname in sorted_cogs:
             cog = ctx.bot.get_cog(cogname)
             # Simple kmaps for these conditions, math is dark magic
-            if (not cogname) or cog:
-                if (isuncategory and cogname is None) or (cogname in category.cogs):
-                    cm = await self.get_cog_help_mapping(ctx, cog, help_settings=help_settings)
-                    if cm:
-                        sorted_iterable.append((cogname, cm))
+            if ((not cogname) or cog) and (
+                (isuncategory and cogname is None) or (cogname in category.cogs)
+            ):
+                cm = await self.get_cog_help_mapping(ctx, cog, help_settings=help_settings)
+                if cm:
+                    sorted_iterable.append((cogname, cm))
         return sorted_iterable
 
     async def send_help(
@@ -391,16 +392,8 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
             emb["title"] = _("{} Help Menu").format(ctx.me.name)
             filtered_categories = await self.filter_categories(ctx, GLOBAL_CATEGORIES)
-            for i in pagify(
-                "\n".join(
-                    [
-                        f"{str(cat.reaction) if cat.reaction else ''} `{ctx.clean_prefix}help {cat.name:<10}:`**{cat.desc}**\n"
-                        for cat in filtered_categories
-                        if cat.cogs
-                    ]
-                ),
-                page_length=1018,
-            ):
+            for i in pagify("\n".join(f"{str(cat.reaction) if cat.reaction else ''} `{ctx.clean_prefix}help {cat.name:<10}:`**{cat.desc}**\n" for cat in filtered_categories
+                                if cat.cogs), page_length=1018):
                 emb["fields"].append(EmbedField("Categories:", i, False))
 
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
@@ -567,8 +560,9 @@ class BaguetteHelp(commands.RedHelpFormatter):
         blocklist = await self.config.blacklist()
         a = (
             ctx.channel.is_nsfw() if hasattr(ctx.channel, "is_nsfw") else True
-        ) or not name in blocklist["nsfw"]
-        b = await self.bot.is_owner(ctx.author) or not name in blocklist["dev"]
+        ) or name not in blocklist["nsfw"]
+
+        b = await self.bot.is_owner(ctx.author) or name not in blocklist["dev"]
         return a and b
 
     async def filter_categories(self, ctx, categories: list) -> list:

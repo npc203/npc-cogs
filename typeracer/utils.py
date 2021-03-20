@@ -25,7 +25,7 @@ async def evaluate(ctx, a_string: str, b_string: str, time_taken, dm_id, author_
         for i, s in enumerate(ndiff(a_string, b_string)):
             if s[0] == " ":
                 continue
-            elif s[0] == "-" or s[0] == "+":
+            elif s[0] in ["-", "+"]:
                 mistakes += 1
     # Analysis
     accuracy = fuzz.ratio(a_string, b_string)

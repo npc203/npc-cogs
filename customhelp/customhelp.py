@@ -124,9 +124,9 @@ class CustomHelp(commands.Cog):
         uncat_config = await self.config.uncategorised()
         GLOBAL_CATEGORIES.append(
             Category(
-                name=uncat_config["name"] if uncat_config["name"] else "uncategorised",
-                desc=uncat_config["desc"] if uncat_config["desc"] else "No category commands",
-                long_desc=uncat_config["long_desc"] if uncat_config["long_desc"] else "",
+                name=uncat_config["name"] or "uncategorised",
+                desc=uncat_config["desc"] or "No category commands",
+                long_desc=uncat_config["long_desc"] or "",
                 reaction=emoji_converter(self.bot, uncat_config["reaction"]),
                 cogs=list(uncategorised),
             )
@@ -142,9 +142,7 @@ class CustomHelp(commands.Cog):
             return
         main_theme = BaguetteHelp(self.bot, self.config)
         theme = await self.config.theme()
-        if all(theme.values()) is None:
-            pass
-        else:
+        if all(theme.values()) is not None:
             for feature in theme:
                 if theme[feature]:
                     inherit_feature = getattr(
@@ -195,10 +193,7 @@ class CustomHelp(commands.Cog):
                     except json.JSONDecodeError:
                         # TODO Implement logger you lazy bum <_<
                         print("[ERROR] Invaild JSON in cog {}".format(k))
-                    if "tags" in tmp:
-                        data[k] = [i.lower() for i in tmp["tags"]]
-                    else:
-                        data[k] = []
+                    data[k] = [i.lower() for i in tmp["tags"]] if "tags" in tmp else []
             else:
                 data[k] = []
 

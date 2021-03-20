@@ -65,15 +65,13 @@ class ReplyMenus(menus.MenuPages, inherit_buttons=False):
     async def show_checked_page(self, page_number: int) -> None:
         max_pages = self._source.get_max_pages()
         try:
-            if max_pages is None:
+            if max_pages is None or page_number < max_pages and page_number >= 0:
                 # If it doesn't give maximum pages, it cannot be checked
                 await self.show_page(page_number)
             elif page_number >= max_pages:
                 await self.show_page(0)
-            elif page_number < 0:
-                await self.show_page(max_pages - 1)
             else:
-                await self.show_page(page_number)
+                await self.show_page(max_pages - 1)
         except IndexError:
             # An error happened that can be handled, so ignore it.
             pass
@@ -113,15 +111,13 @@ class NoReplyMenus(menus.MenuPages, inherit_buttons=False):
     async def show_checked_page(self, page_number: int) -> None:
         max_pages = self._source.get_max_pages()
         try:
-            if max_pages is None:
+            if max_pages is None or page_number < max_pages and page_number >= 0:
                 # If it doesn't give maximum pages, it cannot be checked
                 await self.show_page(page_number)
             elif page_number >= max_pages:
                 await self.show_page(0)
-            elif page_number < 0:
-                await self.show_page(max_pages - 1)
             else:
-                await self.show_page(page_number)
+                await self.show_page(max_pages - 1)
         except IndexError:
             # An error happened that can be handled, so ignore it.
             pass

@@ -21,12 +21,6 @@ def emoji_converter(bot, emoji):
         return bot.get_emoji(int(emoji))
     emoji = emoji.strip()
     return emoji
-    """
-    # TODO Can't be bothered with extra computation for a bot owner command, look at this later 
-    if match := re.search(EMOJI_REGEX, emoji): return emoji
-    elif "Check for unicode emoji here" return emoji
-    else return None
-    """
 
 
 # dpy menus helpers
@@ -67,10 +61,9 @@ async def home_page(ctx, emoji, help_settings):
 
         async def action(menu, payload):
             await menu.change_source(ListPages(pages))
-            if len(pages) == 1:
-                if ARROWS["left"] in map(str, menu._buttons.keys()):
-                    menu.add_button(empty_button(ARROWS["left"]))
-                    menu.add_button(empty_button(ARROWS["right"]))
+            if len(pages) == 1 and ARROWS["left"] in map(str, menu._buttons.keys()):
+                menu.add_button(empty_button(ARROWS["left"]))
+                menu.add_button(empty_button(ARROWS["right"]))
 
         return menus.Button(emoji, action)
     else:

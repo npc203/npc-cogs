@@ -17,11 +17,10 @@ __BaseMenu = None
 def set_menu(reply: bool):
     global __BaseMenu
     if reply:
-        if __version__ >= "3.4.6":
-            __BaseMenu = ReplyMenus
-            return "Sucessfully enabled replies for help menus", 1
-        else:
+        if __version__ < "3.4.6":
             return "You need to have Red version 3.4.6 or greater to use replies", 0
+        __BaseMenu = ReplyMenus
+        return "Sucessfully enabled replies for help menus", 1
     else:
         __BaseMenu = NoReplyMenus
         return "Sucessfully disabled replies for help menus", 1

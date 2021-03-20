@@ -69,13 +69,13 @@ class Google(commands.Cog):
             async with ctx.typing():
                 response = await self.get_result(query, images=True, nsfw=isnsfw)
                 size = len(tuple(response))
-                pages = []
-                for i, j in enumerate(response, 1):
-                    pages.append(
-                        discord.Embed(title=f"Pages: {i}/{size}")
-                        .set_image(url=j)
-                        .set_footer(text=f"Safe Search: {not isnsfw}")
-                    )
+                pages = [
+                    discord.Embed(title=f"Pages: {i}/{size}")
+                    .set_image(url=j)
+                    .set_footer(text=f"Safe Search: {not isnsfw}")
+                    for i, j in enumerate(response, 1)
+                ]
+
             if pages:
                 await menus.menu(ctx, pages, controls=menus.DEFAULT_CONTROLS)
             else:

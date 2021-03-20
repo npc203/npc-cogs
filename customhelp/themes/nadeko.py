@@ -24,12 +24,12 @@ class NadekoHelp(ThemesMeta):
             emb["footer"]["text"] = tagline
             emb["embed"]["description"] = description
             emb["title"] = _("{} Help Menu").format(ctx.me.name)
-            cat_titles = ""
-
             filtered_categories = await self.filter_categories(ctx, GLOBAL_CATEGORIES)
-            for cat in filtered_categories:
-                if cat.cogs:
-                    cat_titles += f"• {cat.name}\n"
+            cat_titles = "".join(
+                f"• {cat.name}\n" for cat in filtered_categories if cat.cogs
+            )
+
+
             # TODO Dont be a moron trying to pagify this or do we? yes we do, lmao.
             for i, vals in enumerate(pagify(cat_titles, page_length=1000)):
                 emb["fields"].append(
@@ -79,10 +79,7 @@ class NadekoHelp(ThemesMeta):
                 emb["embed"]["description"] = f"*{description[:250]}*"
 
             for cog_name, data in coms:
-                if cog_name:
-                    title = f"**{cog_name}**"
-                else:
-                    title = _("**No Category:**")
+                title = f"**{cog_name}**" if cog_name else _("**No Category:**")
                 cog_text = [
                     f"{ctx.clean_prefix}{name:<15}{command.aliases}"
                     for name, command in sorted(data.items())
