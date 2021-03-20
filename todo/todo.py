@@ -72,7 +72,7 @@ class Todo(commands.Cog):
         if not todos:
             await ctx.send("Currently, you have no TODOs")
         else:
-            todo_text = "\n".join([f"{i} - {x}" for i, x in enumerate(todos)])
+            todo_text = "\n".join(f"{i} - {x}" for i, x in enumerate(todos))
             if await self.config.embeds():
                 pagified = tuple(pagify(todo_text, page_length=1004, shorten_by=0))
                 # embeds and menus
@@ -134,10 +134,7 @@ class Todo(commands.Cog):
                 else:
                     removed.append(i)
             todos[:] = temp
-        for page in pagify(
-            "Succesfully removed:\n" + "\n".join([f"{i}. {x}" for i, x in enumerate(removed, 1)]),
-            page_length=1970,
-        ):
+        for page in pagify("Succesfully removed:\n" + "\n".join(f"{i}. {x}" for i, x in enumerate(removed, 1)), page_length=1970):
             await ctx.send(page)
 
     @todo.command()

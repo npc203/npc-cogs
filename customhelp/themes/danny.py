@@ -86,11 +86,7 @@ class DannyHelp(ThemesMeta):
             if description:
                 emb["embed"]["title"] = f"*{description[:250]}*"
             for cog_name, data in coms:
-                if cog_name:
-                    title = f"**{cog_name}**"
-                else:
-                    title = _("**No Category:**")
-
+                title = f"**{cog_name}**" if cog_name else _("**No Category:**")
                 cog_text = " ".join((f"`{name}`") for name, command in sorted(data.items()))
 
                 for page in pagify(cog_text, page_length=256, delims=[" "], shorten_by=0):
