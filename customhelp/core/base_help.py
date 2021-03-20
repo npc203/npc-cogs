@@ -392,8 +392,14 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
             emb["title"] = _("{} Help Menu").format(ctx.me.name)
             filtered_categories = await self.filter_categories(ctx, GLOBAL_CATEGORIES)
-            for i in pagify("\n".join(f"{str(cat.reaction) if cat.reaction else ''} `{ctx.clean_prefix}help {cat.name:<10}:`**{cat.desc}**\n" for cat in filtered_categories
-                                if cat.cogs), page_length=1018):
+            for i in pagify(
+                "\n".join(
+                    f"{str(cat.reaction) if cat.reaction else ''} `{ctx.clean_prefix}help {cat.name:<10}:`**{cat.desc}**\n"
+                    for cat in filtered_categories
+                    if cat.cogs
+                ),
+                page_length=1018,
+            ):
                 emb["fields"].append(EmbedField("Categories:", i, False))
 
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)

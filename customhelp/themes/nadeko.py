@@ -25,10 +25,7 @@ class NadekoHelp(ThemesMeta):
             emb["embed"]["description"] = description
             emb["title"] = _("{} Help Menu").format(ctx.me.name)
             filtered_categories = await self.filter_categories(ctx, GLOBAL_CATEGORIES)
-            cat_titles = "".join(
-                f"• {cat.name}\n" for cat in filtered_categories if cat.cogs
-            )
-
+            cat_titles = "".join(f"• {cat.name}\n" for cat in filtered_categories if cat.cogs)
 
             # TODO Dont be a moron trying to pagify this or do we? yes we do, lmao.
             for i, vals in enumerate(pagify(cat_titles, page_length=1000)):

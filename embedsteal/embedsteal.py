@@ -54,7 +54,9 @@ class EmbedSteal(commands.Cog):
                 if check.count("\n") > 1 or ind != -1:
                     if ind != -1 and ind < 17:
                         check = check[ind + 4 :]
-                    return await ctx.invoke(ctx.bot.get_command("eval"), body=check.strip("\n").strip())
+                    return await ctx.invoke(
+                        ctx.bot.get_command("eval"), body=check.strip("\n").strip()
+                    )
                 # debug stuff
                 else:
                     ind = check.find("debug")

@@ -134,7 +134,10 @@ class Todo(commands.Cog):
                 else:
                     removed.append(i)
             todos[:] = temp
-        for page in pagify("Succesfully removed:\n" + "\n".join(f"{i}. {x}" for i, x in enumerate(removed, 1)), page_length=1970):
+        for page in pagify(
+            "Succesfully removed:\n" + "\n".join(f"{i}. {x}" for i, x in enumerate(removed, 1)),
+            page_length=1970,
+        ):
             await ctx.send(page)
 
     @todo.command()

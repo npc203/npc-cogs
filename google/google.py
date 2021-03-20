@@ -1,16 +1,15 @@
 import functools
 import urllib
 from collections import namedtuple
+from io import BytesIO
 
 import aiohttp
 import discord
-from io import BytesIO
-from html2text import html2text as h2t
 from bs4 import BeautifulSoup
+from html2text import html2text as h2t
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils import menus
-
 
 # TODO Add optional way to use from google search api
 
