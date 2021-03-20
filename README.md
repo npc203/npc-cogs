@@ -24,6 +24,7 @@ To add cogs from this repo to your instance, do these steps:
 | Google| Alpha |<details><summary>A simple google search cog</summary>This cog scrapes google to get results</details>
 | TypeRacer | Alpha |<details><summary>Typing speed test</summary>Test you typing skills with this cog</details>
 | CustomHelp | Beta |<details><summary>A category themed custom help</summary>Kindly read https://npc-cogs.readthedocs.io/en/latest/customhelp.html on how to setup</details>
+| Snake | Beta | <details><summary>A simple Snake Game</summary>This is a classical snake game, uses dpy menus. Be fully aware of this cog spamming the channel ratelimit buckets</details>
 | EmbedSteal | N/A | <details><summary>THIS IS NOT A PROPER COG</summary>DO NOT INSTALL THIS</details>
                                                                                                                                                                                                                           
 ## Credits

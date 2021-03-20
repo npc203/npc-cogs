@@ -85,8 +85,8 @@ class CustomHelp(commands.Cog):
                 "react": True,
                 "set_formatter": False,
                 "thumbnail": None,
-                "timeout": 30,
-                "replies": False,
+                "timeout": 120,
+                "replies": True,
             },
             "blacklist": {"nsfw": [], "dev": []},
         }
