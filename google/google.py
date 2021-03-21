@@ -110,7 +110,7 @@ class Google(commands.Cog):
             result = await self.bot.loop.run_in_executor(None, prep)
         emb = discord.Embed(
             title="Google Reverse Image Search",
-            description="`" + result or "Nothing significant found" + "`",
+            description="`" + (result or "Nothing significant found") + "`",
             color=await ctx.embed_color(),
         )
         emb.set_thumbnail(url=encoded["image_url"])
