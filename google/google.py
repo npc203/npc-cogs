@@ -86,11 +86,10 @@ class Google(commands.Cog):
     @google.command(aliases=["rev"])
     async def reverse(self, ctx, *, url: str = None):
         """Attach or paste the url of an image to reverse search"""
-        if ctx.message.attachments:
-            query = ctx.message.attachments[0].url
-        elif url:
-            query = url
-        else:
+        query = ctx.message.attachments[0].url if ctx.message.attachments else url
+
+        # Big brain url parsing
+        if not query.startswith("http") or " " in query:
             return await ctx.send_help()
         encoded = {
             "image_url": query.lstrip("<").rstrip(">"),
@@ -106,8 +105,10 @@ class Google(commands.Cog):
                     headers=self.options,
                 ) as resp:
                     text = await resp.read()
+
             prep = functools.partial(self.reverse_search, text)
             result = await self.bot.loop.run_in_executor(None, prep)
+
         emb = discord.Embed(
             title="Google Reverse Image Search",
             description="`" + (result or "Nothing significant found") + "`",
