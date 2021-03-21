@@ -25,6 +25,9 @@ class Google(commands.Cog):
 
     def __init__(self, bot: Red) -> None:
         self.bot = bot
+        self.options = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36"
+        }
 
     @commands.group(invoke_without_command=True)
     async def google(self, ctx, *, query: str = None):
@@ -80,18 +83,75 @@ class Google(commands.Cog):
             else:
                 await ctx.send("No result")
 
+    @google.command(aliases=["rev"])
+    async def reverse(self, ctx, *, url: str = None):
+        """Attach or paste the url of an image to reverse search"""
+        if ctx.message.attachments:
+            query = ctx.message.attachments[0].url
+        elif url:
+            query = url
+        else:
+            return await ctx.send_help()
+        encoded = {
+            "image_url": query.lstrip("<").rstrip(">"),
+            "encoded_image": None,
+            "image_content": None,
+            "filename": None,
+            "hl": "en",
+        }
+        async with ctx.typing():
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    "https://www.google.com/searchbyimage?" + urllib.parse.urlencode(encoded),
+                    headers=self.options,
+                ) as resp:
+                    text = await resp.read()
+            prep = functools.partial(self.reverse_search, text)
+            result = await self.bot.loop.run_in_executor(None, prep)
+        emb = discord.Embed(
+            title="Google Reverse Image Search",
+            description="`" + result or "Nothing significant found" + "`",
+            color=await ctx.embed_color(),
+        )
+        emb.set_thumbnail(url=encoded["image_url"])
+        await ctx.send(embed=emb)
+
     @commands.is_owner()
     @google.command(hidden=True)
     async def debug(self, ctx, *, url):
-        options = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36"
-        }
         async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=options) as resp:
+            async with session.get(url, headers=self.options) as resp:
                 text = await resp.text()
         f = BytesIO(bytes(text, "utf-8"))
         await ctx.send(file=discord.File(f, filename="filename.html"))
         f.close()
+
+    async def get_result(self, query, images=False, nsfw=False):
+        """Fetch the data"""
+        # TODO make this fetching a little better
+        encoded = urllib.parse.quote_plus(query, encoding="utf-8", errors="replace")
+
+        if not nsfw:
+            encoded += "&safe=active"
+        if not images:
+            url = "https://www.google.com/search?q="
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url + encoded, headers=self.options) as resp:
+                    text = await resp.text()
+            prep = functools.partial(self.parser_text, text)
+        else:
+            # TYSM fixator, for the non-js query url
+            url = "https://www.google.com/search?tbm=isch&sfr=gws&gbv=1&q="
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url + encoded, headers=self.options) as resp:
+                    text = await resp.text()
+            prep = functools.partial(self.parser_image, text)
+        return await self.bot.loop.run_in_executor(None, prep)
+
+    def reverse_search(self, text):
+        soup = BeautifulSoup(text, features="html.parser")
+        if res := soup.find("input", class_="gLFyf gsfi"):
+            return res["value"]
 
     def parser_text(self, text):
         """My bad logic for scraping"""
@@ -226,27 +286,3 @@ class Google(commands.Cog):
     def parser_image(self, html):
         soup = BeautifulSoup(html, features="html.parser")
         return [x.get("src", "https://http.cat/404") for x in soup.findAll("img", class_="t0fcAb")]
-
-    async def get_result(self, query, images=False, nsfw=False):
-        """Fetch the data"""
-        # TODO make this fetching a little better
-        encoded = urllib.parse.quote_plus(query, encoding="utf-8", errors="replace")
-        options = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36"
-        }
-        if not nsfw:
-            encoded += "&safe=active"
-        if not images:
-            url = "https://www.google.com/search?q="
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url + encoded, headers=options) as resp:
-                    text = await resp.text()
-            prep = functools.partial(self.parser_text, text)
-        else:
-            # TYSM fixator, for the non-js query url
-            url = "https://www.google.com/search?tbm=isch&sfr=gws&gbv=1&q="
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url + encoded, headers=options) as resp:
-                    text = await resp.text()
-            prep = functools.partial(self.parser_image, text)
-        return await self.bot.loop.run_in_executor(None, prep)
