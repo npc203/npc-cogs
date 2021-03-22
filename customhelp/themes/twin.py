@@ -1,7 +1,14 @@
 from ..abc import ThemesMeta
 from ..core.base_help import (
-    EMPTY_STRING, GLOBAL_CATEGORIES, CategoryConvert, Context, EmbedField,
-    HelpSettings, _, pagify)
+    EMPTY_STRING,
+    GLOBAL_CATEGORIES,
+    CategoryConvert,
+    Context,
+    EmbedField,
+    HelpSettings,
+    _,
+    pagify,
+)
 
 
 class TwinHelp(ThemesMeta):
@@ -53,6 +60,7 @@ class TwinHelp(ThemesMeta):
                     embed=True,
                     help_settings=help_settings,
                     add_emojis=((await self.config.settings())["react"]) and True,
+                    emoji_mapping=filtered_categories,
                 )
 
     async def format_category_help(
