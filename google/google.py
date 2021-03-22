@@ -89,7 +89,7 @@ class Google(commands.Cog):
         query = ctx.message.attachments[0].url if ctx.message.attachments else url
 
         # Big brain url parsing
-        if not query.startswith("http") or " " in query:
+        if not query or not query.startswith("http") or " " in query:
             return await ctx.send_help()
         encoded = {
             "image_url": query.lstrip("<").rstrip(">"),
