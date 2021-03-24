@@ -121,19 +121,20 @@ class Google(commands.Cog):
             "filename": None,
             "hl": "en",
         }
-        url = "https://www.google.com/searchbyimage?" + urllib.parse.urlencode(encoded)
+
         async with ctx.typing():
             async with aiohttp.ClientSession() as session:
                 async with session.get(
-                    url,
+                    "https://www.google.com/searchbyimage?" + urllib.parse.urlencode(encoded),
                     headers=self.options,
                 ) as resp:
                     text = await resp.read()
+                    redir_url = resp.url
             prep = functools.partial(self.reverse_search, text)
             result, response = await self.bot.loop.run_in_executor(None, prep)
             emb = discord.Embed(
                 title="Google Reverse Image Search",
-                description="[`" + (result or "Nothing significant found") + f"`]({url})",
+                description="[`" + (result or "Nothing significant found") + f"`]({redir_url})",
                 color=await ctx.embed_color(),
             )
             for i in response[0][:2]:
@@ -256,6 +257,8 @@ class Google(commands.Cog):
                 if dest := card.find("div", class_="dDoNo ikb4Bb vk_bk gsrt gzfeS"):
                     final_text += " " + h2t(str(dest)).strip("\n") + "**"
                 if time := card.find("div", class_="hqAUc"):
+                    if remove := time.find("select"):
+                        remove.decompose()
                     tmp = h2t(str(time)).replace("\n", " ").split("·")
                     final_text += (
                         "\n"
@@ -315,7 +318,7 @@ class Google(commands.Cog):
             else:
                 desc = "Not found"
             if title:
-                final.append(s(url, title, desc))
+                final.append(s(url, title, desc.replace("\n", " ")))
         return final, stats
 
     def parser_image(self, html):
