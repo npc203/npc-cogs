@@ -85,35 +85,66 @@ class Google(commands.Cog):
 
     @google.command(aliases=["rev"])
     async def reverse(self, ctx, *, url: str = None):
-        """Attach or paste the url of an image to reverse search"""
-        query = ctx.message.attachments[0].url if ctx.message.attachments else url
+        """Attach or paste the url of an image to reverse search, or reply to a message which has the image/embed with the image"""
+        isnsfw = nsfwcheck(ctx)
+        query = None
+
+        def reply(ctx):
+            """Helper reply grabber"""
+            if hasattr(ctx.message, "reference") and ctx.message.reference != None:
+                msg = ctx.message.reference.resolved
+                if isinstance(msg, discord.Message):
+                    return msg
+
+        if resp := reply(ctx):
+            query = resp.attachments[0].url if resp.attachments else resp.content
+            if not query and resp.embeds:
+                emb = resp.embeds[0].to_dict()
+                if "image" in emb:
+                    query = emb["image"]["url"]
+        else:
+            query = ctx.message.attachments[0].url if ctx.message.attachments else url
 
         # Big brain url parsing
-        if not query or not query.startswith("http") or " " in query:
+        if not query:
             return await ctx.send_help()
+
+        query = query.lstrip("<").rstrip(">")
+
+        if not query.startswith("http") or " " in query:
+            return await ctx.send_help()
+
         encoded = {
-            "image_url": query.lstrip("<").rstrip(">"),
+            "image_url": query,
             "encoded_image": None,
             "image_content": None,
             "filename": None,
             "hl": "en",
         }
+        url = "https://www.google.com/searchbyimage?" + urllib.parse.urlencode(encoded)
         async with ctx.typing():
             async with aiohttp.ClientSession() as session:
                 async with session.get(
-                    "https://www.google.com/searchbyimage?" + urllib.parse.urlencode(encoded),
+                    url,
                     headers=self.options,
                 ) as resp:
                     text = await resp.read()
-
             prep = functools.partial(self.reverse_search, text)
-            result = await self.bot.loop.run_in_executor(None, prep)
+            result, response = await self.bot.loop.run_in_executor(None, prep)
+            emb = discord.Embed(
+                title="Google Reverse Image Search",
+                description="[`" + (result or "Nothing significant found") + f"`]({url})",
+                color=await ctx.embed_color(),
+            )
+            for i in response[0][:2]:
+                desc = (f"[{i.url[:60]}]({i.url})\n" if i.url else "") + f"{i.desc}"[:1024]
+                emb.add_field(
+                    name=f"{i.title}",
+                    value=desc or "Nothing",
+                    inline=False,
+                )
 
-        emb = discord.Embed(
-            title="Google Reverse Image Search",
-            description="`" + (result or "Nothing significant found") + "`",
-            color=await ctx.embed_color(),
-        )
+        emb.set_footer(text=f"Safe Search: {not isnsfw} | " + response[1].replace("\n", " "))
         emb.set_thumbnail(url=encoded["image_url"])
         await ctx.send(embed=emb)
 
@@ -152,11 +183,12 @@ class Google(commands.Cog):
     def reverse_search(self, text):
         soup = BeautifulSoup(text, features="html.parser")
         if res := soup.find("input", class_="gLFyf gsfi"):
-            return res["value"]
+            return res["value"], self.parser_text(text, soup=soup, cards=False)
 
-    def parser_text(self, text):
+    def parser_text(self, text, soup=None, cards: bool = True):
         """My bad logic for scraping"""
-        soup = BeautifulSoup(text, features="html.parser")
+        if not soup:
+            soup = BeautifulSoup(text, features="html.parser")
         s = namedtuple("searchres", "url title desc")
         final = []
         stats = h2t(str(soup.find("div", id="result-stats")))
@@ -263,7 +295,9 @@ class Google(commands.Cog):
                 )
                 return
 
-        get_card()
+        if cards:
+            get_card()
+
         for res in soup.findAll("div", class_="g"):
             if name := res.find("div", class_="yuRUbf"):
                 url = name.a["href"]

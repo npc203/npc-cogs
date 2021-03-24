@@ -1,7 +1,7 @@
 {
     "name": "Google",
-    "short": "A simple google search",
-    "description": "This searches google and fetches results using a custom scraper.",
+    "short": "A google search cog, with rich card results",
+    "description": "This searches google and fetches results using a custom scraper. The reverse search supports replies as well",
     "end_user_data_statement": "This cog does not persistently store any data or metadata about users.",
     "install_msg": "Warning: This might get your ip 429'ed from google.com for a day or so at max. (Haven't gotten to that despite testing hard)\nFixator helped me so much, with the query url and in many many other things.",
     "author": [
