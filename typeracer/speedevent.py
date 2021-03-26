@@ -76,7 +76,7 @@ class Speedevent:
             await asyncio.sleep(5)
         await countdown.delete()
 
-        msg = await ctx.send("Speedevent Starts in 5")
+        msg = await self.ctx.send("Speedevent Starts in 5")
         for i in range(4, 0, -1):
             await asyncio.sleep(1)
             await msg.edit(content=f"Speedevent Starts in {i}")
