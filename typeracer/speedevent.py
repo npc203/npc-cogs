@@ -28,7 +28,7 @@ class Speedevent:
             await self.ctx.send(
                 "```Event results:\n{}```".format(
                     tabulate(
-                        self.leaderboard,
+                        sorted(self.leaderboard, key=lambda x: x[2], reverse=True),
                         headers=("Name", "Time taken", "WPM", "Mistakes"),
                         tablefmt="fancy_grid",
                     )

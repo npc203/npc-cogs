@@ -62,7 +62,6 @@ class TypeRacer(commands.Cog):
     async def speedevent(self, ctx):
         """Play a speed test event with multiple players"""
 
-    @commands.mod_or_permissions(kick_members=True)
     @speedevent.command(name="start")
     async def start_event(self, ctx, countdown: int = None):
         """Start a typing speed test event \n Takes an optional countdown argument to start the test\n(Be warned that cheating gets you disqualified)\nThis lasts for 3 minutes at max, and stops if everyone completed"""
