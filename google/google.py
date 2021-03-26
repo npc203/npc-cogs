@@ -97,11 +97,15 @@ class Google(commands.Cog):
                     return msg
 
         if resp := reply(ctx):
-            query = resp.attachments[0].url if resp.attachments else resp.content
-            if not query and resp.embeds:
+            query = resp.attachments[0].url if resp.attachments else None
+            if resp.embeds:
                 emb = resp.embeds[0].to_dict()
                 if "image" in emb:
                     query = emb["image"]["url"]
+                elif "thumbnail" in emb:
+                    query = emb["thumbnail"]["url"]
+            if not query:
+                query = resp.content
         else:
             query = ctx.message.attachments[0].url if ctx.message.attachments else url
 
@@ -137,16 +141,18 @@ class Google(commands.Cog):
                 description="[`" + (result or "Nothing significant found") + f"`]({redir_url})",
                 color=await ctx.embed_color(),
             )
-            for i in response[0][:2]:
-                desc = (f"[{i.url[:60]}]({i.url})\n" if i.url else "") + f"{i.desc}"[:1024]
-                emb.add_field(
-                    name=f"{i.title}",
-                    value=desc or "Nothing",
-                    inline=False,
+            if response:
+                for i in response[0][:2]:
+                    desc = (f"[{i.url[:60]}]({i.url})\n" if i.url else "") + f"{i.desc}"[:1024]
+                    emb.add_field(
+                        name=f"{i.title}",
+                        value=desc or "Nothing",
+                        inline=False,
+                    )
+                emb.set_footer(
+                    text=f"Safe Search: {not isnsfw} | " + response[1].replace("\n", " ")
                 )
-
-        emb.set_footer(text=f"Safe Search: {not isnsfw} | " + response[1].replace("\n", " "))
-        emb.set_thumbnail(url=encoded["image_url"])
+                emb.set_thumbnail(url=encoded["image_url"])
         await ctx.send(embed=emb)
 
     @commands.is_owner()
@@ -183,6 +189,9 @@ class Google(commands.Cog):
 
     def reverse_search(self, text):
         soup = BeautifulSoup(text, features="html.parser")
+        if check := soup.find("div", class_="card-section"):
+            if "The URL doesn't refer" in check.text:
+                return check.text, None
         if res := soup.find("input", class_="gLFyf gsfi"):
             return res["value"], self.parser_text(text, soup=soup, cards=False)
 
