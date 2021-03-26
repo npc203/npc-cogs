@@ -64,7 +64,7 @@ class Speedevent:
             f"Joined Users:\n{active}"
         )
         await asyncio.sleep(5)
-        for i in range(self.countdown - 5, 0, -5):  # TODO add to config, time to start event
+        for i in range(self.countdown - 5, 5, -5):  # TODO add to config, time to start event
             active = "\n".join(
                 [f"{index}. {self.joined[user]}" for index, user in enumerate(self.joined, 1)]
             )
@@ -75,7 +75,13 @@ class Speedevent:
             )
             await asyncio.sleep(5)
         await countdown.delete()
+
+        msg = await ctx.send("Speedevent Starts in 5")
+        for i in range(4, 0, -1):
+            await asyncio.sleep(1)
+            await msg.edit(content=f"Speedevent Starts in {i}")
         await self.ctx.send(content=f"Write the given paragraph\n```{nocheats(a_string)}```")
+
         match_begin = time.time()
         self.event_started = True
 
