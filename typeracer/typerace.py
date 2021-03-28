@@ -115,7 +115,7 @@ class TypeRacer(commands.Cog):
     async def dm(self, ctx, toggle: bool):
         """Toggle whether the bot should send analytics in the dm or not"""
         await self.config.guild_from_id(ctx.guild.id).dm.set(toggle)
-        await ctx.send(f"I will {'' if toggle else 'not'}send the speedevent analytics in dms")
+        await ctx.send(f"I will {'' if toggle else 'not'} send the speedevent analytics in dms")
 
     @typerset.command(name="type")
     async def type_of_text(self, ctx, type_txt: str):

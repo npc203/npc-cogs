@@ -33,7 +33,10 @@ class Todo(commands.Cog):
         """Contains a list of commands to set and retrieve todo tasks \n Use todo <id> to get a specific todo"""
         todos = await self.config.user(ctx.author).todos()
         if -len(todos) < id_ < len(todos):
-            await ctx.send(todos[id_])
+            if isinstance(todos[id_], list):
+                await ctx.send(todos[id_][1])
+            else:
+                await ctx.send(todos[id_])
         else:
             await ctx.send(f"Invalid ID: {id_}")
 
@@ -62,7 +65,7 @@ class Todo(commands.Cog):
         """Add a new task to your todo list, DO NOT STORE SENSITIVE INFO HERE"""
         async with self.config.user(ctx.author).todos() as todos:
             todo_id = len(todos)
-            todos.append(task)
+            todos.append([ctx.message.jump_url, task])  # using a list to support future todo edit
         await ctx.send(f"Your todo has been added successfully with the id: **{todo_id}**")
 
     @todo.command(name="list")
@@ -72,8 +75,13 @@ class Todo(commands.Cog):
         if not todos:
             await ctx.send("Currently, you have no TODOs")
         else:
-            todo_text = "\n".join(f"{i} - {x}" for i, x in enumerate(todos))
+            todo_text = ""
             if await self.config.embeds():
+                for i, x in enumerate(todos):
+                    if isinstance(x, list):
+                        todo_text += f"[{i}]({x[0]}). {x[1]}\n"
+                    else:
+                        todo_text += f"{i}. {x}\n"
                 pagified = tuple(pagify(todo_text, page_length=1004, shorten_by=0))
                 # embeds and menus
                 if await self.config.menus():
@@ -95,6 +103,11 @@ class Todo(commands.Cog):
                             )
                         )
             else:
+                for i, x in enumerate(todos):
+                    if isinstance(x, list):
+                        todo_text += f"{i}. {x[1]}\n"
+                    else:
+                        todo_text += f"{i}. {x}\n"
                 pagified = tuple(pagify(todo_text))
                 # not embeds and menus
                 if await self.config.menus():
