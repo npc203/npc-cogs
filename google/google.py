@@ -41,7 +41,10 @@ class Google(commands.Cog):
                 pages = []
                 groups = [response[0][n : n + 3] for n in range(0, len(response[0]), 3)]
                 for num, group in enumerate(groups, 1):
-                    emb = discord.Embed(title=f"Google Search: {query[:50]}...")
+                    emb = discord.Embed(
+                        title=f"Google Search: {query[:50]}...",
+                        color=await ctx.embed_color(),
+                    )
                     for result in group:
                         desc = (
                             f"[{result.url[:60]}]({result.url})\n" if result.url else ""
@@ -72,7 +75,10 @@ class Google(commands.Cog):
                 response = await self.get_result(query, images=True, nsfw=isnsfw)
                 size = len(tuple(response))
                 pages = [
-                    discord.Embed(title=f"Pages: {i}/{size}")
+                    discord.Embed(
+                        title=f"Pages: {i}/{size}",
+                        color=await ctx.embed_color(),
+                    )
                     .set_image(url=j)
                     .set_footer(text=f"Safe Search: {not isnsfw}")
                     for i, j in enumerate(response, 1)
