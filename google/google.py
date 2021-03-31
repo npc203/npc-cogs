@@ -10,6 +10,7 @@ from html2text import html2text as h2t
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils import menus
+from redbot.core.utils.chat_formatting import pagify
 
 # TODO Add optional way to use from google search api
 
@@ -243,13 +244,28 @@ class Google(commands.Cog):
                     if desc := card.find("div", class_="kno-rdesc"):
                         if remove := desc.find(class_="Uo8X3b"):
                             remove.decompose()
-                        desc = h2t(str(desc))
-                        if more_info := soup.findAll("div", class_="wDYxhc"):
+                        desc = h2t(str(desc)).strip("\n") + "\n"
+                        if more_info := card.findAll("div", class_="Z1hOCe"):
                             for thing in more_info:
                                 tmp = thing.findAll("span")
                                 if len(tmp) == 2:
-                                    fin = "\n **{0[0].text}**:`{0[1].text}`".format(tmp)
-                                    desc = desc + fin  # TODO
+                                    desc2 = "\n **{0[0].text}**:`{0[1].text}`".format(tmp)
+                                    # More jack advises :D
+                                    MAX = 1024
+                                    MAX_LEN = MAX - len(desc2)
+                                    if len(desc) > MAX_LEN:
+                                        desc = (
+                                            next(
+                                                pagify(
+                                                    desc,
+                                                    delims=[" ", "\n"],
+                                                    page_length=MAX_LEN - 1,
+                                                    shorten_by=0,
+                                                )
+                                            )
+                                            + "\N{HORIZONTAL ELLIPSIS}"
+                                        )
+                                    desc = desc + desc2
                         final.append(
                             s(
                                 None,
@@ -285,9 +301,9 @@ class Google(commands.Cog):
             if card := soup.find("div", class_="nRbRnb"):
                 final_text = "\N{ZWSP}\n**"
                 if source := card.find("div", class_="vk_sh c8Zgcf"):
-                    final_text += h2t(str(source)).strip("\n")
+                    final_text += "`" + h2t(str(source)).strip("\n")
                 if dest := card.find("div", class_="dDoNo ikb4Bb vk_bk gsrt gzfeS"):
-                    final_text += " " + h2t(str(dest)).strip("\n") + "**"
+                    final_text += " " + h2t(str(dest)).strip("\n") + "`**"
                 if time := card.find("div", class_="hqAUc"):
                     if remove := time.find("select"):
                         remove.decompose()
