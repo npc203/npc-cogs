@@ -42,7 +42,9 @@ class Google(commands.Cog):
                 groups = [response[0][n : n + 3] for n in range(0, len(response[0]), 3)]
                 for num, group in enumerate(groups, 1):
                     emb = discord.Embed(
-                        title=f"Google Search: {query[:50]}...",
+                        title="Google Search: {}".format(
+                            query[:44] + "\N{HORIZONTAL ELLIPSIS}" if len(query) > 45 else query
+                        ),
                         color=await ctx.embed_color(),
                     )
                     for result in group:
@@ -96,32 +98,40 @@ class Google(commands.Cog):
         query = None
 
         def reply(ctx):
-            """Helper reply grabber"""
+            # Helper reply grabber
             if hasattr(ctx.message, "reference") and ctx.message.reference != None:
                 msg = ctx.message.reference.resolved
                 if isinstance(msg, discord.Message):
                     return msg
 
-        if resp := reply(ctx):
-            query = resp.attachments[0].url if resp.attachments else None
-            if resp.embeds:
-                emb = resp.embeds[0].to_dict()
+        def get_url(msg_obj):
+            # Helper get potential url
+            if msg_obj.embeds:
+                emb = msg_obj.embeds[0].to_dict()
                 if "image" in emb:
-                    query = emb["image"]["url"]
+                    return emb["image"]["url"]
                 elif "thumbnail" in emb:
-                    query = emb["thumbnail"]["url"]
-            if not query:
-                query = resp.content
-        else:
-            query = ctx.message.attachments[0].url if ctx.message.attachments else url
+                    return emb["thumbnail"]["url"]
+            if msg_obj.attachments:
+                return msg_obj.attachments[0].url
+            else:
+                return msg_obj.content.lstrip("<").rstrip(">")
+
+        def check_url(url: str):
+            # Helper function to check if valid url or not
+            return url.startswith("http") and " " not in url
+
+        if resp := reply(ctx):
+            query = get_url(resp)
+
+        if not query or not check_url(query):
+            query = get_url(ctx.message)
 
         # Big brain url parsing
-        if not query:
+        if not check_url(query):
             return await ctx.send_help()
 
-        query = query.lstrip("<").rstrip(">")
-
-        if not query.startswith("http") or " " in query:
+        if not query or not query.startswith("http") or " " in query:
             return await ctx.send_help()
 
         encoded = {
@@ -233,15 +243,22 @@ class Google(commands.Cog):
                     if desc := card.find("div", class_="kno-rdesc"):
                         if remove := desc.find(class_="Uo8X3b"):
                             remove.decompose()
+                        desc = h2t(str(desc))
+                        if more_info := soup.findAll("div", class_="wDYxhc"):
+                            for thing in more_info:
+                                tmp = thing.findAll("span")
+                                if len(tmp) == 2:
+                                    fin = "\n **{0[0].text}**:`{0[1].text}`".format(tmp)
+                                    desc = desc + fin  # TODO
                         final.append(
                             s(
                                 None,
                                 "Google Featured Card: "
                                 + h2t(str(title)).replace("\n", " ").replace("#", ""),
-                                h2t(str(desc)),
+                                desc,
                             )
                         )
-                        return
+                    return
 
             # time cards (or more)
             if card := soup.find("div", class_="vk_c"):
