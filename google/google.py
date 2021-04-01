@@ -105,8 +105,8 @@ class Google(commands.Cog):
                 if isinstance(msg, discord.Message):
                     return msg
 
-        def get_url(msg_obj):
-            # Helper get potential url
+        def get_url(msg_obj, check=False):
+            # Helper get potential url, if check is True then returns none if nothing is found in embeds
             if msg_obj.embeds:
                 emb = msg_obj.embeds[0].to_dict()
                 if "image" in emb:
@@ -116,7 +116,7 @@ class Google(commands.Cog):
             if msg_obj.attachments:
                 return msg_obj.attachments[0].url
             else:
-                return msg_obj.content.lstrip("<").rstrip(">")
+                return None if check else msg_obj.content.lstrip("<").rstrip(">")
 
         def check_url(url: str):
             # Helper function to check if valid url or not
@@ -126,7 +126,10 @@ class Google(commands.Cog):
             query = get_url(resp)
 
         if not query or not check_url(query):
-            query = get_url(ctx.message)
+            if query := get_url(ctx.message, check=True):
+                pass
+            else:
+                query = url.lstrip("<").rstrip(">")
 
         # Big brain url parsing
         if not check_url(query):
