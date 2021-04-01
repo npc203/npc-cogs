@@ -252,7 +252,7 @@ class Google(commands.Cog):
                             for thing in more_info:
                                 tmp = thing.findAll("span")
                                 if len(tmp) == 2:
-                                    desc2 = "\n **{0[0].text}**:`{0[1].text}`".format(tmp)
+                                    desc2 = f"\n **{tmp[0].text}**:`{tmp[1].text.lstrip(':')}`"
                                     # More jack advises :D
                                     MAX = 1024
                                     MAX_LEN = MAX - len(desc2)
@@ -279,13 +279,34 @@ class Google(commands.Cog):
                         )
                     return
 
-            # time cards (or more)
+            # time cards and unit conversions -_-
             if card := soup.find("div", class_="vk_c"):
-                if tail := card.find("table", class_="d8WIHd"):
-                    tail.decompose()
-                tmp = h2t(str(card)).replace("\n\n", "\n").split("\n")
-                final.append(s(None, tmp[0], "\n".join(tmp[1:])))
-                return
+                if conversion := card.findAll("div", class_="rpnBye"):
+                    if len(conversion) != 2:
+                        return
+                    tmp = tuple(
+                        map(
+                            lambda thing: (
+                                thing.input["value"],
+                                thing.findAll("option", selected=True)[0].text,
+                            ),
+                            conversion,
+                        )
+                    )
+                    final.append(
+                        s(
+                            None,
+                            "Unit Conversion v1:",
+                            "`" + " ".join(tmp[0]) + " is equal to " + " ".join(tmp[1]) + "`",
+                        )
+                    )
+                else:
+                    # time card
+                    if tail := card.find("table", class_="d8WIHd"):
+                        tail.decompose()
+                    tmp = h2t(str(card)).replace("\n\n", "\n").split("\n")
+                    final.append(s(None, tmp[0], "\n".join(tmp[1:])))
+                    return
 
             # translator cards
             if card := soup.find("div", class_="tw-src-ltr"):

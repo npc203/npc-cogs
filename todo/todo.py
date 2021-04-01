@@ -135,7 +135,7 @@ class Todo(commands.Cog):
         if len(indices) == 1:
             async with self.config.user(ctx.author).todos() as todos:
                 x = todos.pop(indices[0])
-                await ctx.send(f"Succesfully removed: {x}")
+                await ctx.send(f"Succesfully removed: {x[1] if isinstance(x,list) else x}")
             return
 
         removed = []
@@ -148,7 +148,10 @@ class Todo(commands.Cog):
                     removed.append(i)
             todos[:] = temp
         for page in pagify(
-            "Succesfully removed:\n" + "\n".join(f"{i}. {x}" for i, x in enumerate(removed, 1)),
+            "Succesfully removed:\n"
+            + "\n".join(
+                f"{i}. {x[1] if isinstance(x,list) else x}" for i, x in enumerate(removed, 1)
+            ),
             page_length=1970,
         ):
             await ctx.send(page)
