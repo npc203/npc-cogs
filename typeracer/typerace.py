@@ -20,6 +20,7 @@ class TypeRacer(commands.Cog):
         self.config.register_guild(**default_guild)
         self.jobs = {"guilds": {}, "personal": {}}
 
+    @commands.guild_only()
     @commands.group()
     async def typer(self, ctx):
         """Commands to start and stop personal typing speed test"""
@@ -36,6 +37,16 @@ class TypeRacer(commands.Cog):
             + f"`No of Words`:{settings['text_size'][0]} - {settings['text_size'][1]}\n"
         )
         emb.add_field(name="TyperRacer settings", value=val)
+        await ctx.send(embed=emb)
+
+    @commands.is_owner()
+    @typer.command()
+    async def show(self, ctx):
+        emb = Embed(title="Ongoing Type racer stats", color=await ctx.embed_color())
+        if self.jobs["guilds"]:
+            emb.add_field(name="Speedevents", value=len(self.jobs["guilds"]))
+        if self.jobs["personal"]:
+            emb.add_field(name="Personal typing tests", value=len(self.jobs["personal"]))
         await ctx.send(embed=emb)
 
     @typer.command(name="start")
@@ -67,6 +78,8 @@ class TypeRacer(commands.Cog):
         """Start a typing speed test event \n Takes an optional countdown argument to start the test\n(Be warned that cheating gets you disqualified)\nThis lasts for 3 minutes at max, and stops if everyone completed"""
         if ctx.guild.id in self.jobs["guilds"]:
             await ctx.send("There's already a speedtest event running in this guild")
+        elif countdown and countdown > 300:
+            await ctx.send("Exceeded time limit for countdown, Enter value less than 300 seconds")
         else:
             test = Speedevent(
                 ctx,
