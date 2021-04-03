@@ -46,7 +46,7 @@ class Single:
             b_string = (
                 await ctx.bot.wait_for(
                     "message",
-                    timeout=10.0,
+                    timeout=180.0,
                     check=lambda m: m.author.id == ctx.author.id
                     and m.channel.id == ctx.channel.id,
                 )
