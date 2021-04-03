@@ -46,13 +46,14 @@ class Single:
             b_string = (
                 await ctx.bot.wait_for(
                     "message",
-                    timeout=300.0,
-                    check=lambda m: m.author.id == ctx.author.id,
+                    timeout=10.0,
+                    check=lambda m: m.author.id == ctx.author.id
+                    and m.channel.id == ctx.channel.id,
                 )
             ).content.strip()
         except asyncio.TimeoutError:
             await msg.edit(content="Sorry you were way too slow, timed out")
-            return
+            raise asyncio.CancelledError
         end = time.time()
         time_taken = end - start
         return time_taken, b_string
