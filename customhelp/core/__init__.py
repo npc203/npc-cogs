@@ -1,4 +1,4 @@
-from redbot import __version__
+from discord import __version__
 
 from .dpy_menus import NoReplyMenus, ReplyMenus
 
@@ -17,8 +17,8 @@ __BaseMenu = None
 def set_menu(reply: bool):
     global __BaseMenu
     if reply:
-        if __version__ < "3.4.6":
-            return "You need to have Red version 3.4.6 or greater to use replies", 0
+        if __version__ <= "1.5.0":
+            return "You need to have Dpy version 1.6.0 or greater to use replies", 0
         __BaseMenu = ReplyMenus
         return "Sucessfully enabled replies for help menus", 1
     else:

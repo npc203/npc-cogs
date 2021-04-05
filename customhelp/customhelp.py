@@ -620,7 +620,7 @@ class CustomHelp(commands.Cog):
             return
         await ctx.send("Aborted")
 
-    @remove.command(aliases=["categories", "cat"])
+    @remove.command(aliases=["categories", "cat"], require_var_positional=True)
     async def category(self, ctx, *categories: str):
         """Remove a multiple categories"""
         # from [p]load
@@ -659,7 +659,7 @@ class CustomHelp(commands.Cog):
         await self.refresh_cache()
         await ctx.send(text)
 
-    @remove.command(aliases=["cogs"])
+    @remove.command(aliases=["cogs"], require_var_positional=True)
     async def cog(self, ctx, *cog_names: str):
         """Remove a cog(s) from across categories"""
         # From Core [p]load xD, using set to avoid dupes
