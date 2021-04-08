@@ -1,3 +1,4 @@
+from packaging import version
 from redbot import __version__
 from redbot.core.utils.chat_formatting import humanize_list, humanize_number
 
@@ -146,7 +147,7 @@ class JustCore(ThemesMeta):
         ).format(ctx=ctx, command=command)
 
         # Backward compatible.
-        if __version__ >= "3.4.6.dev1":
+        if version.parse(__version__) >= version.parse("3.4.6"):
             aliases = command.aliases
             if help_settings.show_aliases and aliases:
                 alias_fmt = _("Aliases") if len(command.aliases) > 1 else _("Alias")
