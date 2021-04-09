@@ -145,7 +145,9 @@ class Mixture(ThemesMeta):
             if coms:
                 for name, command in sorted(coms.items()):
                     emb["fields"].append(
-                        EmbedField(name, command.format_shortdoc_for_context(ctx), False)
+                        EmbedField(
+                            name, command.format_shortdoc_for_context(ctx) or "\N{ZWSP}", False
+                        )
                     )
 
                 pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
