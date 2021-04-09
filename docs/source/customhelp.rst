@@ -106,6 +106,8 @@ More configurablity
 Additional Notes
 -----------------
 
+-  Don't be a moron trying to mix minimal theme (non-embed) with the other embed-based themes
+
 -  A **Good Practice** is to have the category names all **lowercased** and the category description as **Camelcase**.
   
 -  All the reactions and arrow emojis can be **custom** and even **animated**, You can even put the emoji ID (if u don't have nitro).

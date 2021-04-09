@@ -7,7 +7,12 @@ from ..core.base_help import (GLOBAL_CATEGORIES, CategoryConvert, Context,
 class MinimalHelp(ThemesMeta):
     """This is a no embed minimal theme for the simplistic people.\nThis won't use reactions.\nThanks OwO for design advices"""
 
-    async def format_bot_help(self, ctx: Context, help_settings: HelpSettings):
+    async def format_bot_help(
+        self,
+        ctx: Context,
+        help_settings: HelpSettings,
+        get_pages: bool = False,
+    ):
         description = ctx.bot.description or ""
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
         full_text = f"{description}\n\n{tagline}"
@@ -21,6 +26,8 @@ class MinimalHelp(ThemesMeta):
                 all_cog_text = " · ".join(all_cog_text)
                 full_text += f"\n\n__**{cat.name}**__: {all_cog_text}"
         text_no = list(pagify(full_text))
+        if get_pages:
+            return text_no
         await self.send_pages(
             ctx,
             text_no,
@@ -30,7 +37,12 @@ class MinimalHelp(ThemesMeta):
         )
 
     async def format_category_help(
-        self, ctx: Context, obj: CategoryConvert, help_settings: HelpSettings, **kwargs
+        self,
+        ctx: Context,
+        obj: CategoryConvert,
+        help_settings: HelpSettings,
+        get_pages: bool = False,
+        **kwargs,
     ):
         coms = await self.get_category_help_mapping(
             ctx, obj, help_settings=help_settings, **kwargs
@@ -51,6 +63,8 @@ class MinimalHelp(ThemesMeta):
             )
             full_text += "\n"
         text_no = list(pagify(full_text))
+        if get_pages:
+            return text_no
         await self.send_pages(
             ctx,
             text_no,
