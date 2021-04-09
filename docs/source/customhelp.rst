@@ -106,7 +106,11 @@ More configurablity
 Additional Notes
 -----------------
 
--  Don't be a moron trying to mix minimal theme (non-embed) with the other embed-based themes
+-  Don't be a moron trying to mix minimal theme (non-embed) with the other embed-based themes.
+
+-  Use `[p]helpset pagecharlimit` to increase or decrease your page size, so as to add/subract more categories per page.
+
+-  For my sanity, kindly disable menus if you are using the minimal theme.
 
 -  A **Good Practice** is to have the category names all **lowercased** and the category description as **Camelcase**.
   
