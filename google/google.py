@@ -160,7 +160,7 @@ class Google(commands.Cog):
                     text = await resp.read()
                     redir_url = resp.url
             prep = functools.partial(self.reverse_search, text)
-            result, response, kwargs = await self.bot.loop.run_in_executor(None, prep)
+            result, (response, kwargs) = await self.bot.loop.run_in_executor(None, prep)
             emb = discord.Embed(
                 title="Google Reverse Image Search",
                 description="[`" + (result or "Nothing significant found") + f"`]({redir_url})",
