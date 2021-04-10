@@ -1,5 +1,4 @@
 import asyncio
-import random
 
 import discord
 from redbot.vendored.discord.ext import menus
