@@ -3,6 +3,7 @@
 import asyncio
 
 import discord
+from redbot.core.utils.chat_formatting import humanize_timedelta
 
 from . import ARROWS, GLOBAL_CATEGORIES
 from .dpy_menus import ListPages, menus
@@ -21,6 +22,51 @@ def emoji_converter(bot, emoji):
         return bot.get_emoji(int(emoji))
     emoji = emoji.strip()
     return emoji
+
+
+# Taken from the core help as well :)
+def shorten_line(a_line: str) -> str:
+    if len(a_line) < 70:  # embed max width needs to be lower
+        return a_line
+    return a_line[:67] + "..."
+
+
+# Add permissions
+def get_perms(command):
+    get_list = ["user_perms", "bot_perms"]
+    final_perms = []
+    neat_format = lambda x: " ".join(i.capitalize() for i in x.replace("_", " ").split())
+    for thing in get_list:
+        if perms := getattr(command.requires, thing):
+            perms_list = [neat_format(i) for i, j in perms if j]  # TODO pls learn more to fix this
+            if perms_list:
+                final_perms += perms_list
+    if perms := command.requires.privilege_level:
+        if perms.name != "NONE":
+            final_perms.append(neat_format(perms.name))
+    return final_perms
+
+
+# Add cooldowns
+def get_cooldowns(command):
+    cooldowns = []
+    if s := command._buckets._cooldown:
+        cooldowns.append(
+            f"{s.rate} time{'s' if s.rate>1 else ''} in {humanize_timedelta(seconds=s.per)} per {s.type.name.capitalize()}"
+        )
+    if s := command._max_concurrency:
+        cooldowns.append(f"Max concurrent uses: {s.number} per {s.per.name.capitalize()}")
+
+    return cooldowns
+
+
+# Add aliases
+def get_aliases(command, original):
+    if alias := command.aliases:
+        if original in alias:
+            alias.remove(original)
+            alias.append(command.name)
+        return alias
 
 
 # dpy menus helpers

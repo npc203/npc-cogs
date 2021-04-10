@@ -8,12 +8,13 @@ from redbot.core import commands
 from redbot.core.commands.context import Context
 from redbot.core.commands.help import (HelpSettings, NoCommand, NoSubCommand,
                                        _, dpy_commands, mass_purge)
-from redbot.core.utils.chat_formatting import box, humanize_timedelta, pagify
+from redbot.core.utils.chat_formatting import humanize_timedelta, pagify
 
 from . import ARROWS, GLOBAL_CATEGORIES, get_menu
 from .category import Category, CategoryConvert, get_category
 from .dpy_menus import ListPages
-from .utils import close_menu, home_page, next_page, prev_page, react_page
+from .utils import (close_menu, get_aliases, get_cooldowns, get_perms,
+                    home_page, next_page, prev_page, react_page, shorten_line)
 
 HelpTarget = Union[
     commands.Command,
@@ -182,7 +183,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
             spacing = len(max(spacer_list, key=len))
             for cog_name, data in coms:
                 cog_text = "\n" + "\n".join(
-                    f"`{name:<{spacing}}:`{command.format_shortdoc_for_context(ctx)[:140]}"  # No more than 2 lines of desc (140 = 2 lines max embed line width)
+                    shorten_line(f"`{name:<{spacing}}:`{command.format_shortdoc_for_context(ctx)}")
                     for name, command in sorted(data.items())
                 )
                 all_cog_text += cog_text
@@ -303,44 +304,14 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 field = EmbedField("Description", name[:250] + "\n" + value[:1024], False)
                 emb["fields"].append(field)
 
-                # Add aliases
-                if alias := command.aliases:
-                    if ctx.invoked_with in alias:
-                        alias.remove(ctx.invoked_with)
-                        alias.append(command.name)
+                if alias := get_aliases(command, ctx.invoked_with):
                     emb["fields"].append(EmbedField("Aliases", ",".join(alias), False))
 
-                # Add permissions
-                get_list = ["user_perms", "bot_perms"]
-                final_perms = []
-                neat_format = lambda x: " ".join(
-                    i.capitalize() for i in x.replace("_", " ").split()
-                )
-                for thing in get_list:
-                    if perms := getattr(command.requires, thing):
-                        perms_list = [
-                            neat_format(i) for i, j in perms if j
-                        ]  # TODO pls learn more to fix this
-                        if perms_list:
-                            final_perms += perms_list
-                if perms := command.requires.privilege_level:
-                    if perms.name != "NONE":
-                        final_perms.append(neat_format(perms.name))
-                if final_perms:
+                if final_perms := get_perms(command):
                     emb["fields"].append(EmbedField("Permissions", ", ".join(final_perms), False))
 
-                # Add cooldowns
-                cooldowns = []
-                if s := command._buckets._cooldown:
-                    cooldowns.append(
-                        f"{s.rate} time{'s' if s.rate>1 else ''} in {humanize_timedelta(seconds=s.per)} per {s.type.name.capitalize()}"
-                    )
-                if s := command._max_concurrency:
-                    cooldowns.append(
-                        f"Max concurrent uses: {s.number} per {s.per.name.capitalize()}"
-                    )
-                if cooldowns:
-                    emb["fields"].append(EmbedField("Cooldowns:", "\n".join(cooldowns), False))
+                if cooldowns := get_cooldowns(command):
+                    emb["fields"].append(EmbedField("Cooldowns", "\n".join(cooldowns), False))
 
             if subcommands:
 

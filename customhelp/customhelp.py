@@ -845,9 +845,9 @@ class CustomHelp(commands.Cog):
         for x in themes.list:
             for y in self.feature_list:
                 if self.feature_list[y] in themes.list[x].__dict__:
-                    outs[x].append((y, "✅"))
+                    outs[x].append((y, "\N{WHITE HEAVY CHECK MARK}"))
                 else:
-                    outs[x].append((y, "❎"))
+                    outs[x].append((y, "❌"))
         final = tabulate(
             [list(chain([i], *[x[1] for x in j])) for i, j in outs.items()],
             headers=["#"] + list(self.feature_list.keys()),
