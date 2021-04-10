@@ -5,6 +5,7 @@ from io import BytesIO
 
 import aiohttp
 import discord
+import textwrap
 from bs4 import BeautifulSoup
 from html2text import html2text as h2t
 from redbot.core import commands
@@ -29,6 +30,7 @@ class Google(commands.Cog):
         self.options = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36"
         }
+        self.cookies = None
 
     @commands.group(invoke_without_command=True)
     async def google(self, ctx, *, query: str = None):
@@ -38,9 +40,9 @@ class Google(commands.Cog):
         else:
             isnsfw = nsfwcheck(ctx)
             async with ctx.typing():
-                response = await self.get_result(query, nsfw=isnsfw)
+                response, kwargs = await self.get_result(query, nsfw=isnsfw)
                 pages = []
-                groups = [response[0][n : n + 3] for n in range(0, len(response[0]), 3)]
+                groups = [response[n : n + 3] for n in range(0, len(response), 3)]
                 for num, group in enumerate(groups, 1):
                     emb = discord.Embed(
                         title="Google Search: {}".format(
@@ -59,8 +61,10 @@ class Google(commands.Cog):
                         )
                     emb.description = f"Page {num} of {len(groups)}"
                     emb.set_footer(
-                        text=f"Safe Search: {not isnsfw} | " + response[1].replace("\n", " ")
+                        text=f"Safe Search: {not isnsfw} | " + kwargs["stats"].replace("\n", " ")
                     )
+                    if "thumbnail" in kwargs:
+                        emb.set_thumbnail(url=kwargs["thumbnail"])
                     pages.append(emb)
             if pages:
                 await menus.menu(ctx, pages, controls=menus.DEFAULT_CONTROLS)
@@ -151,18 +155,19 @@ class Google(commands.Cog):
                 async with session.get(
                     "https://www.google.com/searchbyimage?" + urllib.parse.urlencode(encoded),
                     headers=self.options,
+                    cookies=self.cookies,
                 ) as resp:
                     text = await resp.read()
                     redir_url = resp.url
             prep = functools.partial(self.reverse_search, text)
-            result, response = await self.bot.loop.run_in_executor(None, prep)
+            result, response, kwargs = await self.bot.loop.run_in_executor(None, prep)
             emb = discord.Embed(
                 title="Google Reverse Image Search",
                 description="[`" + (result or "Nothing significant found") + f"`]({redir_url})",
                 color=await ctx.embed_color(),
             )
             if response:
-                for i in response[0][:2]:
+                for i in response[:6]:
                     desc = (f"[{i.url[:60]}]({i.url})\n" if i.url else "") + f"{i.desc}"[:1024]
                     emb.add_field(
                         name=f"{i.title}",
@@ -170,7 +175,7 @@ class Google(commands.Cog):
                         inline=False,
                     )
                 emb.set_footer(
-                    text=f"Safe Search: {not isnsfw} | " + response[1].replace("\n", " ")
+                    text=f"Safe Search: {not isnsfw} | " + kwargs["stats"].replace("\n", " ")
                 )
                 emb.set_thumbnail(url=encoded["image_url"])
         await ctx.send(embed=emb)
@@ -179,7 +184,7 @@ class Google(commands.Cog):
     @google.command(hidden=True)
     async def debug(self, ctx, *, url):
         async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=self.options) as resp:
+            async with session.get(url, headers=self.options, cookies=self.cookies) as resp:
                 text = await resp.text()
         f = BytesIO(bytes(text, "utf-8"))
         await ctx.send(file=discord.File(f, filename="filename.html"))
@@ -190,20 +195,24 @@ class Google(commands.Cog):
         # TODO make this fetching a little better
         encoded = urllib.parse.quote_plus(query, encoding="utf-8", errors="replace")
 
+        async def get_html(url, encoded):
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    url + encoded, headers=self.options, cookies=self.cookies
+                ) as resp:
+                    self.cookies = resp.cookies
+                    return await resp.text()
+
         if not nsfw:
             encoded += "&safe=active"
         if not images:
             url = "https://www.google.com/search?q="
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url + encoded, headers=self.options) as resp:
-                    text = await resp.text()
+            text = await get_html(url, encoded)
             prep = functools.partial(self.parser_text, text)
         else:
             # TYSM fixator, for the non-js query url
             url = "https://www.google.com/search?tbm=isch&sfr=gws&gbv=1&q="
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url + encoded, headers=self.options) as resp:
-                    text = await resp.text()
+            text = await get_html(url, encoded)
             prep = functools.partial(self.parser_image, text)
         return await self.bot.loop.run_in_executor(None, prep)
 
@@ -221,7 +230,7 @@ class Google(commands.Cog):
             soup = BeautifulSoup(text, features="html.parser")
         s = namedtuple("searchres", "url title desc")
         final = []
-        stats = h2t(str(soup.find("div", id="result-stats")))
+        kwargs = {"stats": h2t(str(soup.find("div", id="result-stats")))}
 
         def get_card():
             """Getting cards if present, here started the pain"""
@@ -243,16 +252,25 @@ class Google(commands.Cog):
 
             # sidepage card
             if card := soup.find("div", class_="liYKde g VjDLd"):
+                if thumbnail := card.find("g-img", attrs={"data-lpage": True}):
+                    kwargs["thumbnail"] = thumbnail["data-lpage"]
                 if title := soup.find("div", class_="SPZz6b"):
                     if desc := card.find("div", class_="kno-rdesc"):
                         if remove := desc.find(class_="Uo8X3b"):
                             remove.decompose()
-                        desc = h2t(str(desc)).strip("\n") + "\n"
+
+                        desc = (
+                            textwrap.shorten(
+                                h2t(str(desc)), 1024, placeholder="\N{HORIZONTAL ELLIPSIS}"
+                            )
+                            + "\n"
+                        )
+
                         if more_info := card.findAll("div", class_="Z1hOCe"):
                             for thing in more_info:
                                 tmp = thing.findAll("span")
                                 if len(tmp) == 2:
-                                    desc2 = f"\n **{tmp[0].text}**:`{tmp[1].text.lstrip(':')}`"
+                                    desc2 = f"\n **{tmp[0].text}**`{tmp[1].text.lstrip(':')}`"
                                     # More jack advises :D
                                     MAX = 1024
                                     MAX_LEN = MAX - len(desc2)
@@ -279,7 +297,7 @@ class Google(commands.Cog):
                         )
                     return
 
-            # time cards and unit conversions -_-
+            # time cards and unit conversions and moar-_-
             if card := soup.find("div", class_="vk_c"):
                 if conversion := card.findAll("div", class_="rpnBye"):
                     if len(conversion) != 2:
@@ -300,6 +318,9 @@ class Google(commands.Cog):
                             "`" + " ".join(tmp[0]) + " is equal to " + " ".join(tmp[1]) + "`",
                         )
                     )
+                elif card.find("a"):
+                    # TODO this is a map card, scrape this.
+                    return
                 else:
                     # time card
                     if tail := card.find("table", class_="d8WIHd"):
@@ -391,7 +412,7 @@ class Google(commands.Cog):
                 desc = "Not found"
             if title:
                 final.append(s(url, title, desc.replace("\n", " ")))
-        return final, stats
+        return final, kwargs
 
     def parser_image(self, html):
         soup = BeautifulSoup(html, features="html.parser")
