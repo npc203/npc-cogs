@@ -69,6 +69,9 @@ class Google(commands.Cog):
                     )
                     if "thumbnail" in kwargs:
                         emb.set_thumbnail(url=kwargs["thumbnail"])
+
+                    if "image" in kwargs and num == 1:
+                        emb.set_image(url=kwargs["image"])
                     pages.append(emb)
             if pages:
                 await ResultMenu(source=Source(pages, per_page=1)).start(ctx)
@@ -340,9 +343,11 @@ class Google(commands.Cog):
                             "`" + " ".join(tmp[0]) + " is equal to " + " ".join(tmp[1]) + "`",
                         )
                     )
-                elif card.find("a"):
-                    # TODO this is a map card, scrape this.
                     return
+                elif card.find("a"):
+                    if img := re.search(r"\((.*)\)", h2t(str(card)).replace("\n", "")):
+                        kwargs["image"] = "https://www.google.com" + img[1]
+                        return
                 else:
                     # time card
                     if tail := card.find("table", class_="d8WIHd"):
@@ -412,6 +417,10 @@ class Google(commands.Cog):
                     )
                 )
                 return
+            # another single card?
+            if card := soup.find("div", class_="sXLaOe"):
+                final.append(s(None, "Single Answer Card:", card.text))
+                return
 
         if cards:
             get_card()
@@ -451,7 +460,7 @@ class ResultMenu(menus.MenuPages, inherit_buttons=False):
     def __init__(self, **kwargs):
         super().__init__(
             **kwargs,
-            timeout=10,
+            timeout=60,
             clear_reactions_after=True,
             delete_message_after=True,
         )
@@ -508,5 +517,5 @@ class ResultMenu(menus.MenuPages, inherit_buttons=False):
         await self.show_page(self._source.get_max_pages() - 1)
 
     @menus.button("\N{CROSS MARK}", position=menus.First(2))
-    async def stop_pages(self, payload: discord.RawReactionActionEvent) -> None:
+    async def stop_pages(self, payload) -> None:
         self.stop()
