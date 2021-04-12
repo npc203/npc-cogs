@@ -8,7 +8,7 @@ from redbot.core import commands
 from redbot.core.commands.context import Context
 from redbot.core.commands.help import (HelpSettings, NoCommand, NoSubCommand,
                                        _, dpy_commands, mass_purge)
-from redbot.core.utils.chat_formatting import humanize_timedelta, pagify
+from redbot.core.utils.chat_formatting import pagify
 
 from . import ARROWS, GLOBAL_CATEGORIES, get_menu
 from .category import Category, CategoryConvert, get_category

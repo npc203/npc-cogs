@@ -11,8 +11,8 @@ from bs4 import BeautifulSoup
 from html2text import html2text as h2t
 from redbot.core import commands
 from redbot.core.bot import Red
-from redbot.vendored.discord.ext import menus
 from redbot.core.utils.chat_formatting import pagify
+from redbot.vendored.discord.ext import menus
 
 # TODO Add optional way to use from google search api
 
