@@ -2,6 +2,7 @@ import functools
 import urllib
 from collections import namedtuple
 from io import BytesIO
+import re
 
 import aiohttp
 import discord
@@ -30,6 +31,9 @@ class Google(commands.Cog):
         self.options = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36"
         }
+        self.link_regex = re.compile(
+            r"https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*(?:\.png|\.jpe?g|\.gif))"
+        )
         self.cookies = None
 
     @commands.group(invoke_without_command=True)
@@ -85,6 +89,7 @@ class Google(commands.Cog):
                     discord.Embed(
                         title=f"Pages: {i}/{size}",
                         color=await ctx.embed_color(),
+                        description="Some images might not be visible.",
                     )
                     .set_image(url=j)
                     .set_footer(text=f"Safe Search: {not isnsfw}")
@@ -211,7 +216,7 @@ class Google(commands.Cog):
             prep = functools.partial(self.parser_text, text)
         else:
             # TYSM fixator, for the non-js query url
-            url = "https://www.google.com/search?tbm=isch&sfr=gws&gbv=1&q="
+            url = "https://www.google.com/search?tbm=isch&q="
             text = await get_html(url, encoded)
             prep = functools.partial(self.parser_image, text)
         return await self.bot.loop.run_in_executor(None, prep)
@@ -415,5 +420,5 @@ class Google(commands.Cog):
         return final, kwargs
 
     def parser_image(self, html):
-        soup = BeautifulSoup(html, features="html.parser")
-        return [x.get("src", "https://http.cat/404") for x in soup.findAll("img", class_="t0fcAb")]
+        # first 2 are google static logo images
+        return self.link_regex.findall(html)[2:]
