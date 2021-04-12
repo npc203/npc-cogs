@@ -446,25 +446,67 @@ class Source(menus.ListPageSource):
         return embeds
 
 
-class ResultMenu(menus.MenuPages):
+# Thanks fixator https://github.com/fixator10/Fixator10-Cogs/blob/V3.leveler_abc/leveler/menus/top.py
+class ResultMenu(menus.MenuPages, inherit_buttons=False):
+    def __init__(self, **kwargs):
+        super().__init__(
+            **kwargs,
+            timeout=10,
+            clear_reactions_after=True,
+            delete_message_after=True,
+        )
 
-    # thanks trusty
-    async def show_checked_page(self, page_number: int) -> None:
-        max_pages = self._source.get_max_pages()
-        try:
-            if max_pages is None or page_number < max_pages and page_number >= 0:
-                # If it doesn't give maximum pages, it cannot be checked
-                await self.show_page(page_number)
-            elif page_number >= max_pages:
-                await self.show_page(0)
-            else:
-                await self.show_page(max_pages - 1)
-        except IndexError:
-            # An error happened that can be handled, so ignore it.
-            pass
+    def _skip_double_triangle_buttons(self):
+        return super()._skip_double_triangle_buttons()
 
-    @menus.button("\N{BLACK SQUARE FOR STOP}\ufe0f", position=menus.First(2))
-    async def stop_pages(self, payload):
-        """stops the pagination session."""
+    async def finalize(self, timed_out):
+        """|coro|
+        A coroutine that is called when the menu loop has completed
+        its run. This is useful if some asynchronous clean-up is
+        required after the fact.
+        Parameters
+        --------------
+        timed_out: :class:`bool`
+            Whether the menu completed due to timing out.
+        """
+        if timed_out and self.delete_message_after:
+            self.delete_message_after = False
+
+    @menus.button(
+        "\N{BLACK LEFT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\ufe0f",
+        position=menus.First(0),
+        skip_if=_skip_double_triangle_buttons,
+    )
+    async def go_to_first_page(self, payload):
+        """go to the first page"""
+        await self.show_page(0)
+
+    @menus.button("\N{BLACK LEFT-POINTING TRIANGLE}\ufe0f", position=menus.First(1))
+    async def go_to_previous_page(self, payload):
+        """go to the previous page"""
+        if self.current_page == 0:
+            await self.show_page(self._source.get_max_pages() - 1)
+        else:
+            await self.show_checked_page(self.current_page - 1)
+
+    @menus.button("\N{BLACK RIGHT-POINTING TRIANGLE}\ufe0f", position=menus.Last(0))
+    async def go_to_next_page(self, payload):
+        """go to the next page"""
+        if self.current_page == self._source.get_max_pages() - 1:
+            await self.show_page(0)
+        else:
+            await self.show_checked_page(self.current_page + 1)
+
+    @menus.button(
+        "\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\ufe0f",
+        position=menus.Last(1),
+        skip_if=_skip_double_triangle_buttons,
+    )
+    async def go_to_last_page(self, payload):
+        """go to the last page"""
+        # The call here is safe because it's guarded by skip_if
+        await self.show_page(self._source.get_max_pages() - 1)
+
+    @menus.button("\N{CROSS MARK}", position=menus.First(2))
+    async def stop_pages(self, payload: discord.RawReactionActionEvent) -> None:
         self.stop()
-        await self.message.delete()
