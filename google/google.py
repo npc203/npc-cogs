@@ -1,12 +1,12 @@
 import functools
+import re
+import textwrap
 import urllib
 from collections import namedtuple
 from io import BytesIO
-import re
 
 import aiohttp
 import discord
-import textwrap
 from bs4 import BeautifulSoup
 from html2text import html2text as h2t
 from redbot.core import commands
@@ -166,24 +166,41 @@ class Google(commands.Cog):
                     redir_url = resp.url
             prep = functools.partial(self.reverse_search, text)
             result, (response, kwargs) = await self.bot.loop.run_in_executor(None, prep)
-            emb = discord.Embed(
-                title="Google Reverse Image Search",
-                description="[`" + (result or "Nothing significant found") + f"`]({redir_url})",
-                color=await ctx.embed_color(),
-            )
+            pages = []
             if response:
-                for i in response[:6]:
-                    desc = (f"[{i.url[:60]}]({i.url})\n" if i.url else "") + f"{i.desc}"[:1024]
-                    emb.add_field(
-                        name=f"{i.title}",
-                        value=desc or "Nothing",
-                        inline=False,
+                groups = [response[n : n + 3] for n in range(0, len(response), 3)]
+                for num, group in enumerate(groups, 1):
+                    emb = discord.Embed(
+                        title="Google Reverse Image Search",
+                        description="[`"
+                        + (result or "Nothing significant found")
+                        + f"`]({redir_url})",
+                        color=await ctx.embed_color(),
                     )
-                emb.set_footer(
-                    text=f"Safe Search: {not isnsfw} | " + kwargs["stats"].replace("\n", " ")
+                    for i in group:
+                        desc = (f"[{i.url[:60]}]({i.url})\n" if i.url else "") + f"{i.desc}"[:1024]
+                        emb.add_field(
+                            name=f"{i.title}",
+                            value=desc or "Nothing",
+                            inline=False,
+                        )
+                    emb.set_footer(
+                        text=f"Safe Search: {not isnsfw} | "
+                        + kwargs["stats"].replace("\n", " ")
+                        + f"| Page: {num}/{len(groups)}"
+                    )
+                    emb.set_thumbnail(url=encoded["image_url"])
+                    pages.append(emb)
+            if pages:
+                await menus.menu(ctx, pages, controls=menus.DEFAULT_CONTROLS)
+            else:
+                await ctx.send(
+                    embed=discord.Embed(
+                        title="Google Reverse Image Search",
+                        description="[`" + ("Nothing significant found") + f"`]({redir_url})",
+                        color=await ctx.embed_color(),
+                    ).set_thumbnail(url=encoded["image_url"])
                 )
-                emb.set_thumbnail(url=encoded["image_url"])
-        await ctx.send(embed=emb)
 
     @commands.is_owner()
     @google.command(hidden=True)
@@ -225,7 +242,7 @@ class Google(commands.Cog):
         soup = BeautifulSoup(text, features="html.parser")
         if check := soup.find("div", class_="card-section"):
             if "The URL doesn't refer" in check.text:
-                return check.text, None
+                return check.text, (None, None)
         if res := soup.find("input", class_="gLFyf gsfi"):
             return res["value"], self.parser_text(text, soup=soup, cards=False)
 
@@ -398,7 +415,6 @@ class Google(commands.Cog):
 
         if cards:
             get_card()
-
         for res in soup.findAll("div", class_="g"):
             if name := res.find("div", class_="yuRUbf"):
                 url = name.a["href"]
