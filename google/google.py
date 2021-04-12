@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 from html2text import html2text as h2t
 from redbot.core import commands
 from redbot.core.bot import Red
-from redbot.core.utils import menus
+from redbot.vendored.discord.ext import menus
 from redbot.core.utils.chat_formatting import pagify
 
 # TODO Add optional way to use from google search api
@@ -71,7 +71,7 @@ class Google(commands.Cog):
                         emb.set_thumbnail(url=kwargs["thumbnail"])
                     pages.append(emb)
             if pages:
-                await menus.menu(ctx, pages, controls=menus.DEFAULT_CONTROLS)
+                await ResultMenu(source=Source(pages, per_page=1)).start(ctx)
             else:
                 await ctx.send("No result")
 
@@ -97,7 +97,7 @@ class Google(commands.Cog):
                 ]
 
             if pages:
-                await menus.menu(ctx, pages, controls=menus.DEFAULT_CONTROLS)
+                await ResultMenu(source=Source(pages, per_page=1)).start(ctx)
             else:
                 await ctx.send("No result")
 
@@ -192,7 +192,7 @@ class Google(commands.Cog):
                     emb.set_thumbnail(url=encoded["image_url"])
                     pages.append(emb)
             if pages:
-                await menus.menu(ctx, pages, controls=menus.DEFAULT_CONTROLS)
+                await ResultMenu(source=Source(pages, per_page=1)).start(ctx)
             else:
                 await ctx.send(
                     embed=discord.Embed(
@@ -438,3 +438,33 @@ class Google(commands.Cog):
     def parser_image(self, html):
         # first 2 are google static logo images
         return self.link_regex.findall(html)[2:]
+
+
+# Dpy menus
+class Source(menus.ListPageSource):
+    async def format_page(self, menu, embeds):
+        return embeds
+
+
+class ResultMenu(menus.MenuPages):
+
+    # thanks trusty
+    async def show_checked_page(self, page_number: int) -> None:
+        max_pages = self._source.get_max_pages()
+        try:
+            if max_pages is None or page_number < max_pages and page_number >= 0:
+                # If it doesn't give maximum pages, it cannot be checked
+                await self.show_page(page_number)
+            elif page_number >= max_pages:
+                await self.show_page(0)
+            else:
+                await self.show_page(max_pages - 1)
+        except IndexError:
+            # An error happened that can be handled, so ignore it.
+            pass
+
+    @menus.button("\N{BLACK SQUARE FOR STOP}\ufe0f", position=menus.First(2))
+    async def stop_pages(self, payload):
+        """stops the pagination session."""
+        self.stop()
+        await self.message.delete()
