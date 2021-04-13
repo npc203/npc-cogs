@@ -322,7 +322,7 @@ class Google(commands.Cog):
                         )
                     return
 
-            # time cards and unit conversions and moar-_-
+            # time cards and unit conversions and moar-_- WORK ON THIS, THIS IS BAD STUFF 100
             if card := soup.find("div", class_="vk_c"):
                 if conversion := card.findAll("div", class_="rpnBye"):
                     if len(conversion) != 2:
@@ -344,7 +344,7 @@ class Google(commands.Cog):
                         )
                     )
                     return
-                elif card.find("a"):
+                elif card.find("div", "lu_map_section"):
                     if img := re.search(r"\((.*)\)", h2t(str(card)).replace("\n", "")):
                         kwargs["image"] = "https://www.google.com" + img[1]
                         return
