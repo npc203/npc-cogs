@@ -6,8 +6,8 @@ from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.config import Config
 from redbot.core.utils.chat_formatting import pagify
-from redbot.core.utils.menus import (DEFAULT_CONTROLS, menu,
-                                     start_adding_reactions)
+from redbot.core.utils.menus import DEFAULT_CONTROLS, menu, start_adding_reactions
+from redbot.vendored.discord.ext import menus
 from redbot.core.utils.predicates import ReactionPredicate
 
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
@@ -26,7 +26,7 @@ class Todo(commands.Cog):
             force_registration=True,
         )
         self.config.register_user(todos=[])
-        self.config.register_global(embeds=True, menus=True)
+        self.config.register_global(menus=True)
 
     @commands.group(invoke_without_command=True)
     async def todo(self, ctx, id_: int):
@@ -42,23 +42,13 @@ class Todo(commands.Cog):
 
     @commands.is_owner()
     @todo.command()
-    async def embedset(self, ctx, toggle: bool):
-        """Enable/Disable embeds for todos"""
-        if toggle:
-            await self.config.embeds.set(True)
-        else:
-            await self.config.embeds.set(False)
-        await ctx.send(f'Sucessfully {"Enabled" if toggle else "Disabled"} embeds for todo lists')
-
-    @commands.is_owner()
-    @todo.command()
     async def menuset(self, ctx, toggle: bool):
         """Enable/Disable menus for todos"""
         if toggle:
             await self.config.menus.set(True)
         else:
             await self.config.menus.set(False)
-        await ctx.send(f'Sucessfully {"Enabled" if toggle else "Disabled"} menus for todo lists')
+        await ctx.send(f'Successfully {"enabled" if toggle else "disabled"} menus for todo lists')
 
     @todo.command()
     async def add(self, ctx, *, task: str):
@@ -76,7 +66,7 @@ class Todo(commands.Cog):
             await ctx.send("Currently, you have no TODOs")
         else:
             todo_text = ""
-            if await self.config.embeds():
+            if await ctx.embed_requested():
                 for i, x in enumerate(todos):
                     if isinstance(x, list):
                         todo_text += f"[{i}]({x[0]}). {x[1]}\n"
@@ -88,19 +78,21 @@ class Todo(commands.Cog):
                     emb_pages = [
                         discord.Embed(
                             title="Your TODO List",
-                            description=f"Page:{num}/{len(pagified)}\n\n{page}",
-                        )
+                            description=page,
+                            color=await ctx.embed_color(),
+                        ).set_footer(text=f"Page: {num}/{len(pagified)}")
                         for num, page in enumerate(pagified, 1)
                     ]
-                    await menu(ctx, emb_pages, DEFAULT_CONTROLS, timeout=120)
+                    await menus.MenuPages(source=Source(emb_pages, per_page=1)).start(ctx)
                 # embeds and not menus
                 else:
-                    for page in pagified:
+                    for num, page in enumerate(pagified, 1):
                         await ctx.send(
                             embed=discord.Embed(
                                 title="Your TODO List",
                                 description=page,
-                            )
+                                color=await ctx.embed_color(),
+                            ).set_footer(text=f"Page: {num}/{len(pagified)}")
                         )
             else:
                 for i, x in enumerate(todos):
@@ -111,7 +103,7 @@ class Todo(commands.Cog):
                 pagified = tuple(pagify(todo_text))
                 # not embeds and menus
                 if await self.config.menus():
-                    await menu(ctx, pagified, DEFAULT_CONTROLS, timeout=120)
+                    await menus.MenuPages(source=Source(pagified, per_page=1)).start(ctx)
                 # not embeds and not menus
                 else:
                     for page in pagified:
@@ -119,6 +111,7 @@ class Todo(commands.Cog):
 
     @todo.command(aliases=["rearrange"])
     async def reorder(self, ctx, from_: int, to: int):
+        """Reorder your todos using IDs to swap them"""
         async with self.config.user(ctx.author).todos() as todos:
             if -len(todos) < from_ < len(todos):
                 if -len(todos) < to < len(todos):
@@ -135,7 +128,9 @@ class Todo(commands.Cog):
         if len(indices) == 1:
             async with self.config.user(ctx.author).todos() as todos:
                 x = todos.pop(indices[0])
-                await ctx.send(f"Succesfully removed: {x[1] if isinstance(x,list) else x}")
+                await ctx.send_interactive(
+                    pagify(f"Succesfully removed: {x[1] if isinstance(x,list) else x}")
+                )
             return
 
         removed = []
@@ -153,6 +148,7 @@ class Todo(commands.Cog):
                 f"{i}. {x[1] if isinstance(x,list) else x}" for i, x in enumerate(removed, 1)
             ),
             page_length=1970,
+            shorten_by=0,
         ):
             await ctx.send(page)
 
@@ -175,3 +171,9 @@ class Todo(commands.Cog):
     async def red_delete_data_for_user(self, *, requester: RequestType, user_id: int) -> None:
         # should I add anything more here?
         await self.config.user_from_id(user_id).clear()
+
+
+# Dpy menus
+class Source(menus.ListPageSource):
+    async def format_page(self, menu, embeds):
+        return embeds
