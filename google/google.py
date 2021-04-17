@@ -137,9 +137,12 @@ class Google(commands.Cog):
         if resp := reply(ctx):
             query = get_url(resp)
 
+        # TODO More work on this to shorten code.
         if not query or not check_url(query):
             if query := get_url(ctx.message, check=True):
                 pass
+            elif url is None:
+                return await ctx.send_help()
             else:
                 query = url.lstrip("<").rstrip(">")
 
