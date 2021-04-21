@@ -10,7 +10,7 @@
         "speed test",
         "race"
     ],
-    "hidden":true,
+    "hidden":false,
     "requirements": [
         "tabulate"
     ],
