@@ -83,7 +83,7 @@ class Todo(commands.Cog):
                         ).set_footer(text=f"Page: {num}/{len(pagified)}")
                         for num, page in enumerate(pagified, 1)
                     ]
-                    await menus.MenuPages(source=Source(emb_pages, per_page=1)).start(ctx)
+                    await ResultMenu(source=Source(emb_pages, per_page=1)).start(ctx)
                 # embeds and not menus
                 else:
                     for num, page in enumerate(pagified, 1):
@@ -103,7 +103,7 @@ class Todo(commands.Cog):
                 pagified = tuple(pagify(todo_text))
                 # not embeds and menus
                 if await self.config.menus():
-                    await menus.MenuPages(source=Source(pagified, per_page=1)).start(ctx)
+                    await ResultMenu(source=Source(pagified, per_page=1)).start(ctx)
                 # not embeds and not menus
                 else:
                     for page in pagified:
@@ -177,3 +177,68 @@ class Todo(commands.Cog):
 class Source(menus.ListPageSource):
     async def format_page(self, menu, embeds):
         return embeds
+
+# Thanks fixator https://github.com/fixator10/Fixator10-Cogs/blob/V3.leveler_abc/leveler/menus/top.py
+class ResultMenu(menus.MenuPages, inherit_buttons=False):
+    def __init__(self, **kwargs):
+        super().__init__(
+            **kwargs,
+            timeout=60,
+            clear_reactions_after=True,
+            delete_message_after=True,
+        )
+
+    def _skip_double_triangle_buttons(self):
+        return super()._skip_double_triangle_buttons()
+
+    async def finalize(self, timed_out):
+        """|coro|
+        A coroutine that is called when the menu loop has completed
+        its run. This is useful if some asynchronous clean-up is
+        required after the fact.
+        Parameters
+        --------------
+        timed_out: :class:`bool`
+            Whether the menu completed due to timing out.
+        """
+        if timed_out and self.delete_message_after:
+            self.delete_message_after = False
+
+    @menus.button(
+        "\N{BLACK LEFT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\ufe0f",
+        position=menus.First(0),
+        skip_if=_skip_double_triangle_buttons,
+    )
+    async def go_to_first_page(self, payload):
+        """go to the first page"""
+        await self.show_page(0)
+
+    @menus.button("\N{BLACK LEFT-POINTING TRIANGLE}\ufe0f", position=menus.First(1))
+    async def go_to_previous_page(self, payload):
+        """go to the previous page"""
+        if self.current_page == 0:
+            await self.show_page(self._source.get_max_pages() - 1)
+        else:
+            await self.show_checked_page(self.current_page - 1)
+
+    @menus.button("\N{BLACK RIGHT-POINTING TRIANGLE}\ufe0f", position=menus.Last(0))
+    async def go_to_next_page(self, payload):
+        """go to the next page"""
+        if self.current_page == self._source.get_max_pages() - 1:
+            await self.show_page(0)
+        else:
+            await self.show_checked_page(self.current_page + 1)
+
+    @menus.button(
+        "\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\ufe0f",
+        position=menus.Last(1),
+        skip_if=_skip_double_triangle_buttons,
+    )
+    async def go_to_last_page(self, payload):
+        """go to the last page"""
+        # The call here is safe because it's guarded by skip_if
+        await self.show_page(self._source.get_max_pages() - 1)
+
+    @menus.button("\N{CROSS MARK}", position=menus.First(2))
+    async def stop_pages(self, payload) -> None:
+        self.stop()
