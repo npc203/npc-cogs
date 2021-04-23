@@ -1,4 +1,5 @@
 import asyncio
+import random
 from typing import Literal
 
 import discord
@@ -6,9 +7,10 @@ from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.config import Config
 from redbot.core.utils.chat_formatting import pagify
-from redbot.core.utils.menus import DEFAULT_CONTROLS, menu, start_adding_reactions
-from redbot.vendored.discord.ext import menus
+from redbot.core.utils.menus import (DEFAULT_CONTROLS, menu,
+                                     start_adding_reactions)
 from redbot.core.utils.predicates import ReactionPredicate
+from redbot.vendored.discord.ext import menus
 
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
 
@@ -57,6 +59,31 @@ class Todo(commands.Cog):
             todo_id = len(todos)
             todos.append([ctx.message.jump_url, task])  # using a list to support future todo edit
         await ctx.send(f"Your todo has been added successfully with the id: **{todo_id}**")
+
+    @todo.command(aliases=["r", "rand"])
+    async def random(self, ctx):
+        """Displays a random todo from your todo list"""
+        todos = await self.config.user(ctx.author).todos()
+        id_ = random.randint(0, len(todos) - 1)
+        if isinstance(todos[id_], list):
+            await ctx.send(todos[id_][1])
+        else:
+            await ctx.send(todos[id_])
+
+    @todo.command()
+    async def edit(self, ctx, index: int, *, task: str):
+        """Edit a todo quickly"""
+        async with self.config.user(ctx.author).todos() as todos:
+            try:
+                old = todos[index][1] if isinstance(todos[index], list) else todos[index]
+                todos[index] = [ctx.message.jump_url, task]
+                await ctx.send_interactive(
+                    pagify(
+                        f"Sucessfully edited Todo ID: {index}\n**from:**\n{old}\n**to:**\n{task}"
+                    )
+                )
+            except IndexError:
+                await ctx.send(f"Invalid Todo ID: {index}")
 
     @todo.command(name="list")
     async def list_todos(self, ctx):
@@ -177,6 +204,7 @@ class Todo(commands.Cog):
 class Source(menus.ListPageSource):
     async def format_page(self, menu, embeds):
         return embeds
+
 
 # Thanks fixator https://github.com/fixator10/Fixator10-Cogs/blob/V3.leveler_abc/leveler/menus/top.py
 class ResultMenu(menus.MenuPages, inherit_buttons=False):
