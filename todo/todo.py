@@ -64,7 +64,10 @@ class Todo(commands.Cog):
     async def random(self, ctx):
         """Displays a random todo from your todo list"""
         todos = await self.config.user(ctx.author).todos()
-        id_ = random.randint(0, len(todos) - 1)
+        try:
+            id_ = random.randint(0, len(todos) - 1)
+        except ValueError:
+            return await ctx.send("You have no more todos.")
         if isinstance(todos[id_], list):
             await ctx.send(todos[id_][1])
         else:
