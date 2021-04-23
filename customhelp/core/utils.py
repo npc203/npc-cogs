@@ -33,17 +33,23 @@ def shorten_line(a_line: str) -> str:
 
 # Add permissions
 def get_perms(command):
-    get_list = ["user_perms", "bot_perms"]
-    final_perms = []
+    final_perms = ""
     neat_format = lambda x: " ".join(i.capitalize() for i in x.replace("_", " ").split())
-    for thing in get_list:
-        if perms := getattr(command.requires, thing):
-            perms_list = [neat_format(i) for i, j in perms if j]  # TODO pls learn more to fix this
-            if perms_list:
-                final_perms += perms_list
+
+    user_perms = []
+    if perms := getattr(command.requires, "user_perms"):
+        user_perms.extend(neat_format(i) for i, j in perms if j)
     if perms := command.requires.privilege_level:
         if perms.name != "NONE":
-            final_perms.append(neat_format(perms.name))
+            user_perms.append(neat_format(perms.name))
+
+    if user_perms:
+        final_perms += "User Permission(s): " + ", ".join(user_perms) + "\n"
+
+    if perms := getattr(command.requires, "bot_perms"):
+        if perms_list := ", ".join(neat_format(i) for i, j in perms if j):
+            final_perms += "Bot Permission(s): " + perms_list
+
     return final_perms
 
 

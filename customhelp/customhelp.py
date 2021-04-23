@@ -57,7 +57,7 @@ class CustomHelp(commands.Cog):
     A custom customisable help for fun and profit
     """
 
-    __version__ = "0.6.4"
+    __version__ = "0.6.5"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -856,6 +856,62 @@ class CustomHelp(commands.Cog):
         )
 
         await ctx.send(box(final))
+
+    @chelp.command()
+    async def reorder(self, ctx, *, categories: str = None):
+        """This can be used to reorder the categories.
+
+        The categories you type are pushed forward while the rest are pushed back.
+        Note: Due to technical stuff, the uncategorised category is always at the last"""
+        if categories:
+            content = categories
+        else:
+            await ctx.send(
+                "Your next message should be valid category names each in a new line\n"
+                "Example:\n"
+                "general\n"
+                "fun\n"
+                "moderation\n"
+            )
+            try:
+                msg = await self.bot.wait_for(
+                    "message",
+                    timeout=180,
+                    check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
+                )
+                content = msg.content
+            except asyncio.TimeoutError:
+                return await ctx.send("Timed out, please try again.")
+        content = map(str.strip, content.split())
+        to_config = []
+        failed = []
+        for thing in content:
+            if thing != GLOBAL_CATEGORIES[-1]:
+                try:
+                    to_config.append(GLOBAL_CATEGORIES.index(thing))
+                except:
+                    failed.append(thing)
+            else:
+                failed.append(thing)
+
+        async with self.config.categories() as cat_conf:
+            new_order = [cat_conf[i] for i in to_config]
+
+            for ind in range(len(cat_conf)):
+                if ind not in to_config:
+                    new_order.append(cat_conf[ind])
+
+            cat_conf[:] = new_order
+
+        await self.refresh_cache()
+        await ctx.send(
+            "Sucessfully reordered the categories\n"
+            + (
+                "Invalid categories: (uncategorised is invalid as well)\n" + "\n".join(failed)
+                if failed
+                else ""
+            )
+        )
 
     @commands.command(aliases=["findcat"])
     async def findcategory(self, ctx, *, command):

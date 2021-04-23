@@ -308,7 +308,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                     emb["fields"].append(EmbedField("Aliases", ",".join(alias), False))
 
                 if final_perms := get_perms(command):
-                    emb["fields"].append(EmbedField("Permissions", ", ".join(final_perms), False))
+                    emb["fields"].append(EmbedField("Permissions", final_perms, False))
 
                 if cooldowns := get_cooldowns(command):
                     emb["fields"].append(EmbedField("Cooldowns", "\n".join(cooldowns), False))

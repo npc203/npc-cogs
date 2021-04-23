@@ -124,11 +124,11 @@ class MinimalHelp(ThemesMeta):
         if aliases := get_aliases(command, ctx.invoked_with):
             full_text += "**Aliases:** " + ",".join(aliases) + "\n"
 
-        if final_perms := get_perms(command):
-            full_text += "**Permissions:** " + ", ".join(final_perms) + "\n"
-
         if cooldowns := get_cooldowns(command):
             full_text += "**Cooldowns:** " + "\n".join(cooldowns) + "\n"
+
+        if final_perms := get_perms(command):
+            full_text += "**Permissions:**\n" + final_perms + "\n"
 
         if command_help:
             full_text += (
