@@ -2,8 +2,15 @@ from redbot.core.utils.chat_formatting import box
 
 from ..abc import ThemesMeta
 from ..core.base_help import (
-    EMPTY_STRING, GLOBAL_CATEGORIES, CategoryConvert, Context, EmbedField,
-    HelpSettings, _, pagify)
+    EMPTY_STRING,
+    GLOBAL_CATEGORIES,
+    CategoryConvert,
+    Context,
+    EmbedField,
+    HelpSettings,
+    _,
+    pagify,
+)
 
 
 class NadekoHelp(ThemesMeta):
@@ -14,7 +21,9 @@ class NadekoHelp(ThemesMeta):
     ):
         description = ctx.bot.description or ""
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
-        if not await ctx.embed_requested():  # Maybe redirect to non-embed minimal format
+        if (
+            not await ctx.embed_requested()
+        ):  # Maybe redirect to non-embed minimal format
             await ctx.send(_("You need to enable embeds to use custom help menu"))
         else:
             emb = {
@@ -27,13 +36,17 @@ class NadekoHelp(ThemesMeta):
             emb["embed"]["description"] = description
             emb["title"] = _("{} Help Menu").format(ctx.me.name)
             filtered_categories = await self.filter_categories(ctx, GLOBAL_CATEGORIES)
-            cat_titles = "".join(f"• {cat.name}\n" for cat in filtered_categories if cat.cogs)
+            cat_titles = "".join(
+                f"• {cat.name}\n" for cat in filtered_categories if cat.cogs
+            )
 
             # TODO Dont be a moron trying to pagify this or do we? yes we do, lmao.
             for i, vals in enumerate(pagify(cat_titles, page_length=1000)):
                 emb["fields"].append(
                     EmbedField(
-                        (_("List of Categories") if i < 1 else EMPTY_STRING + " "), vals, False
+                        (_("List of Categories") if i < 1 else EMPTY_STRING + " "),
+                        vals,
+                        False,
                     )
                 )
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
@@ -88,7 +101,9 @@ class NadekoHelp(ThemesMeta):
                     (cog_text[n : n + 7] for n in range(0, len(cog_text), 7))
                 ):
                     field = EmbedField(
-                        title if i < 1 else _("{title} (continued)").format(title=title),
+                        title
+                        if i < 1
+                        else _("{title} (continued)").format(title=title),
                         box("\n".join(page), lang="css"),
                         True,
                     )
@@ -98,7 +113,9 @@ class NadekoHelp(ThemesMeta):
             if get_pages:
                 return pages
             else:
-                await self.send_pages(ctx, pages, embed=True, help_settings=help_settings)
+                await self.send_pages(
+                    ctx, pages, embed=True, help_settings=help_settings
+                )
         else:
             # fix this
             await ctx.send("Kindly enable embeds")

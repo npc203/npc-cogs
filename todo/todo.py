@@ -7,8 +7,7 @@ from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.config import Config
 from redbot.core.utils.chat_formatting import pagify
-from redbot.core.utils.menus import (DEFAULT_CONTROLS, menu,
-                                     start_adding_reactions)
+from redbot.core.utils.menus import DEFAULT_CONTROLS, menu, start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
 from redbot.vendored.discord.ext import menus
 
@@ -50,15 +49,21 @@ class Todo(commands.Cog):
             await self.config.menus.set(True)
         else:
             await self.config.menus.set(False)
-        await ctx.send(f'Successfully {"enabled" if toggle else "disabled"} menus for todo lists')
+        await ctx.send(
+            f'Successfully {"enabled" if toggle else "disabled"} menus for todo lists'
+        )
 
     @todo.command()
     async def add(self, ctx, *, task: str):
         """Add a new task to your todo list, DO NOT STORE SENSITIVE INFO HERE"""
         async with self.config.user(ctx.author).todos() as todos:
             todo_id = len(todos)
-            todos.append([ctx.message.jump_url, task])  # using a list to support future todo edit
-        await ctx.send(f"Your todo has been added successfully with the id: **{todo_id}**")
+            todos.append(
+                [ctx.message.jump_url, task]
+            )  # using a list to support future todo edit
+        await ctx.send(
+            f"Your todo has been added successfully with the id: **{todo_id}**"
+        )
 
     @todo.command(aliases=["r", "rand"])
     async def random(self, ctx):
@@ -78,7 +83,9 @@ class Todo(commands.Cog):
         """Edit a todo quickly"""
         async with self.config.user(ctx.author).todos() as todos:
             try:
-                old = todos[index][1] if isinstance(todos[index], list) else todos[index]
+                old = (
+                    todos[index][1] if isinstance(todos[index], list) else todos[index]
+                )
                 todos[index] = [ctx.message.jump_url, task]
                 await ctx.send_interactive(
                     pagify(
@@ -175,7 +182,8 @@ class Todo(commands.Cog):
         for page in pagify(
             "Succesfully removed:\n"
             + "\n".join(
-                f"{i}. {x[1] if isinstance(x,list) else x}" for i, x in enumerate(removed, 1)
+                f"{i}. {x[1] if isinstance(x,list) else x}"
+                for i, x in enumerate(removed, 1)
             ),
             page_length=1970,
             shorten_by=0,
@@ -198,7 +206,9 @@ class Todo(commands.Cog):
         else:
             await ctx.send("Cancelled.")
 
-    async def red_delete_data_for_user(self, *, requester: RequestType, user_id: int) -> None:
+    async def red_delete_data_for_user(
+        self, *, requester: RequestType, user_id: int
+    ) -> None:
         # should I add anything more here?
         await self.config.user_from_id(user_id).clear()
 

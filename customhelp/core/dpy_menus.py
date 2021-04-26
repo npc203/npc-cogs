@@ -53,7 +53,9 @@ class ReplyMenus(menus.MenuPages, inherit_buttons=False):
     async def _get_kwargs_from_page(self, page):
         # Do this if you dont want to ping the user
         no_ping = {"allowed_mentions": discord.AllowedMentions(replied_user=False)}
-        value = await discord.utils.maybe_coroutine(self._source.format_page, self, page)
+        value = await discord.utils.maybe_coroutine(
+            self._source.format_page, self, page
+        )
         if isinstance(value, dict):
             no_ping.update(value)
         elif isinstance(value, str):

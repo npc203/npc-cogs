@@ -46,7 +46,9 @@ class TypeRacer(commands.Cog):
         if self.jobs["guilds"]:
             emb.add_field(name="Speedevents", value=len(self.jobs["guilds"]))
         if self.jobs["personal"]:
-            emb.add_field(name="Personal typing tests", value=len(self.jobs["personal"]))
+            emb.add_field(
+                name="Personal typing tests", value=len(self.jobs["personal"])
+            )
         await ctx.send(embed=emb)
 
     @typer.command(name="start")
@@ -79,7 +81,9 @@ class TypeRacer(commands.Cog):
         if ctx.guild.id in self.jobs["guilds"]:
             await ctx.send("There's already a speedtest event running in this guild")
         elif countdown and countdown > 300:
-            await ctx.send("Exceeded time limit for countdown, Enter value less than 300 seconds")
+            await ctx.send(
+                "Exceeded time limit for countdown, Enter value less than 300 seconds"
+            )
         else:
             test = Speedevent(
                 ctx,
@@ -94,7 +98,9 @@ class TypeRacer(commands.Cog):
     async def join(self, ctx):
         """Join the typing test speed event"""
         if ctx.guild.id in self.jobs["guilds"]:
-            await self.jobs["guilds"][ctx.guild.id].join(ctx.author.id, ctx.author.display_name)
+            await self.jobs["guilds"][ctx.guild.id].join(
+                ctx.author.id, ctx.author.display_name
+            )
         else:
             await ctx.send("Event has not started yet")
 
@@ -118,7 +124,9 @@ class TypeRacer(commands.Cog):
         Range: min>0 and max<=100"""
         if min > 0 and max <= 100:
             await self.config.guild_from_id(ctx.guild.id).text_size.set((min, max))
-            await ctx.send(f"The number of words are changed to\nMinimum:{min}\nMaximum:{max}")
+            await ctx.send(
+                f"The number of words are changed to\nMinimum:{min}\nMaximum:{max}"
+            )
         else:
             await ctx.send(
                 "The minimum number of words must be greater than 0\nThe maxiumum number of words must be less than or equal to 100 "
@@ -128,7 +136,9 @@ class TypeRacer(commands.Cog):
     async def dm(self, ctx, toggle: bool):
         """Toggle whether the bot should send analytics in the dm or not"""
         await self.config.guild_from_id(ctx.guild.id).dm.set(toggle)
-        await ctx.send(f"I will {'' if toggle else 'not'} send the speedevent analytics in dms")
+        await ctx.send(
+            f"I will {'' if toggle else 'not'} send the speedevent analytics in dms"
+        )
 
     @typerset.command(name="type")
     async def type_of_text(self, ctx, type_txt: str):

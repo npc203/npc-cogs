@@ -1,7 +1,16 @@
 from ..abc import ThemesMeta
 from ..core.base_help import (
-    EMPTY_STRING, GLOBAL_CATEGORIES, CategoryConvert, Context, EmbedField,
-    HelpSettings, _, chain, commands, pagify)
+    EMPTY_STRING,
+    GLOBAL_CATEGORIES,
+    CategoryConvert,
+    Context,
+    EmbedField,
+    HelpSettings,
+    _,
+    chain,
+    commands,
+    pagify,
+)
 
 
 class Mixture(ThemesMeta):
@@ -12,7 +21,9 @@ class Mixture(ThemesMeta):
     ):
         description = ctx.bot.description or ""
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
-        if not await ctx.embed_requested():  # Maybe redirect to non-embed minimal format
+        if (
+            not await ctx.embed_requested()
+        ):  # Maybe redirect to non-embed minimal format
             await ctx.send(_("You need to enable embeds to use custom help menu"))
         else:
             emb = {
@@ -43,7 +54,9 @@ class Mixture(ThemesMeta):
                         ", ".join(f"{name}" for name in data) for _, data in coms
                     )
                     for i, page in enumerate(
-                        pagify(commands_list, page_length=1000, delims=[","], shorten_by=0)
+                        pagify(
+                            commands_list, page_length=1000, delims=[","], shorten_by=0
+                        )
                     ):
                         if i == 0:
                             title = (
@@ -106,11 +119,17 @@ class Mixture(ThemesMeta):
                 title = f"**__{cog_name}:__**"
 
                 cog_text = "\n" + "\n".join(
-                    shorten_line(f"`{name:<{spacing}}:`{command.format_shortdoc_for_context(ctx)}")
+                    shorten_line(
+                        f"`{name:<{spacing}}:`{command.format_shortdoc_for_context(ctx)}"
+                    )
                     for name, command in sorted(data.items())
                 )
-                for i, page in enumerate(pagify(cog_text, page_length=1000, shorten_by=0)):
-                    title = title if i < 1 else _("{title} (continued)").format(title=title)
+                for i, page in enumerate(
+                    pagify(cog_text, page_length=1000, shorten_by=0)
+                ):
+                    title = (
+                        title if i < 1 else _("{title} (continued)").format(title=title)
+                    )
                     field = EmbedField(title, page, False)
                     emb["fields"].append(field)
 
@@ -118,12 +137,16 @@ class Mixture(ThemesMeta):
             if get_pages:
                 return pages
             else:
-                await self.send_pages(ctx, pages, embed=True, help_settings=help_settings)
+                await self.send_pages(
+                    ctx, pages, embed=True, help_settings=help_settings
+                )
         else:
             # fix this
             await ctx.send("Kindly enable embeds")
 
-    async def format_cog_help(self, ctx: Context, obj: commands.Cog, help_settings: HelpSettings):
+    async def format_cog_help(
+        self, ctx: Context, obj: commands.Cog, help_settings: HelpSettings
+    ):
 
         coms = await self.get_cog_help_mapping(ctx, obj, help_settings=help_settings)
         if not (coms or help_settings.verify_exists):
@@ -146,7 +169,9 @@ class Mixture(ThemesMeta):
                 for name, command in sorted(coms.items()):
                     emb["fields"].append(
                         EmbedField(
-                            name, command.format_shortdoc_for_context(ctx) or "\N{ZWSP}", False
+                            name,
+                            command.format_shortdoc_for_context(ctx) or "\N{ZWSP}",
+                            False,
                         )
                     )
 

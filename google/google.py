@@ -50,7 +50,9 @@ class Google(commands.Cog):
                 for num, group in enumerate(groups, 1):
                     emb = discord.Embed(
                         title="Google Search: {}".format(
-                            query[:44] + "\N{HORIZONTAL ELLIPSIS}" if len(query) > 45 else query
+                            query[:44] + "\N{HORIZONTAL ELLIPSIS}"
+                            if len(query) > 45
+                            else query
                         ),
                         color=await ctx.embed_color(),
                     )
@@ -65,7 +67,8 @@ class Google(commands.Cog):
                         )
                     emb.description = f"Page {num} of {len(groups)}"
                     emb.set_footer(
-                        text=f"Safe Search: {not isnsfw} | " + kwargs["stats"].replace("\n", " ")
+                        text=f"Safe Search: {not isnsfw} | "
+                        + kwargs["stats"].replace("\n", " ")
                     )
                     if "thumbnail" in kwargs:
                         emb.set_thumbnail(url=kwargs["thumbnail"])
@@ -164,7 +167,8 @@ class Google(commands.Cog):
         async with ctx.typing():
             async with aiohttp.ClientSession() as session:
                 async with session.get(
-                    "https://www.google.com/searchbyimage?" + urllib.parse.urlencode(encoded),
+                    "https://www.google.com/searchbyimage?"
+                    + urllib.parse.urlencode(encoded),
                     headers=self.options,
                     cookies=self.cookies,
                 ) as resp:
@@ -184,7 +188,9 @@ class Google(commands.Cog):
                         color=await ctx.embed_color(),
                     )
                     for i in group:
-                        desc = (f"[{i.url[:60]}]({i.url})\n" if i.url else "") + f"{i.desc}"[:1024]
+                        desc = (
+                            f"[{i.url[:60]}]({i.url})\n" if i.url else ""
+                        ) + f"{i.desc}"[:1024]
                         emb.add_field(
                             name=f"{i.title}",
                             value=desc or "Nothing",
@@ -203,7 +209,9 @@ class Google(commands.Cog):
                 await ctx.send(
                     embed=discord.Embed(
                         title="Google Reverse Image Search",
-                        description="[`" + ("Nothing significant found") + f"`]({redir_url})",
+                        description="[`"
+                        + ("Nothing significant found")
+                        + f"`]({redir_url})",
                         color=await ctx.embed_color(),
                     ).set_thumbnail(url=encoded["image_url"])
                 )
@@ -212,7 +220,9 @@ class Google(commands.Cog):
     @google.command(hidden=True)
     async def debug(self, ctx, *, url):
         async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=self.options, cookies=self.cookies) as resp:
+            async with session.get(
+                url, headers=self.options, cookies=self.cookies
+            ) as resp:
                 text = await resp.text()
         f = BytesIO(bytes(text, "utf-8"))
         await ctx.send(file=discord.File(f, filename="filename.html"))
@@ -274,7 +284,11 @@ class Google(commands.Cog):
                     if answer := card.find("span", class_="qv3Wpe"):
                         tmp = h2t(str(question)).strip("\n")
                         final.append(
-                            s(None, "Google Calculator:", f"**{tmp}** {h2t(str(answer))}")
+                            s(
+                                None,
+                                "Google Calculator:",
+                                f"**{tmp}** {h2t(str(answer))}",
+                            )
                         )
                         return
 
@@ -289,7 +303,9 @@ class Google(commands.Cog):
 
                         desc = (
                             textwrap.shorten(
-                                h2t(str(desc)), 1024, placeholder="\N{HORIZONTAL ELLIPSIS}"
+                                h2t(str(desc)),
+                                1024,
+                                placeholder="\N{HORIZONTAL ELLIPSIS}",
                             )
                             + "\n"
                         )
@@ -343,7 +359,11 @@ class Google(commands.Cog):
                         s(
                             None,
                             "Unit Conversion v1:",
-                            "`" + " ".join(tmp[0]) + " is equal to " + " ".join(tmp[1]) + "`",
+                            "`"
+                            + " ".join(tmp[0])
+                            + " is equal to "
+                            + " ".join(tmp[1])
+                            + "`",
                         )
                     )
                     return
@@ -362,13 +382,19 @@ class Google(commands.Cog):
             # translator cards
             if card := soup.find("div", class_="tw-src-ltr"):
                 langs = soup.find("div", class_="pcCUmf")
-                src_lang = "**" + langs.find("span", class_="source-language").text + "**"
-                dest_lang = "**" + langs.find("span", class_="target-language").text + "**"
+                src_lang = (
+                    "**" + langs.find("span", class_="source-language").text + "**"
+                )
+                dest_lang = (
+                    "**" + langs.find("span", class_="target-language").text + "**"
+                )
                 final_text = ""
                 if source := card.find("div", id="KnM9nf"):
                     final_text += (src_lang + "\n`" + source.find("pre").text) + "`\n"
                 if dest := card.find("div", id="kAz1tf"):
-                    final_text += dest_lang + "\n`" + dest.find("pre").text.strip("\n") + "`"
+                    final_text += (
+                        dest_lang + "\n`" + dest.find("pre").text.strip("\n") + "`"
+                    )
                 final.append(s(None, "Google Translator", final_text))
                 return
 
@@ -385,7 +411,11 @@ class Google(commands.Cog):
                     tmp = h2t(str(time)).replace("\n", " ").split("·")
                     final_text += (
                         "\n"
-                        + (f"`{tmp[0].strip()}` ·{tmp[1]}" if len(tmp) == 2 else "·".join(tmp))
+                        + (
+                            f"`{tmp[0].strip()}` ·{tmp[1]}"
+                            if len(tmp) == 2
+                            else "·".join(tmp)
+                        )
                         + "\n\N{ZWSP}"
                     )
                 final.append(s(None, "Unit Conversion", final_text))
@@ -406,7 +436,9 @@ class Google(commands.Cog):
                     for text in definition.findAll("div")[:2]:
                         tmp = h2t(str(text))
                         if tmp.count("\n") < 5:
-                            final_text += "`" + tmp.strip("\n").replace("\n", " ") + "`" + "\n"
+                            final_text += (
+                                "`" + tmp.strip("\n").replace("\n", " ") + "`" + "\n"
+                            )
                 final.append(s(None, "Definition", final_text))
                 return
 
@@ -416,7 +448,8 @@ class Google(commands.Cog):
                     s(
                         None,
                         h2t(str(card.find("div", class_="zCubwf"))).replace("\n", ""),
-                        h2t(str(card.find("span").find("span"))).strip("\n") + "\n\N{ZWSP}",
+                        h2t(str(card.find("span").find("span"))).strip("\n")
+                        + "\n\N{ZWSP}",
                     )
                 )
                 return

@@ -11,7 +11,9 @@ from .dpy_menus import ListPages, menus
 # From dpy server >.<
 EMOJI_REGEX = r"<(?P<animated>a?):(?P<name>[a-zA-Z0-9_]{2,32}):(?P<id>[0-9]{18,22})>"
 # https://www.w3resource.com/python-exercises/re/python-re-exercise-42.php
-LINK_REGEX = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
+LINK_REGEX = (
+    r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
+)
 
 # TODO find a way to detect unicode emojis properly
 def emoji_converter(bot, emoji):
@@ -34,7 +36,9 @@ def shorten_line(a_line: str) -> str:
 # Add permissions
 def get_perms(command):
     final_perms = ""
-    neat_format = lambda x: " ".join(i.capitalize() for i in x.replace("_", " ").split())
+    neat_format = lambda x: " ".join(
+        i.capitalize() for i in x.replace("_", " ").split()
+    )
 
     user_perms = []
     if perms := getattr(command.requires, "user_perms"):
@@ -61,7 +65,9 @@ def get_cooldowns(command):
             f"{s.rate} time{'s' if s.rate>1 else ''} in {humanize_timedelta(seconds=s.per)} per {s.type.name.capitalize()}"
         )
     if s := command._max_concurrency:
-        cooldowns.append(f"Max concurrent uses: {s.number} per {s.per.name.capitalize()}")
+        cooldowns.append(
+            f"Max concurrent uses: {s.number} per {s.per.name.capitalize()}"
+        )
 
     return cooldowns
 
@@ -99,8 +105,12 @@ async def react_page(ctx, emoji, help_settings, bypass_checks=False):
                     menu.add_button(empty_button(ARROWS["left"]))
                     menu.add_button(empty_button(ARROWS["right"]))
             else:
-                asyncio.create_task(menu.add_button(prev_page(ARROWS["left"]), react=True))
-                asyncio.create_task(menu.add_button(next_page(ARROWS["right"]), react=True))
+                asyncio.create_task(
+                    menu.add_button(prev_page(ARROWS["left"]), react=True)
+                )
+                asyncio.create_task(
+                    menu.add_button(next_page(ARROWS["right"]), react=True)
+                )
 
         return menus.Button(emoji, action)
     else:
@@ -108,7 +118,9 @@ async def react_page(ctx, emoji, help_settings, bypass_checks=False):
 
 
 async def home_page(ctx, emoji, help_settings):
-    pages = await ctx.bot._help_formatter.format_bot_help(ctx, help_settings, get_pages=True)
+    pages = await ctx.bot._help_formatter.format_bot_help(
+        ctx, help_settings, get_pages=True
+    )
     if pages:
 
         async def action(menu, payload):

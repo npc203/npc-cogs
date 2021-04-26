@@ -7,8 +7,10 @@ from fuzzywuzzy import fuzz
 from tabulate import tabulate
 
 
-async def evaluate(ctx, a_string: str, b_string: str, time_taken, dm_id, author_name=None):
-    """ Returns None on personal event, returns [time_taken,wpm,mistakes] on speedevents"""
+async def evaluate(
+    ctx, a_string: str, b_string: str, time_taken, dm_id, author_name=None
+):
+    """Returns None on personal event, returns [time_taken,wpm,mistakes] on speedevents"""
     user_obj = ctx.guild.get_member(dm_id) if dm_id else ctx.author
     special_send = user_obj.send if dm_id else ctx.send
     if not author_name:
@@ -44,7 +46,9 @@ async def evaluate(ctx, a_string: str, b_string: str, time_taken, dm_id, author_
             (f"Characters from {author_name}", len(b_string)),
             (f"Mistakes done by {author_name}", mistakes),
         ]
-        await special_send(content="```" + tabulate(verdict, tablefmt="fancy_grid") + "```")
+        await special_send(
+            content="```" + tabulate(verdict, tablefmt="fancy_grid") + "```"
+        )
         return [time_taken, wpm - (mistakes / (time_taken / 60)), mistakes]
     else:
         await special_send(
@@ -56,7 +60,9 @@ async def get_text(settings, guild_id: int) -> tuple:
     """Gets the paragraph for the test"""
     # TODO add customisable length of text and difficuilty
     url = "http://www.randomtext.me/api/"
-    url += f'{settings["type"]}/p-1/{settings["text_size"][0]}-{settings["text_size"][1]}'
+    url += (
+        f'{settings["type"]}/p-1/{settings["text_size"][0]}-{settings["text_size"][1]}'
+    )
     async with ClientSession() as session:
         async with session.get(url) as f:
             if f.status == 200:

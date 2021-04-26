@@ -1,7 +1,14 @@
 from ..abc import ThemesMeta
 from ..core.base_help import (
-    EMPTY_STRING, GLOBAL_CATEGORIES, CategoryConvert, Context, EmbedField,
-    HelpSettings, _, pagify)
+    EMPTY_STRING,
+    GLOBAL_CATEGORIES,
+    CategoryConvert,
+    Context,
+    EmbedField,
+    HelpSettings,
+    _,
+    pagify,
+)
 
 
 class DannyHelp(ThemesMeta):
@@ -12,7 +19,9 @@ class DannyHelp(ThemesMeta):
     ):
         description = ctx.bot.description or ""
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
-        if not await ctx.embed_requested():  # Maybe redirect to non-embed minimal format
+        if (
+            not await ctx.embed_requested()
+        ):  # Maybe redirect to non-embed minimal format
             await ctx.send(_("You need to enable embeds to use custom help menu"))
         else:
             emb = {
@@ -37,7 +46,9 @@ class DannyHelp(ThemesMeta):
             for cat in filtered_categories:
                 if cat.cogs:
                     cog_names = "`" + "` `".join(cat.cogs) + "`" if cat.cogs else ""
-                    for i, page in enumerate(pagify(cog_names, page_length=1000, shorten_by=0)):
+                    for i, page in enumerate(
+                        pagify(cog_names, page_length=1000, shorten_by=0)
+                    ):
                         if i == 0:
                             title = (
                                 str(cat.reaction) if cat.reaction else ""
@@ -87,9 +98,13 @@ class DannyHelp(ThemesMeta):
                 emb["embed"]["title"] = f"*{description[:250]}*"
             for cog_name, data in coms:
                 title = f"**{cog_name}**" if cog_name else _("**No Category:**")
-                cog_text = " ".join((f"`{name}`") for name, command in sorted(data.items()))
+                cog_text = " ".join(
+                    (f"`{name}`") for name, command in sorted(data.items())
+                )
 
-                for page in pagify(cog_text, page_length=256, delims=[" "], shorten_by=0):
+                for page in pagify(
+                    cog_text, page_length=256, delims=[" "], shorten_by=0
+                ):
                     field = EmbedField(title, page, True)
                     emb["fields"].append(field)
 

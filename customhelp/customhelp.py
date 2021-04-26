@@ -235,7 +235,9 @@ class CustomHelp(commands.Cog):
             if i in setting_mapping:
                 other_settings.append(f"`{setting_mapping[i]:<13}`: {j}")
         val = await self.config.theme()
-        val = "\n".join([f"`{i:<10}`: " + (j if j else "default") for i, j in val.items()])
+        val = "\n".join(
+            [f"`{i:<10}`: " + (j if j else "default") for i, j in val.items()]
+        )
         emb = discord.Embed(
             title="Custom help settings",
             description=f"Cog Version: {self.__version__}",
@@ -344,7 +346,9 @@ class CustomHelp(commands.Cog):
                 # update the existing category
                 index = available_categories.index(category)
                 if index in to_config["existing"]:
-                    to_config["existing"][index].extend(parse_to_config(category)["cogs"])
+                    to_config["existing"][index].extend(
+                        parse_to_config(category)["cogs"]
+                    )
                 else:
                     to_config["existing"][index] = parse_to_config(category)["cogs"]
             else:
@@ -476,7 +480,9 @@ class CustomHelp(commands.Cog):
             chain(*(category["cogs"] for category in available_categories_raw))
         )
         joined = (
-            _("Set Categories:\n") if len(available_categories_raw) > 1 else _("Set Category:\n")
+            _("Set Categories:\n")
+            if len(available_categories_raw) > 1
+            else _("Set Category:\n")
         )
         for category in available_categories_raw:
             joined += "+ {}:\n".format(category["name"])
@@ -501,7 +507,9 @@ class CustomHelp(commands.Cog):
         def loader(theme, feature):
             inherit_theme = themes.list[theme]
             if hasattr(inherit_theme, self.feature_list[feature]):
-                inherit_feature = getattr(themes.list[theme], self.feature_list[feature])
+                inherit_feature = getattr(
+                    themes.list[theme], self.feature_list[feature]
+                )
                 # load up the attribute,Monkey patch me daddy UwU
                 setattr(
                     self.bot._help_formatter,
@@ -532,7 +540,9 @@ class CustomHelp(commands.Cog):
     @chelp.group(invoke_without_command=True)
     async def reset(self, ctx):
         """Resets all settings to default **custom** help \n use `[p]chelp set 0` to revert back to the old help"""
-        msg = await ctx.send("Are you sure? This will reset everything back to the default theme.")
+        msg = await ctx.send(
+            "Are you sure? This will reset everything back to the default theme."
+        )
         menus.start_adding_reactions(msg, predicates.ReactionPredicate.YES_OR_NO_EMOJIS)
         pred = predicates.ReactionPredicate.yes_or_no(msg, ctx.author)
         await ctx.bot.wait_for("reaction_add", check=pred)
@@ -650,12 +660,15 @@ class CustomHelp(commands.Cog):
                 conf_cat.pop(index)
 
         text += (
-            _("Sucessfully removed: ") + (", ".join(map(lambda x: all_cat[x], to_config)) + "\n")
+            _("Sucessfully removed: ")
+            + (", ".join(map(lambda x: all_cat[x], to_config)) + "\n")
             if to_config
             else ""
         )
         if invalid:
-            text += _("These categories aren't present in the list:\n" + ",".join(invalid))
+            text += _(
+                "These categories aren't present in the list:\n" + ",".join(invalid)
+            )
         await self.refresh_cache()
         await ctx.send(text)
 
@@ -665,7 +678,9 @@ class CustomHelp(commands.Cog):
         # From Core [p]load xD, using set to avoid dupes
         cog_names = set(map(lambda cog: cog.rstrip(","), cog_names))
 
-        to_config = []  # [(index_of_category,cog_name),()] (maybe use namedtuples here?)
+        to_config = (
+            []
+        )  # [(index_of_category,cog_name),()] (maybe use namedtuples here?)
         uncat = []
         invalid = []
         # wait ctx.send("You can't remove cogs from uncategorised category")
@@ -713,7 +728,9 @@ class CustomHelp(commands.Cog):
                 + (", ".join(uncat))
             )
         if invalid:
-            text += "The following cogs are invalid or unloaded:\n" + (", ".join(invalid))
+            text += "The following cogs are invalid or unloaded:\n" + (
+                ", ".join(invalid)
+            )
 
         await self.refresh_cache()
         for page in pagify(text, page_length=1985, shorten_by=0):
@@ -780,7 +797,9 @@ class CustomHelp(commands.Cog):
                         conf.append(category)
                         await ctx.send(f"Sucessfully added {category} to nsfw category")
                     else:
-                        await ctx.send(f"{category} is already present in nsfw blocklist")
+                        await ctx.send(
+                            f"{category} is already present in nsfw blocklist"
+                        )
         else:
             await ctx.send("Invalid category name")
 
@@ -907,7 +926,8 @@ class CustomHelp(commands.Cog):
         await ctx.send(
             "Sucessfully reordered the categories\n"
             + (
-                "Invalid categories: (uncategorised is invalid as well)\n" + "\n".join(failed)
+                "Invalid categories: (uncategorised is invalid as well)\n"
+                + "\n".join(failed)
                 if failed
                 else ""
             )
@@ -930,7 +950,9 @@ class CustomHelp(commands.Cog):
                 else:
                     await ctx.send("Impossible! report this to the cog owner pls")
             else:
-                em.add_field(name="Category:", value=GLOBAL_CATEGORIES[-1].name, inline=False)
+                em.add_field(
+                    name="Category:", value=GLOBAL_CATEGORIES[-1].name, inline=False
+                )
                 em.add_field(name="Cog:", value="None", inline=False)
                 await ctx.send(embed=em)
         else:
@@ -958,6 +980,8 @@ class CustomHelp(commands.Cog):
                 return
         return parsed_data
 
-    async def red_delete_data_for_user(self, *, requester: RequestType, user_id: int) -> None:
+    async def red_delete_data_for_user(
+        self, *, requester: RequestType, user_id: int
+    ) -> None:
         # TODO: Replace this with the proper end user data removal handling.
         super().red_delete_data_for_user(requester=requester, user_id=user_id)

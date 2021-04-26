@@ -1,7 +1,18 @@
 from ..abc import ThemesMeta
-from ..core.base_help import (GLOBAL_CATEGORIES, CategoryConvert, Context,
-                              HelpSettings, _, cast, chain, commands,
-                              get_aliases, get_cooldowns, get_perms, pagify)
+from ..core.base_help import (
+    GLOBAL_CATEGORIES,
+    CategoryConvert,
+    Context,
+    HelpSettings,
+    _,
+    cast,
+    chain,
+    commands,
+    get_aliases,
+    get_cooldowns,
+    get_perms,
+    pagify,
+)
 
 
 class MinimalHelp(ThemesMeta):
@@ -21,8 +32,12 @@ class MinimalHelp(ThemesMeta):
         # Maybe add category desc somewhere?
         for cat in filtered_categories:
             if cat.cogs:
-                coms = await self.get_category_help_mapping(ctx, cat, help_settings=help_settings)
-                all_cog_text = [" · ".join(f"{name}" for name in data) for _, data in coms]
+                coms = await self.get_category_help_mapping(
+                    ctx, cat, help_settings=help_settings
+                )
+                all_cog_text = [
+                    " · ".join(f"{name}" for name in data) for _, data in coms
+                ]
                 all_cog_text = " · ".join(all_cog_text)
                 full_text += f"\n\n__**{cat.name}**__: {all_cog_text}"
         text_no = list(pagify(full_text))
@@ -72,7 +87,9 @@ class MinimalHelp(ThemesMeta):
             help_settings=help_settings,
         )
 
-    async def format_cog_help(self, ctx: Context, obj: commands.Cog, help_settings: HelpSettings):
+    async def format_cog_help(
+        self, ctx: Context, obj: commands.Cog, help_settings: HelpSettings
+    ):
         coms = await self.get_cog_help_mapping(ctx, obj, help_settings=help_settings)
         if not (coms or help_settings.verify_exists):
             return
@@ -104,14 +121,16 @@ class MinimalHelp(ThemesMeta):
 
         command = obj
 
-        signature = _("`{ctx.clean_prefix}{command.qualified_name} {command.signature}`").format(
-            ctx=ctx, command=command
-        )
+        signature = _(
+            "`{ctx.clean_prefix}{command.qualified_name} {command.signature}`"
+        ).format(ctx=ctx, command=command)
         subcommands = None
 
         if hasattr(command, "all_commands"):
             grp = cast(commands.Group, command)
-            subcommands = await self.get_group_help_mapping(ctx, grp, help_settings=help_settings)
+            subcommands = await self.get_group_help_mapping(
+                ctx, grp, help_settings=help_settings
+            )
 
         full_text = ""
         command_help = command.format_help_for_context(ctx)
@@ -132,7 +151,11 @@ class MinimalHelp(ThemesMeta):
 
         if command_help:
             full_text += (
-                "**Description:**\n" + name + "\n" + (value + "\n" if value else "") + "\n"
+                "**Description:**\n"
+                + name
+                + "\n"
+                + (value + "\n" if value else "")
+                + "\n"
             )
 
         if subcommands:
