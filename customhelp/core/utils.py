@@ -71,7 +71,7 @@ def get_cooldowns(command):
         except AttributeError:
             pass
         cooldowns.append(txt)
-        
+
     if s := command._max_concurrency:
         cooldowns.append(
             f"Max concurrent uses: {s.number} per {s.per.name.capitalize()}"
