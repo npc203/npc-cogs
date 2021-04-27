@@ -64,6 +64,14 @@ def get_cooldowns(command):
         cooldowns.append(
             f"{s.rate} time{'s' if s.rate>1 else ''} in {humanize_timedelta(seconds=s.per)} per {s.type.name.capitalize()}"
         )
+        txt = f"{s.rate} time{'s' if s.rate>1 else ''} in {humanize_timedelta(seconds=s.per)}"
+        try:
+            txt += f" per {s.type.name.capitalize()}"
+        # This is to avoid custom bucketype erroring out stuff (eg:licenseinfo)
+        except AttributeError:
+            pass
+        cooldowns.append(txt)
+        
     if s := command._max_concurrency:
         cooldowns.append(
             f"Max concurrent uses: {s.number} per {s.per.name.capitalize()}"
