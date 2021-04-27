@@ -60,10 +60,12 @@ def get_perms(command):
 # Add cooldowns
 def get_cooldowns(command):
     cooldowns = []
+
     if s := command._buckets._cooldown:
         cooldowns.append(
             f"{s.rate} time{'s' if s.rate>1 else ''} in {humanize_timedelta(seconds=s.per)} per {s.type.name.capitalize()}"
         )
+
         txt = f"{s.rate} time{'s' if s.rate>1 else ''} in {humanize_timedelta(seconds=s.per)}"
         try:
             txt += f" per {s.type.name.capitalize()}"
