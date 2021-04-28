@@ -1,0 +1,19 @@
+{
+    "name": "GhTools",
+    "short": "A small set of github tools",
+    "description": "A simple set of github tools to profile repos and cogs alike",
+    "end_user_data_statement": "This cog does not persistently store any data or metadata about users.",
+    "install_msg": "Thanks for installing, as this doesn't use an access token, spamming might get you ratelimited for 1 minute",
+    "author": [
+        "epic guy"
+    ],
+    "required_cogs": {},
+    "requirements": ["pygit2"],
+    "tags": [
+        "utility"
+    ],
+    "min_bot_version": "3.3.10",
+    "hidden": true,
+    "disabled": false,
+    "type": "COG"
+}
