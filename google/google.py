@@ -1,4 +1,7 @@
+import asyncio
+import datetime
 import functools
+import json
 import re
 import textwrap
 import urllib
@@ -37,6 +40,7 @@ class Google(commands.Cog):
         self.cookies = None
 
     @commands.group(invoke_without_command=True)
+    @commands.bot_has_permissions(embed_links=True)
     async def google(self, ctx, *, query: str = None):
         """Search in google from discord"""
         if not query:
@@ -77,6 +81,72 @@ class Google(commands.Cog):
                 await ResultMenu(source=Source(pages, per_page=1)).start(ctx)
             else:
                 await ctx.send("No result")
+
+    @google.command()
+    async def autofill(self, ctx, *, query: str):
+        """Responds with a list of the Google Autofill results for a particular query."""
+
+        # This “API” is a bit of a hack; it was only meant for use by
+        # Google’s own products. and hence it is undocumented.
+        # Attribution: https://shreyaschand.com/blog/2013/01/03/google-autocomplete-api/
+        base_url = "https://suggestqueries.google.com/complete/search"
+        params = {"client": "firefox", "hl": "en", "q": query}
+        async with ctx.typing():
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(base_url, params=params) as response:
+                        if response.status != 200:
+                            return await ctx.send(f"https://http.cat/{response.status}")
+                        data = json.loads(await response.read())
+            except asyncio.TimeoutError:
+                return await ctx.send("Operation timed out.")
+
+            if not data[1]:
+                return await ctx.send("Could not find any results.")
+
+            await ctx.send("\n".join(data[1]))
+
+    @google.command()
+    async def doodle(self, ctx, month: int = None, year: int = None):
+        """Responds with Google doodles of the current month.
+        
+        Or doodles of specific month/year if `month` and `year` values are provided.
+        """
+        month = datetime.datetime.now(datetime.timezone.utc).month if not month else month
+        year = datetime.datetime.now(datetime.timezone.utc).year if not year else year
+
+        async with ctx.typing():
+            base_url = f"https://www.google.com/doodles/json/{year}/{month}"
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(base_url) as response:
+                        if response.status != 200:
+                            return await ctx.send(f"https://http.cat/{response.status}")
+                        output = await response.json()
+            except asyncio.TimeoutError:
+                return await ctx.send("Operation timed out.")
+
+            if not output:
+                return await ctx.send("Could not find any results.")
+
+            pages = []
+            for data in output:
+                em = discord.Embed(colour=await ctx.embed_color())
+                em.title = data.get("title", "Doodle title missing")
+                img_url = data.get("high_res_url")
+                if (img_url and not img_url.startswith("https:")):
+                    img_url = "https:" + data.get("high_res_url")
+                if not img_url:
+                    img_url = "https:" + data.get("url")
+                em.set_image(url=img_url)
+                date = "-".join([str(x) for x in data.get("run_date_array")[::-1]])
+                em.set_footer(text=f"{data.get('share_text')}\nDoodle published on: {date}")
+                pages.append(em)
+
+        if len(pages) == 1:
+            return await ctx.send(embed=pages[0])
+        else:
+            await ResultMenu(source=Source(pages, per_page=1)).start(ctx)
 
     @google.command(aliases=["img"])
     async def image(self, ctx, *, query: str = None):
