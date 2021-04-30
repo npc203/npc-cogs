@@ -108,7 +108,10 @@ class Google(commands.Cog):
 
     @google.command()
     async def doodle(self, ctx, month: int = None, year: int = None):
-        """Responds with today's Google doodle."""
+        """Responds with Google doodles of the current month.
+        
+        Or doodles of specific month/year if `month` and `year` values are provided.
+        """
         month = datetime.datetime.now(datetime.timezone.utc).month if not month else month
         year = datetime.datetime.now(datetime.timezone.utc).year if not year else year
 
