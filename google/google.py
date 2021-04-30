@@ -86,12 +86,12 @@ class Google(commands.Cog):
     async def autofill(self, ctx, *, query: str):
         """Responds with a list of the Google Autofill results for a particular query."""
 
-        # This “API” is a bit of a hack; it was only meant for use by
-        # Google’s own products. and hence it is undocumented.
-        # Attribution: https://shreyaschand.com/blog/2013/01/03/google-autocomplete-api/
-        base_url = "https://suggestqueries.google.com/complete/search"
         params = {"client": "firefox", "hl": "en", "q": query}
         async with ctx.typing():
+            # This “API” is a bit of a hack; it was only meant for use by
+            # Google’s own products. and hence it is undocumented.
+            # Attribution: https://shreyaschand.com/blog/2013/01/03/google-autocomplete-api/
+            base_url = "https://suggestqueries.google.com/complete/search"
             try:
                 async with aiohttp.ClientSession() as session:
                     async with session.get(base_url, params=params) as response:
@@ -139,7 +139,7 @@ class Google(commands.Cog):
                 if not img_url:
                     img_url = "https:" + data.get("url")
                 em.set_image(url=img_url)
-                date = "-".join([str(x) for x in data.get("run_date_array")[::-1]])
+                date = "-".join(str(x) for x in data.get("run_date_array")[::-1])
                 em.set_footer(text=f"{data.get('share_text')}\nDoodle published on: {date}")
                 pages.append(em)
 
