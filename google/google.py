@@ -109,7 +109,7 @@ class Google(commands.Cog):
     @google.command()
     async def doodle(self, ctx, month: int = None, year: int = None):
         """Responds with Google doodles of the current month.
-        
+
         Or doodles of specific month/year if `month` and `year` values are provided.
         """
         month = datetime.datetime.now(datetime.timezone.utc).month if not month else month
@@ -134,7 +134,7 @@ class Google(commands.Cog):
                 em = discord.Embed(colour=await ctx.embed_color())
                 em.title = data.get("title", "Doodle title missing")
                 img_url = data.get("high_res_url")
-                if (img_url and not img_url.startswith("https:")):
+                if img_url and not img_url.startswith("https:"):
                     img_url = "https:" + data.get("high_res_url")
                 if not img_url:
                     img_url = "https:" + data.get("url")

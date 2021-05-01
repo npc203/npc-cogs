@@ -1,16 +1,17 @@
-import discord
-from redbot.core.utils.chat_formatting import humanize_timedelta
+import datetime
+import itertools
+import os
+from types import SimpleNamespace as sp
+from typing import Union
+
 import aiohttp
+import discord
+import pydriller as pd
 from redbot.core import commands
 from redbot.core.bot import Red
-import datetime
-from typing import Union
-import itertools
+from redbot.core.utils.chat_formatting import box, humanize_timedelta
 from redbot.vendored.discord.ext import menus
-import pydriller as pd
-from types import SimpleNamespace as sp
-from redbot.core.utils.chat_formatting import box
-import os
+
 
 # Taken from the core help
 def shorten_line(a_line: str) -> str:

@@ -7,8 +7,7 @@ from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.config import Config
 from redbot.core.utils.chat_formatting import pagify
-from redbot.core.utils.menus import (DEFAULT_CONTROLS, menu,
-                                     start_adding_reactions)
+from redbot.core.utils.menus import DEFAULT_CONTROLS, menu, start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
 from redbot.vendored.discord.ext import menus
 
@@ -155,32 +154,44 @@ class Todo(commands.Cog):
     @todo.command()
     async def remove(self, ctx, *indices: int):
         """Remove your todo tasks, supports multiple id removals as well\n eg:[p]todo remove 1 2 3"""
+        todos = await self.config.user(ctx.author).todos()
         if len(indices) == 1:
-            async with self.config.user(ctx.author).todos() as todos:
+            if 0 <= indices[0] < len(todos):
                 x = todos.pop(indices[0])
+                await self.config.user(ctx.author).todos.set(todos)
                 await ctx.send_interactive(
                     pagify(f"Succesfully removed: {x[1] if isinstance(x,list) else x}")
                 )
-            return
-
-        removed = []
-        async with self.config.user(ctx.author).todos() as todos:
+            else:
+                await ctx.send(f"Invalid ID: {indices[0]}")
+        else:
+            removed = []
             temp = []
+            removed_inds = []
             for j, i in enumerate(todos):
                 if j not in indices:
                     temp.append(i)
                 else:
                     removed.append(i)
-            todos[:] = temp
-        for page in pagify(
-            "Succesfully removed:\n"
-            + "\n".join(
-                f"{i}. {x[1] if isinstance(x,list) else x}" for i, x in enumerate(removed, 1)
-            ),
-            page_length=1970,
-            shorten_by=0,
-        ):
-            await ctx.send(page)
+                    removed_inds.append(j)
+            await self.config.user(ctx.author).todos.set(temp)
+            if removed:
+                await ctx.send_interactive(
+                    pagify(
+                        (
+                            f"Invalid IDs:{', '.join(str(i) for i in indices if i not in removed_inds)} \n"
+                            if len(removed) != len(indices)
+                            else ""
+                        )
+                        + "Succesfully removed:\n"
+                        + "\n".join(
+                            f"{i}. {x[1] if isinstance(x,list) else x}"
+                            for i, x in enumerate(removed, 1)
+                        ),
+                    )
+                )
+            else:
+                await ctx.send(f"Invalid IDs: {', '.join(map(str,indices))}")
 
     @todo.command()
     async def removeall(self, ctx, *indices: int):
