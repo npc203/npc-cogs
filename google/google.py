@@ -337,6 +337,12 @@ class Google(commands.Cog):
                 if desc := card.find("span", class_="hgKElc"):
                     final.append(s(None, "Google Info Card:", h2t(str(desc))))
                     return
+            # another webpull card: what is the language JetBrains made? TODO fix this, depends on too many classes as of now
+            if card := soup.find("div", class_="kp-blk c2xzTb"):
+                if head := card.find("div", class_="Z0LcW XcVN5d AZCkJd"):
+                    if desc := card.find("div", class_="iKJnec"):
+                        final.append(s(None, f"Answer: {head.text}", h2t(str(desc))))
+                        return
 
             # calculator card
             if card := soup.find("div", class_="tyYmIf"):
