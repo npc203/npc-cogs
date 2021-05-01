@@ -152,6 +152,23 @@ class Todo(commands.Cog):
                 await ctx.send(f"Invaild ID: {from_}")
 
     @todo.command()
+    async def search(self, ctx, *, text):
+        no_case = text.lower()
+        todos = await self.config.user(ctx.author).todos()
+        async with ctx.typing():
+            results = []
+            for ind in range(len(todos)):
+                x = todos[ind][1] if isinstance(todos[ind], list) else todos[ind]
+                if no_case in x.lower():
+                    results.append(f"**{ind}**. {x}")
+            if results:
+                await ctx.send_interactive(
+                    pagify(f"Search results for {text}:\n" + "\n".join(results))
+                )
+            else:
+                await ctx.send(f"No results found for {text}")
+
+    @todo.command(aliases=["delete"])
     async def remove(self, ctx, *indices: int):
         """Remove your todo tasks, supports multiple id removals as well\n eg:[p]todo remove 1 2 3"""
         todos = await self.config.user(ctx.author).todos()
@@ -193,7 +210,7 @@ class Todo(commands.Cog):
             else:
                 await ctx.send(f"Invalid IDs: {', '.join(map(str,indices))}")
 
-    @todo.command()
+    @todo.command(aliases=["clear"])
     async def removeall(self, ctx, *indices: int):
         """Remove all your todo tasks"""
         msg = await ctx.send("Are you sure do you want to remove all of your todos?")
