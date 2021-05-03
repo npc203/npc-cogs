@@ -150,7 +150,7 @@ class GhTools(commands.Cog):
 
         for u in b:
             if r[u]:
-                r[u] = datetime.strptime(r[u], "%Y-%m-%dT%H:%M:%SZ").strftime(
+                r[u] = datetime.datetime.strptime(r[u], "%Y-%m-%dT%H:%M:%SZ").strftime(
                     "%a %b %d, %Y at %H:%M GMT"
                 )
         a = {
