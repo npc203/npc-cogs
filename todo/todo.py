@@ -101,7 +101,7 @@ class Todo(commands.Cog):
                         todo_text += f"[{i}]({x[0]}). {x[1]}\n"
                     else:
                         todo_text += f"{i}. {x}\n"
-                pagified = tuple(pagify(todo_text, page_length=1004, shorten_by=0))
+                pagified = tuple(pagify(todo_text, page_length=2048, shorten_by=0))
                 # embeds and menus
                 if await self.config.menus():
                     emb_pages = [
