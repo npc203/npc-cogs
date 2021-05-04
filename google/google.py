@@ -14,7 +14,7 @@ from bs4 import BeautifulSoup
 from html2text import html2text as h2t
 from redbot.core import commands
 from redbot.core.bot import Red
-from redbot.core.utils.chat_formatting import pagify
+from redbot.core.utils.chat_formatting import humanize_number, pagify
 from redbot.vendored.discord.ext import menus
 
 # TODO Add optional way to use from google search api
@@ -40,7 +40,7 @@ class Google(commands.Cog):
         self.cookies = None
 
     @commands.group(invoke_without_command=True)
-    @commands.bot_has_permissions(embed_links=True)
+    @commands.bot_has_permissions(embed_links=True, add_reactions=True)
     async def google(self, ctx, *, query: str = None):
         """Search in google from discord"""
         if not query:
@@ -105,6 +105,125 @@ class Google(commands.Cog):
                 return await ctx.send("Could not find any results.")
 
             await ctx.send("\n".join(data[1]))
+
+    @google.command(aliases=["books"])
+    async def book(self, ctx, *, query: str):
+        """Search for a book or magazine on Google Books.
+
+        This command requires an API key.
+        To get an API key, you'll first require to enable the API at:
+        https://console.cloud.google.com/flows/enableapi?apiid=books.googleapis.com
+
+        Once you have enabled the API, you can find out how to acquire the API key at:
+        https://developers.google.com/books/docs/v1/using#APIKey
+
+        Once you get API key, set it in your redbot instance using:
+        ```
+        [p]set api googlebooks api_key <your_api_key>
+        ```
+
+        There are special keywords you can specify in the search terms to search in particular fields.
+        You can read more on that in detail over at:
+        https://developers.google.com/books/docs/v1/using#PerformingSearch
+        """
+        api_key = (await ctx.bot.get_shared_api_tokens("googlebooks")).get("api_key")
+        if not api_key:
+            return await ctx.send_help()
+
+        async with ctx.typing():
+            base_url = "https://www.googleapis.com/books/v1/volumes"
+            params = {
+                "apiKey": api_key,
+                "q": query,
+                "printType": "all",
+                "maxResults": 40,
+                "orderBy": "relevance"
+            }
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(base_url, params=params) as response:
+                        if response.status != 200:
+                            return await ctx.send(f"https://http.cat/{response.status}")
+                        data = await response.json()
+            except aiohttp.TimeoutError:
+                return await ctx.send("Operation timed out.")
+
+            if len(data.get("items")) == 0:
+                return await ctx.send("No results.")
+
+            pages = []
+            for i, info in enumerate(data.get("items")):
+                embed = discord.Embed(colour=await ctx.embed_color())
+                embed.title = info.get("volumeInfo").get("title")
+                embed.url = info.get("volumeInfo").get("canonicalVolumeLink")
+                embed.description = info.get("volumeInfo").get("description", "No summary.")[:2000]
+                embed.set_author(
+                    name="Google Books",
+                    url="https://books.google.com/",
+                    icon_url="https://i.imgur.com/N3oHABo.png",
+                )
+                if info.get("volumeInfo").get("imageLinks"):
+                    embed.set_thumbnail(url=info.get("volumeInfo").get("imageLinks").get("thumbnail"))
+                embed.add_field(
+                    name="Published Date",
+                    value=info.get("volumeInfo").get("publishedDate", "Unknown"),
+                )
+                if info.get("volumeInfo").get("authors"):
+                    embed.add_field(
+                        name="Authors",
+                        value=", ".join(info.get("volumeInfo").get("authors")),
+                    )
+                embed.add_field(
+                    name="Publisher",
+                    value=info.get("volumeInfo").get("publisher", "Unknown"),
+                )
+                if info.get("volumeInfo").get("pageCount"):
+                    embed.add_field(
+                        name="Page Count",
+                        value=humanize_number(info.get("volumeInfo").get("pageCount")),
+                    )
+                embed.add_field(
+                    name="Web Reader Link",
+                    value=f"[Click here!]({info.get('accessInfo').get('webReaderLink')})",
+                )
+                if info.get("volumeInfo").get("categories"):
+                    embed.add_field(
+                        name="Category",
+                        value=", ".join(info.get("volumeInfo").get("categories")),
+                    )
+                if info.get("saleInfo").get("retailPrice"):
+                    currency_format = (
+                        f"[{info.get('saleInfo').get('retailPrice').get('amount')} "
+                        f"{info.get('saleInfo').get('retailPrice').get('currencyCode')}]"
+                        f"({info.get('saleInfo').get('buyLink')} 'Click to buy on Google Books!')"
+                    )
+                    embed.add_field(
+                        name="Retail Price",
+                        value=currency_format,
+                    )
+                epub_available = "✅" if info.get("accessInfo").get("epub").get("isAvailable") else "❌"
+                pdf_available = "✅" if info.get("accessInfo").get("pdf").get("isAvailable") else "❌"
+                if info.get("accessInfo").get("epub").get("downloadLink"):
+                    epub_available += (
+                        " [`Download Link`]"
+                        f"({info.get('accessInfo').get('epub').get('downloadLink')})"
+                    )
+                if info.get("accessInfo").get("pdf").get("downloadLink"):
+                    pdf_available += (
+                        " [`Download Link`]"
+                        f"({info.get('accessInfo').get('pdf').get('downloadLink')})"
+                    )
+                embed.add_field(name="EPUB available?", value=epub_available)
+                embed.add_field(name="PDF available?", value=pdf_available)
+                viewablility = f"{info.get('accessInfo').get('viewability').replace('_', ' ').title()}"
+                embed.add_field(name="Viewablility", value=viewablility)
+                embed.set_footer(text=f"Page {i + 1} of {len(data.get('items'))}")
+                pages.append(embed)
+
+            if len(pages) == 1:
+                await ctx.send(embed=pages[0])
+            else:
+                await ResultMenu(source=Source(pages, per_page=1)).start(ctx)
 
     @google.command()
     async def doodle(self, ctx, month: int = None, year: int = None):
