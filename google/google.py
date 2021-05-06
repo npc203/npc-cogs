@@ -137,7 +137,7 @@ class Google(commands.Cog):
                 "q": query,
                 "printType": "all",
                 "maxResults": 40,
-                "orderBy": "relevance"
+                "orderBy": "relevance",
             }
             try:
                 async with aiohttp.ClientSession() as session:
@@ -163,7 +163,9 @@ class Google(commands.Cog):
                     icon_url="https://i.imgur.com/N3oHABo.png",
                 )
                 if info.get("volumeInfo").get("imageLinks"):
-                    embed.set_thumbnail(url=info.get("volumeInfo").get("imageLinks").get("thumbnail"))
+                    embed.set_thumbnail(
+                        url=info.get("volumeInfo").get("imageLinks").get("thumbnail")
+                    )
                 embed.add_field(
                     name="Published Date",
                     value=info.get("volumeInfo").get("publishedDate", "Unknown"),
@@ -201,8 +203,12 @@ class Google(commands.Cog):
                         name="Retail Price",
                         value=currency_format,
                     )
-                epub_available = "✅" if info.get("accessInfo").get("epub").get("isAvailable") else "❌"
-                pdf_available = "✅" if info.get("accessInfo").get("pdf").get("isAvailable") else "❌"
+                epub_available = (
+                    "✅" if info.get("accessInfo").get("epub").get("isAvailable") else "❌"
+                )
+                pdf_available = (
+                    "✅" if info.get("accessInfo").get("pdf").get("isAvailable") else "❌"
+                )
                 if info.get("accessInfo").get("epub").get("downloadLink"):
                     epub_available += (
                         " [`Download Link`]"
@@ -215,7 +221,9 @@ class Google(commands.Cog):
                     )
                 embed.add_field(name="EPUB available?", value=epub_available)
                 embed.add_field(name="PDF available?", value=pdf_available)
-                viewablility = f"{info.get('accessInfo').get('viewability').replace('_', ' ').title()}"
+                viewablility = (
+                    f"{info.get('accessInfo').get('viewability').replace('_', ' ').title()}"
+                )
                 embed.add_field(name="Viewablility", value=viewablility)
                 embed.set_footer(text=f"Page {i + 1} of {len(data.get('items'))}")
                 pages.append(embed)

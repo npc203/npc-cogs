@@ -13,8 +13,9 @@ from redbot.core.utils.chat_formatting import pagify
 from . import ARROWS, GLOBAL_CATEGORIES, get_menu
 from .category import Category, CategoryConvert, get_category
 from .dpy_menus import ListPages
-from .utils import (close_menu, get_aliases, get_cooldowns, get_perms,
-                    home_page, next_page, prev_page, react_page, shorten_line)
+from .utils import (close_menu, first_page, get_aliases, get_cooldowns,
+                    get_perms, home_page, last_page, next_page, prev_page,
+                    react_page, shorten_line)
 
 HelpTarget = Union[
     commands.Command,
@@ -163,7 +164,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
         if not coms:
             return
 
-        description = ctx.bot.description or ""
+        description = obj.long_desc or ""
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
 
         if await ctx.embed_requested():
@@ -510,7 +511,6 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
                 asyncio.create_task(_delete_delay_help(destination, messages, delete_delay))
         else:
-            # Specifically ensuring the menu's message is sent prior to returning
             # m = await (ctx.send(embed=pages[0]) if embed else ctx.send(pages[0]))
             trans = {
                 "left": prev_page,
@@ -520,6 +520,12 @@ class BaguetteHelp(commands.RedHelpFormatter):
             final_menu = get_menu()(ListPages(pages))
             for thing in trans:
                 final_menu.add_button(trans[thing](ARROWS[thing]))
+
+            if not add_emojis:
+                # Add force left and right reactions when emojis are off, cause why not xD
+                final_menu.add_button(first_page(ARROWS["force_left"]))
+                final_menu.add_button(last_page(ARROWS["force_right"]))
+
             # TODO important!
             if add_emojis:
                 # Adding additional category emojis

@@ -67,7 +67,7 @@ class DankHelp(ThemesMeta):
         if not coms:
             return
 
-        description = ctx.bot.description or ""
+        description = obj.long_desc or ""
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
 
         if await ctx.embed_requested():
