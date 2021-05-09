@@ -21,15 +21,16 @@ To add cogs from this repo to your instance, do these steps:
 | Speak | Alpha |<details><summary>Speak as others or for yourself</summary>This uses webhooks to mimic the person's identity and speak what you type, it also can speak stuff for you (insults and sadme)</details>
 | Weeb | Alpha |<details><summary>Bunch of Otaku emoticons</summary>Expwess youw weebness using the bunch of wandom weeb emoticons UwU</details>
 | Todo | Alpha |<details><summary>A todo cog</summary>A simple todo cog to remember your tasks</details>
-| Google| Alpha |<details><summary>A simple google search cog</summary>This cog scrapes google to get results</details>
-| TypeRacer | Alpha |<details><summary>Typing speed test</summary>Test you typing skills with this cog</details>
+| Google| Alpha |<details><summary>A google search cog with tons of functions</summary>This cog scrapes google to get results/reverse image search, cards, books, images, etc.. (siu3334 did a lotta work in this cog as well)</details>
+| TypeRacer | Alpha |<details><summary>Typing speed test</summary>Test your typing skills with this cog</details>
 | CustomHelp | Beta |<details><summary>A category themed custom help</summary>Kindly read https://npc-cogs.readthedocs.io/en/latest/customhelp.html on how to setup</details>
 | Snake | Beta | <details><summary>A simple Snake Game</summary>This is a classical snake game, uses dpy menus. Be fully aware of this cog spamming the channel ratelimit buckets</details>
 | EmbedSteal | N/A | <details><summary>THIS IS NOT A PROPER COG</summary>DO NOT INSTALL THIS</details>
                                                                                                                                                                                                                           
 ## Credits
 - Everyone who tested my cogs and helped me with the code. <3
-- Thank you Red community, you guys are awesome
+- Everyone who contributed to make this better.
+- Thank you Red community, you guys are awesome.
 
 # Contributing.md
 - Kindly follow the format of black with line-length = 99 and isort

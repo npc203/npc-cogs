@@ -447,7 +447,7 @@ class Google(commands.Cog):
             if "The URL doesn't refer" in check.text:
                 return check.text, (None, None)
         if res := soup.find("input", class_="gLFyf gsfi"):
-            return res["value"], self.parser_text(text, soup=soup, cards=False)
+            return res["value"], (self.parser_text(text, soup=soup, cards=False) or (None, None))
 
     def parser_text(self, text, soup=None, cards: bool = True):
         """My bad logic for scraping"""
