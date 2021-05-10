@@ -206,7 +206,6 @@ class JustCore(ThemesMeta):
                 emb["fields"].append(field)
 
             if final_perms := get_perms(command):
-                print("aaa", final_perms, "bb")
                 emb["fields"].append(EmbedField("Permissions", final_perms, False))
 
             if cooldowns := get_cooldowns(command):
