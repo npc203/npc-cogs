@@ -101,7 +101,18 @@ More configurablity
    
 4. ``[p]chelp info`` to see a brief description of categories.
    
-5. ``[p]chelp settings`` Has even more stuff for you to mess around with, like adding replies,thumbnail etc...
+5. | Custom Arrows, YAY!
+   | If you feel the default arrow icons are boring and plain, this is what you probably need (Supports emotes ofc).
+   | You can also use plain emoji ids, The format is
+   
+   .. code-block:: javascript
+
+      left : emoji
+      right: emoji
+      cross: emoji
+      home : emoji
+      force_left: emoji
+      force_right: emoji
 
 Additional Notes
 -----------------
@@ -137,12 +148,7 @@ FAQ
      new file in that folder with your custom coded theme and load the cog. 
    | your theme should magically occur in the ``[p]chelp listthemes``
 
-3. Why can't I have custom navigation arrows?
-    
-   Apprently it leads to people stealing other bots arrows and encourages plagarism, that's why it's not there.
-   feel free to change my mind.
-
-4. Some of my reactions are vanishing?
+3. Some of my reactions are vanishing?
 
    You are probably having more than 14 categories. A message can only have 14 reactions from a bot at max (I think).
    This is a discord limitation and it's unhandled by the cog.

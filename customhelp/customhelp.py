@@ -57,7 +57,7 @@ class CustomHelp(commands.Cog):
     A custom customisable help for fun and profit
     """
 
-    __version__ = "0.6.6"
+    __version__ = "0.7.0"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -87,6 +87,14 @@ class CustomHelp(commands.Cog):
                 "thumbnail": None,
                 "timeout": 120,
                 "replies": True,
+                "arrows": {
+                    "right": "\N{BLACK RIGHTWARDS ARROW}\N{VARIATION SELECTOR-16}",
+                    "left": "\N{LEFTWARDS BLACK ARROW}\N{VARIATION SELECTOR-16}",
+                    "cross": "\N{CROSS MARK}",
+                    "home": "\U0001f3d8\U0000fe0f",
+                    "force_right": "\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\N{VARIATION SELECTOR-16}",
+                    "force_left": "\N{BLACK LEFT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\N{VARIATION SELECTOR-16}",
+                },
             },
             "blacklist": {"nsfw": [], "dev": []},
         }
@@ -101,6 +109,16 @@ class CustomHelp(commands.Cog):
         """
         pre_processed = super().format_help_for_context(ctx)
         return f"{pre_processed}\n\nCog Version: {self.__version__}"
+
+    async def refresh_arrows(self):
+        """This is to make the emoji arrows objects be in their proper types"""
+        arrows = await self.config.settings.arrows()
+        for name, emoji in arrows.items():
+            if emj := emoji_converter(self.bot, emoji):
+                ARROWS[name] = emj
+            else:
+                # back-up measure if the something went wrong
+                ARROWS[name] = self.chelp_global["settings"]["arrows"][name]
 
     async def refresh_cache(self):
         """Get's the config and re-populates the GLOBAL_CATEGORIES"""
@@ -136,6 +154,8 @@ class CustomHelp(commands.Cog):
         """Adds the themes and loads the formatter"""
         # This is needed to be on top so that Cache gets populated no matter what (supplements chelp create)
         await self.refresh_cache()
+        await self.refresh_arrows()
+
         settings = await self.config.settings()
         set_menu(settings["replies"])
         if not settings["set_formatter"]:
@@ -245,6 +265,12 @@ class CustomHelp(commands.Cog):
         emb.add_field(
             name="Other Settings",
             value="\n".join(other_settings),
+            inline=False,
+        )
+
+        emb.add_field(
+            name="Arrows",
+            value="\n".join(f"`{i:<7}`: {j}" for i, j in ARROWS.items()),
             inline=False,
         )
 
@@ -761,6 +787,69 @@ class CustomHelp(commands.Cog):
             await ctx.send(f"Sucessfully set timeout to {wait}")
         else:
             await ctx.send("Timeout must be atleast 20 seconds")
+
+    @settings.command(aliases=["arrow"])
+    async def arrows(self, ctx, *, correct_txt=None):
+        """Add custom arrows for fun and profit"""
+        if correct_txt:
+            content = correct_txt
+        else:
+            await ctx.send(
+                "Your next message should be with the specfied format as follows(see docs for more info).\n"
+                "IF U ENTER AN INVALID EMOJI YOUR HELP WILL BREAK.\n"
+                "Example:\n"
+                "left :↖️\n"
+                "right:↗️\n"
+                "cross:❎\n"
+                "home :🏛️\n"
+            )
+            try:
+                msg = await self.bot.wait_for(
+                    "message",
+                    timeout=180,
+                    check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
+                )
+                content = msg.content
+            except asyncio.TimeoutError:
+                return await ctx.send("Timed out, please try again.")
+
+        already_present_emojis = list(
+            str(i.reaction) for i in GLOBAL_CATEGORIES if i.reaction
+        ) + list((await self.config.settings.arrows()).values())
+
+        async def emj_parser(data):
+            parsed = {}
+            checks = ["left", "right", "cross", "home", "force_right", "force_left"]
+            raw = data.split("\n")
+            for emj in raw:
+                tmp = emj.split(":", 1)
+                tmp = [i.strip() for i in tmp]
+                if len(tmp) != 2 or tmp[0] not in checks:
+                    await ctx.send("Invalid format")
+                    return
+                else:
+                    if tmp[1] not in already_present_emojis:
+                        if emoji_converter(self.bot, tmp[1]):
+                            parsed[tmp[0]] = tmp[1]
+                        else:
+                            await ctx.send(f"Invalid Emoji:{tmp[1]}")
+                            return
+                    else:
+                        await ctx.send(f"Already present Emoji:{tmp[1]}")
+                        return
+            return parsed
+
+        parsed_data = await emj_parser(content)
+        if not parsed_data:
+            return
+        async with self.config.settings.arrows() as conf:
+            for k, v in parsed_data.items():
+                conf[k] = v
+        await ctx.send(
+            "Successfully added the changes:\n"
+            + "\n".join(f"`{i} `: {j}" for i, j in parsed_data.items())
+        )
+        await self.refresh_arrows()
 
     @chelp.group()
     async def nsfw(self, ctx):
