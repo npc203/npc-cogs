@@ -26,8 +26,9 @@ nsfwcheck = lambda ctx: (not ctx.guild) or ctx.channel.is_nsfw()
 class Google(commands.Cog):
     """
     A Simple google search with image support as well
-    A fair bit of querying stuff is taken from  Kowlin's cog - https://github.com/Kowlin/refactored-cogs
     """
+
+    __version__ = "0.0.1"
 
     def __init__(self, bot: Red) -> None:
         self.bot = bot
@@ -38,6 +39,11 @@ class Google(commands.Cog):
             r"https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*(?:\.png|\.jpe?g|\.gif))"
         )
         self.cookies = None
+
+    def format_help_for_context(self, ctx: commands.Context) -> str:
+        """Thanks Sinbad!"""
+        pre_processed = super().format_help_for_context(ctx)
+        return f"{pre_processed}\n\nCog Version: {self.__version__}"
 
     @commands.group(invoke_without_command=True)
     @commands.bot_has_permissions(embed_links=True, add_reactions=True)

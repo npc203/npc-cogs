@@ -7,6 +7,7 @@ from typing import Union
 import aiohttp
 import discord
 import pydriller as pd
+from redbot.cogs.downloader.repo_manager import Repo
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import box, humanize_timedelta
@@ -64,42 +65,58 @@ class GhTools(commands.Cog):
             desc,
         )
 
-    @commands.command()
-    async def commits(self, ctx, repo_name_or_url: RepoUrl):
-        pages = self.get_last_commits(self._path / repo_name_or_url)
-        if await ctx.embed_requested():
-            final = []
-            for ind, page in enumerate(pages, 1):
-                emb = discord.Embed(
-                    title=f"Recent updates in {repo_name_or_url}",
-                    description="aa",
-                )
-        await ctx.send(embed=emb)
-
     # with references to core
-    async def get_commit_infos(self, package, cog_mgr, count=10):
-        installed, cog_installable = await self._downloader.is_installed(package)
-
-        if installed and cog_installable.repo_name != "MISSING_REPO":
-            full_path = str(self._path / cog_installable.repo_name)
-            gr = pd.GitRepository(full_path)
-            hashes = gr.get_commits_modified_file(package)
+    async def get_commit_infos(self, cog_mgr, package=None, repo=None, count=10):
+        if package:
+            installed, cog_installable = await self._downloader.is_installed(package)
+            if installed and cog_installable.repo_name != "MISSING_REPO":
+                full_path = str(self._path / cog_installable.repo_name)
+                gr = pd.GitRepository(full_path)
+                hashes = gr.get_commits_modified_file(package)
+                commits = itertools.islice(
+                    pd.RepositoryMining(
+                        full_path,
+                        only_commits=hashes,
+                        only_in_branch=cog_installable.repo.branch,
+                        order="reverse",
+                    ).traverse_commits(),
+                    count,
+                )
+                return (
+                    (lambda x: sp(name=x[0], value=x[1], package=package))(
+                        self.format_commit(c, url=cog_installable.repo.url)
+                    )
+                    for c in commits
+                )
+        else:
             commits = itertools.islice(
                 pd.RepositoryMining(
-                    full_path,
-                    only_commits=hashes,
-                    only_in_branch=cog_installable.repo.branch,
+                    str(repo.folder_path),
+                    only_in_branch=repo.branch,
                     order="reverse",
                 ).traverse_commits(),
                 count,
             )
             return (
-                (lambda x: sp(name=x[0], value=x[1], package=package))(
-                    self.format_commit(c, url=cog_installable.repo.url)
-                )
+                (lambda x: sp(name=x[0], value=x[1], repo=repo.name))(self.format_commit(c))
                 for c in commits
             )
 
+    @commands.command()
+    async def commits(self, ctx, repo: Repo = None):
+        if repo:
+            async with ctx.typing():
+                data = await self.get_commit_infos(self.bot._cog_mgr, repo=repo, count=30)
+                if data:
+                    pages = ResultMenu(
+                        source=EmbPages(data, per_page=5, key=lambda x: x.repo),
+                    )
+                    await pages.start(ctx)
+
+        else:
+            await ctx.send_help()
+
+    # TODO fix greedy int parse
     @commands.command()
     async def updates(self, ctx, *packages: str, commit_count: int = None):
         if commit_count and commit_count > 30:
@@ -107,7 +124,7 @@ class GhTools(commands.Cog):
 
         if len(packages) == 1:
             data = await self.get_commit_infos(
-                packages[0], self.bot._cog_mgr, count=10 or commit_count
+                self.bot._cog_mgr, package=packages[0], count=10 or commit_count
             )
             if data:
                 pages = ResultMenu(
@@ -115,19 +132,20 @@ class GhTools(commands.Cog):
                 )
                 await pages.start(ctx)
             else:
-                await ctx.send("Repo not found")
+                await ctx.send("Package not found")
         else:
-            full_list = []
-            for package in packages:
-                data = await self.get_commit_infos(
-                    package, self.bot._cog_mgr, count=5 or commit_count
+            async with ctx.typing():
+                full_list = []
+                for package in packages:
+                    data = await self.get_commit_infos(
+                        package, self.bot._cog_mgr, count=5 or commit_count
+                    )
+                    if data:
+                        full_list.extend(data)
+                pages = ResultMenu(
+                    source=EmbPages(full_list, per_page=5, key=lambda x: x.package),
                 )
-                if data:
-                    full_list.extend(data)
-            pages = ResultMenu(
-                source=EmbPages(full_list, per_page=5, key=lambda x: x.package),
-            )
-            await pages.start(ctx)
+                await pages.start(ctx)
 
     @commands.command()
     async def ghuser(self, ctx, name):
@@ -183,12 +201,6 @@ class EmbPages(menus.GroupByPageSource):
         emb.description = desc
         emb.set_footer(text=f"Page {menu.current_page + 1}/{self.get_max_pages()}")
         return emb
-
-
-class TxtPages(menus.ListPageSource):
-    async def format_page(self, menu, page):
-        self.entries
-        # return embeds
 
 
 # Thanks fixator https://github.com/fixator10/Fixator10-Cogs/blob/V3.leveler_abc/leveler/menus/top.py

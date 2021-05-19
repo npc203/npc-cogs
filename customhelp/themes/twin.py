@@ -1,14 +1,7 @@
 from ..abc import ThemesMeta
 from ..core.base_help import (
-    EMPTY_STRING,
-    GLOBAL_CATEGORIES,
-    CategoryConvert,
-    Context,
-    EmbedField,
-    HelpSettings,
-    _,
-    pagify,
-)
+    EMPTY_STRING, GLOBAL_CATEGORIES, CategoryConvert, Context, EmbedField,
+    HelpSettings, _, pagify)
 
 
 class TwinHelp(ThemesMeta):

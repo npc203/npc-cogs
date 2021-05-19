@@ -67,7 +67,3 @@ class EmbedSteal(commands.Cog):
                 await ctx.send("Message isn't reachable")
         else:
             await ctx.send("No reply found")
-
-    async def red_delete_data_for_user(self, *, requester: RequestType, user_id: int) -> None:
-        # TODO: Replace this with the proper end user data removal handling.
-        super().red_delete_data_for_user(requester=requester, user_id=user_id)

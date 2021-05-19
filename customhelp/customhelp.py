@@ -7,7 +7,6 @@ from itertools import chain
 from os import path
 from pathlib import Path
 from types import MethodType
-from typing import Literal
 
 import discord
 import yaml
@@ -23,8 +22,6 @@ from .core import ARROWS, GLOBAL_CATEGORIES, set_menu
 from .core.base_help import EMPTY_STRING, BaguetteHelp
 from .core.category import Category, get_category
 from .core.utils import LINK_REGEX, emoji_converter
-
-RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
 
 _ = Translator("CustomHelp", __file__)
 
@@ -57,7 +54,7 @@ class CustomHelp(commands.Cog):
     A custom customisable help for fun and profit
     """
 
-    __version__ = "0.7.0"
+    __version__ = "0.7.1"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -1055,7 +1052,3 @@ class CustomHelp(commands.Cog):
                 await ctx.send("Invalid Format")
                 return
         return parsed_data
-
-    async def red_delete_data_for_user(self, *, requester: RequestType, user_id: int) -> None:
-        # TODO: Replace this with the proper end user data removal handling.
-        super().red_delete_data_for_user(requester=requester, user_id=user_id)

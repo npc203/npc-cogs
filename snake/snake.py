@@ -24,7 +24,3 @@ class Snake(commands.Cog):
     async def snake(self, ctx):
         menu = BoardMenu(ctx.author.display_name, clear_reactions_after=True)
         await menu.start(ctx, wait=True)
-
-    async def red_delete_data_for_user(self, *, requester: RequestType, user_id: int) -> None:
-        # TODO: Replace this with the proper end user data removal handling.
-        super().red_delete_data_for_user(requester=requester, user_id=user_id)

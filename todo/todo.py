@@ -154,6 +154,7 @@ class Todo(commands.Cog):
 
     @todo.command()
     async def search(self, ctx, *, text):
+        """Quick search in your todos to find stuff fast"""
         no_case = text.lower()
         todos = await self.config.user(ctx.author).todos()
         async with ctx.typing():

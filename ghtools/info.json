@@ -8,7 +8,7 @@
         "epic guy"
     ],
     "required_cogs": {},
-    "requirements": ["pygit2"],
+    "requirements": ["pydriller"],
     "tags": [
         "utility"
     ],
