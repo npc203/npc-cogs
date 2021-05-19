@@ -1,12 +1,22 @@
 from packaging import version
 from redbot import __version__
-from redbot.core.utils.chat_formatting import (box, humanize_list,
-                                               humanize_number)
+from redbot.core.utils.chat_formatting import box, humanize_list, humanize_number
 
 from ..abc import ThemesMeta
-from ..core.base_help import (EMPTY_STRING, CategoryConvert, Context,
-                              EmbedField, HelpSettings, _, cast, commands,
-                              get_cooldowns, get_perms, pagify)
+from ..core.base_help import (
+    EMPTY_STRING,
+    CategoryConvert,
+    Context,
+    EmbedField,
+    HelpSettings,
+    _,
+    cast,
+    commands,
+    get_cooldowns,
+    get_perms,
+    pagify,
+    shorten_line,
+)
 
 
 class JustCore(ThemesMeta):
@@ -25,25 +35,11 @@ class JustCore(ThemesMeta):
         )
         if not coms:
             return
-        description = obj.long_desc or ""
-        tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
 
         if await ctx.embed_requested():
-
-            emb = {
-                "embed": {"title": "", "description": ""},
-                "footer": {"text": ""},
-                "fields": [],
-            }
-
-            emb["footer"]["text"] = tagline
-            if description:
-                emb["embed"]["title"] = f"*{description[:250]}*"
-
-            def shorten_line(a_line: str) -> str:
-                if len(a_line) < 70:  # embed max width needs to be lower
-                    return a_line
-                return a_line[:67] + "..."
+            emb = await self.embed_template(help_settings, ctx)
+            if description := obj.long_desc:
+                emb["embed"]["title"] = f"{description[:250]}"
 
             for cog_name, data in coms:
                 title = f"**__{cog_name}:__**"
@@ -69,7 +65,7 @@ class JustCore(ThemesMeta):
                 )
 
         else:
-            await ctx.send("Please have embeds enabled")
+            await ctx.send(_("You need to enable embeds to use the help menu"))
 
     async def format_cog_help(self, ctx: Context, obj: commands.Cog, help_settings: HelpSettings):
 
@@ -77,32 +73,10 @@ class JustCore(ThemesMeta):
         if not (coms or help_settings.verify_exists):
             return
 
-        description = obj.format_help_for_context(ctx)
-        tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
-
         if await ctx.embed_requested():
-            emb = {
-                "embed": {"title": "", "description": ""},
-                "footer": {"text": ""},
-                "fields": [],
-            }
+            emb = await self.embed_template(help_settings, ctx, obj.format_help_for_context(ctx))
 
-            emb["footer"]["text"] = tagline
-            if description:
-                splitted = description.split("\n\n")
-                name = splitted[0]
-                value = "\n\n".join(splitted[1:])
-                if not value:
-                    value = EMPTY_STRING
-                field = EmbedField(name[:252], value[:1024], False)
-                emb["fields"].append(field)
             if coms:
-
-                def shorten_line(a_line: str) -> str:
-                    if len(a_line) < 70:  # embed max width needs to be lower
-                        return a_line
-                    return a_line[:67] + "..."
-
                 command_text = "\n".join(
                     shorten_line(f"**{name}** {command.format_shortdoc_for_context(ctx)}")
                     for name, command in sorted(coms.items())
@@ -122,7 +96,7 @@ class JustCore(ThemesMeta):
                     help_settings=help_settings,
                 )
         else:
-            await ctx.send(f"Enable embeds please")
+            await ctx.send(_("You need to enable embeds to use the help menu"))
 
     async def format_command_help(
         self, ctx: Context, obj: commands.Command, help_settings: HelpSettings
@@ -140,9 +114,6 @@ class JustCore(ThemesMeta):
 
         command = obj
 
-        description = command.description or ""
-
-        tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
         signature = _(
             "Syntax: {ctx.clean_prefix}{command.qualified_name} {command.signature}"
         ).format(ctx=ctx, command=command)
@@ -187,23 +158,13 @@ class JustCore(ThemesMeta):
             subcommands = await self.get_group_help_mapping(ctx, grp, help_settings=help_settings)
 
         if await ctx.embed_requested():
-            emb = {"embed": {"title": "", "description": ""}, "footer": {"text": ""}, "fields": []}
+            emb = await self.embed_template(
+                help_settings, ctx, command.format_help_for_context(ctx)
+            )
+            if description := command.description:
+                emb["embed"]["title"] = f"{description[:250]}"
 
-            if description:
-                emb["embed"]["title"] = f"*{description[:250]}*"
-
-            emb["footer"]["text"] = tagline
             emb["embed"]["description"] = box(signature)
-
-            command_help = command.format_help_for_context(ctx)
-            if command_help:
-                splitted = command_help.split("\n\n")
-                name = splitted[0]
-                value = "\n\n".join(splitted[1:])
-                if not value:
-                    value = EMPTY_STRING
-                field = EmbedField(name[:250], value[:1024], False)
-                emb["fields"].append(field)
 
             if final_perms := get_perms(command):
                 emb["fields"].append(EmbedField("Permissions", final_perms, False))
@@ -236,3 +197,5 @@ class JustCore(ThemesMeta):
                 embed=True,
                 help_settings=help_settings,
             )
+        else:
+            await ctx.send(_("You need to enable embeds to use the help menu"))

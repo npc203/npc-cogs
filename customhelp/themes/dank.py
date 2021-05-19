@@ -1,8 +1,19 @@
 from ..abc import ThemesMeta
 from ..core.base_help import (
-    EMPTY_STRING, GLOBAL_CATEGORIES, CategoryConvert, Context, EmbedField,
-    HelpSettings, _, cast, commands, get_aliases, get_cooldowns, get_perms,
-    pagify)
+    EMPTY_STRING,
+    GLOBAL_CATEGORIES,
+    CategoryConvert,
+    Context,
+    EmbedField,
+    HelpSettings,
+    _,
+    cast,
+    commands,
+    get_aliases,
+    get_cooldowns,
+    get_perms,
+    pagify,
+)
 
 
 class DankHelp(ThemesMeta):
@@ -11,20 +22,11 @@ class DankHelp(ThemesMeta):
     async def format_bot_help(
         self, ctx: Context, help_settings: HelpSettings, get_pages: bool = False
     ):
-        description = ctx.bot.description or ""
-        tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
-        if not await ctx.embed_requested():  # Maybe redirect to non-embed minimal format
-            await ctx.send(_("You need to enable embeds to use custom help menu"))
-        else:
-            emb = {
-                "embed": {"title": "", "description": ""},
-                "footer": {"text": ""},
-                "fields": [],
-            }
 
-            emb["footer"]["text"] = tagline
+        if await ctx.embed_requested():
+            emb = await self.embed_template(help_settings, ctx)
+            description = ctx.bot.description or ""
             emb["embed"]["description"] = description
-            emb["title"] = _("{} Help Menu").format(ctx.me.name)
 
             filtered_categories = await self.filter_categories(ctx, GLOBAL_CATEGORIES)
             # Maybe add category desc with long_desc somewhere?
@@ -52,6 +54,8 @@ class DankHelp(ThemesMeta):
                     add_emojis=((await self.config.settings())["react"]) and True,
                     emoji_mapping=filtered_categories,
                 )
+        else:
+            await ctx.send(_("You need to enable embeds to use the help menu"))
 
     async def format_category_help(
         self,
@@ -67,23 +71,13 @@ class DankHelp(ThemesMeta):
         if not coms:
             return
 
-        description = obj.long_desc or ""
-        tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
-
         if await ctx.embed_requested():
-
-            emb = {
-                "embed": {"title": "", "description": ""},
-                "footer": {"text": ""},
-                "fields": [],
-            }
-
+            emb = await self.embed_template(help_settings, ctx)
             emb["embed"]["title"] = (
                 (str(obj.reaction) if obj.reaction else "") + " " + obj.name.capitalize()
             )
-            emb["footer"]["text"] = tagline
-            if description:
-                emb["embed"]["description"] = f"*{description[:250]}*"
+            if description := obj.long_desc:
+                emb["embed"]["description"] = f"{description[:250]}"
 
             all_cog_text = [
                 ", ".join(f"`{name}`" for name, command in sorted(data.items()))
@@ -112,7 +106,7 @@ class DankHelp(ThemesMeta):
                     help_settings=help_settings,
                 )
         else:
-            await ctx.send("Enable embeds please")
+            await ctx.send(_("You need to enable embeds to use the help menu"))
 
     async def format_command_help(
         self, ctx: Context, obj: commands.Command, help_settings: HelpSettings
@@ -129,10 +123,6 @@ class DankHelp(ThemesMeta):
             return
 
         command = obj
-
-        description = command.description or ""
-
-        tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
         signature = _("`{ctx.clean_prefix}{command.qualified_name} {command.signature}`").format(
             ctx=ctx, command=command
         )
@@ -143,17 +133,9 @@ class DankHelp(ThemesMeta):
             subcommands = await self.get_group_help_mapping(ctx, grp, help_settings=help_settings)
 
         if await ctx.embed_requested():
-            emb = {
-                "embed": {"title": "", "description": ""},
-                "footer": {"text": ""},
-                "fields": [],
-            }
-
-            if description:
-                emb["embed"]["title"] = f"*{description[:250]}*"
-
-            emb["footer"]["text"] = tagline
-            # emb["embed"]["description"] = signature
+            emb = await self.embed_template(help_settings, ctx)
+            if description := command.description:
+                emb["embed"]["title"] = f"{description[:250]}"
 
             command_help = command.format_help_for_context(ctx)
             if command_help:
@@ -204,4 +186,4 @@ class DankHelp(ThemesMeta):
                 help_settings=help_settings,
             )
         else:
-            await ctx.send("Enable embeds pls")
+            await ctx.send(_("You need to enable embeds to use the help menu"))

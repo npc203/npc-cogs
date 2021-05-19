@@ -1,7 +1,14 @@
 from ..abc import ThemesMeta
 from ..core.base_help import (
-    EMPTY_STRING, GLOBAL_CATEGORIES, CategoryConvert, Context, EmbedField,
-    HelpSettings, _, pagify)
+    EMPTY_STRING,
+    GLOBAL_CATEGORIES,
+    CategoryConvert,
+    Context,
+    EmbedField,
+    HelpSettings,
+    _,
+    pagify,
+)
 
 
 class DannyHelp(ThemesMeta):
@@ -10,29 +17,9 @@ class DannyHelp(ThemesMeta):
     async def format_bot_help(
         self, ctx: Context, help_settings: HelpSettings, get_pages: bool = False
     ):
-        description = ctx.bot.description or ""
-        tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
-        if not await ctx.embed_requested():  # Maybe redirect to non-embed minimal format
-            await ctx.send(_("You need to enable embeds to use custom help menu"))
-        else:
-            emb = {
-                "embed": {"title": "", "description": ""},
-                "footer": {"text": ""},
-                "fields": [],
-            }
 
-            emb["footer"]["text"] = tagline
-            if description:
-                splitted = description.split("\n\n")
-                name = splitted[0]
-                value = "\n\n".join(splitted[1:])
-                if not value:
-                    value = EMPTY_STRING
-                field = EmbedField(name[:252], value[:1024], False)
-                emb["fields"].append(field)
-
-            emb["title"] = _("{} Help Menu").format(ctx.me.name)
-
+        if await ctx.embed_requested():  # Maybe redirect to non-embed minimal format
+            emb = await self.embed_template(help_settings, ctx, ctx.bot.description)
             filtered_categories = await self.filter_categories(ctx, GLOBAL_CATEGORIES)
             for cat in filtered_categories:
                 if cat.cogs:
@@ -57,6 +44,8 @@ class DannyHelp(ThemesMeta):
                     add_emojis=((await self.config.settings())["react"]) and True,
                     emoji_mapping=filtered_categories,
                 )
+        else:
+            await ctx.send(_("You need to enable embeds to use the help menu"))
 
     async def format_category_help(
         self,
@@ -71,20 +60,12 @@ class DannyHelp(ThemesMeta):
         )
         if not coms:
             return
-        description = obj.long_desc or ""
-        tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
 
         if await ctx.embed_requested():
+            emb = await self.embed_template(help_settings, ctx)
 
-            emb = {
-                "embed": {"title": "", "description": ""},
-                "footer": {"text": ""},
-                "fields": [],
-            }
-
-            emb["footer"]["text"] = tagline
-            if description:
-                emb["embed"]["title"] = f"*{description[:250]}*"
+            if description := obj.long_desc:
+                emb["embed"]["title"] = f"{description[:250]}"
             for cog_name, data in coms:
                 title = f"**{cog_name}**" if cog_name else _("**No Category:**")
                 cog_text = " ".join((f"`{name}`") for name, command in sorted(data.items()))
@@ -105,4 +86,4 @@ class DannyHelp(ThemesMeta):
                 )
 
         else:
-            await ctx.send("Please have embeds enabled")
+            await ctx.send(_("You need to enable embeds to use the help menu"))

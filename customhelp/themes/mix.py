@@ -1,7 +1,17 @@
 from ..abc import ThemesMeta
 from ..core.base_help import (
-    EMPTY_STRING, GLOBAL_CATEGORIES, CategoryConvert, Context, EmbedField,
-    HelpSettings, _, chain, commands, pagify)
+    EMPTY_STRING,
+    GLOBAL_CATEGORIES,
+    CategoryConvert,
+    Context,
+    EmbedField,
+    HelpSettings,
+    _,
+    chain,
+    commands,
+    pagify,
+    shorten_line,
+)
 
 
 class Mixture(ThemesMeta):
@@ -10,29 +20,8 @@ class Mixture(ThemesMeta):
     async def format_bot_help(
         self, ctx: Context, help_settings: HelpSettings, get_pages: bool = False
     ):
-        description = ctx.bot.description or ""
-        tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
-        if not await ctx.embed_requested():  # Maybe redirect to non-embed minimal format
-            await ctx.send(_("You need to enable embeds to use custom help menu"))
-        else:
-            emb = {
-                "embed": {"title": "", "description": ""},
-                "footer": {"text": ""},
-                "fields": [],
-            }
-
-            emb["footer"]["text"] = tagline
-            if description:
-                splitted = description.split("\n\n")
-                name = splitted[0]
-                value = "\n\n".join(splitted[1:])
-                if not value:
-                    value = EMPTY_STRING
-                field = EmbedField(name[:252], value[:1024], False)
-                emb["fields"].append(field)
-
-            emb["title"] = _("{} Help Menu").format(ctx.me.name)
-
+        if await ctx.embed_requested():
+            emb = await self.embed_template(help_settings, ctx, ctx.bot.description)
             filtered_categories = await self.filter_categories(ctx, GLOBAL_CATEGORIES)
             for cat in filtered_categories:
                 if cat.cogs:
@@ -64,6 +53,8 @@ class Mixture(ThemesMeta):
                     add_emojis=((await self.config.settings())["react"]) and True,
                     emoji_mapping=filtered_categories,
                 )
+        else:
+            await ctx.send(_("You need to enable embeds to use the help menu"))
 
     async def format_category_help(
         self,
@@ -78,29 +69,14 @@ class Mixture(ThemesMeta):
         )
         if not coms:
             return
-
-        description = obj.long_desc or ""
-        tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
-
         if await ctx.embed_requested():
+            emb = await self.embed_template(help_settings, ctx)
 
-            emb = {
-                "embed": {"title": "", "description": ""},
-                "footer": {"text": ""},
-                "fields": [],
-            }
-
-            emb["footer"]["text"] = tagline
-            if description:
-                emb["embed"]["description"] = f"*{description[:250]}*"
+            if description := obj.long_desc:
+                emb["embed"]["description"] = f"{description[:250]}"
 
             spacer_list = chain(*(i[1].keys() for i in coms))
             spacing = len(max(spacer_list, key=len))
-
-            def shorten_line(a_line: str) -> str:
-                if len(a_line) < 70:  # embed max width needs to be lower
-                    return a_line
-                return a_line[:67] + "..."
 
             for cog_name, data in coms:
                 title = f"**__{cog_name}:__**"
@@ -120,8 +96,7 @@ class Mixture(ThemesMeta):
             else:
                 await self.send_pages(ctx, pages, embed=True, help_settings=help_settings)
         else:
-            # fix this
-            await ctx.send("Kindly enable embeds")
+            await ctx.send(_("You need to enable embeds to use the help menu"))
 
     async def format_cog_help(self, ctx: Context, obj: commands.Cog, help_settings: HelpSettings):
 
@@ -129,33 +104,23 @@ class Mixture(ThemesMeta):
         if not (coms or help_settings.verify_exists):
             return
 
-        description = obj.format_help_for_context(ctx)
-        tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
-
         if await ctx.embed_requested():
-            emb = {
-                "embed": {"title": "", "description": ""},
-                "footer": {"text": ""},
-                "fields": [],
-            }
+            emb = await self.embed_template(help_settings, ctx)
 
-            emb["footer"]["text"] = tagline
-            if description:
+            if description := obj.format_help_for_context(ctx):
                 emb["embed"]["description"] = "**" + description + "**"
-            if coms:
-                for name, command in sorted(coms.items()):
-                    emb["fields"].append(
-                        EmbedField(
-                            name, command.format_shortdoc_for_context(ctx) or "\N{ZWSP}", False
-                        )
-                    )
 
-                pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
-                await self.send_pages(
-                    ctx,
-                    pages,
-                    embed=True,
-                    help_settings=help_settings,
+            for name, command in sorted(coms.items()):
+                emb["fields"].append(
+                    EmbedField(name, command.format_shortdoc_for_context(ctx) or "\N{ZWSP}", False)
                 )
+
+            pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
+            await self.send_pages(
+                ctx,
+                pages,
+                embed=True,
+                help_settings=help_settings,
+            )
         else:
-            await ctx.send(f"Enable embeds please")
+            await ctx.send(_("You need to enable embeds to use the help menu"))

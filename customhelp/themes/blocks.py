@@ -37,9 +37,6 @@ class Blocks(ThemesMeta):
         )
         if not coms:
             return
-
-        description = obj.long_desc or ""
-        tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
         all_cog_text = []
 
         for cog_name, data in coms:
@@ -52,18 +49,13 @@ class Blocks(ThemesMeta):
 
         if await ctx.embed_requested():
 
-            emb = {
-                "embed": {"title": "", "description": ""},
-                "footer": {"text": ""},
-                "fields": [],
-            }
-
+            emb = await self.embed_template(help_settings, ctx)
             emb["embed"]["title"] = (
                 (str(obj.reaction) if obj.reaction else "") + " " + obj.name.capitalize()
             )
-            emb["footer"]["text"] = tagline
-            if description:
-                emb["embed"]["description"] = f"*{description[:250]}*"
+
+            if description := obj.long_desc:
+                emb["embed"]["description"] = f"{description[:250]}"
 
             for page in pagify(all_cog_str, page_length=998, shorten_by=0):
                 field = EmbedField(
@@ -106,13 +98,7 @@ class Blocks(ThemesMeta):
         )
 
         if await ctx.embed_requested():
-            emb = {
-                "embed": {"title": "", "description": ""},
-                "footer": {"text": ""},
-                "fields": [],
-            }
-
-            emb["footer"]["text"] = tagline
+            emb = await self.embed_template(help_settings, ctx)
             if description:
                 emb["embed"]["description"] = "**" + description + "**"
             if coms:

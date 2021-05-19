@@ -6,16 +6,32 @@ from typing import List, Union, cast
 import discord
 from redbot.core import commands
 from redbot.core.commands.context import Context
-from redbot.core.commands.help import (HelpSettings, NoCommand, NoSubCommand,
-                                       _, dpy_commands, mass_purge)
+from redbot.core.commands.help import (
+    HelpSettings,
+    NoCommand,
+    NoSubCommand,
+    _,
+    dpy_commands,
+    mass_purge,
+)
 from redbot.core.utils.chat_formatting import pagify
 
 from . import ARROWS, GLOBAL_CATEGORIES, get_menu
 from .category import Category, CategoryConvert, get_category
 from .dpy_menus import ListPages
-from .utils import (close_menu, first_page, get_aliases, get_cooldowns,
-                    get_perms, home_page, last_page, next_page, prev_page,
-                    react_page, shorten_line)
+from .utils import (
+    close_menu,
+    first_page,
+    get_aliases,
+    get_cooldowns,
+    get_perms,
+    home_page,
+    last_page,
+    next_page,
+    prev_page,
+    react_page,
+    shorten_line,
+)
 
 HelpTarget = Union[
     commands.Command,
@@ -164,20 +180,10 @@ class BaguetteHelp(commands.RedHelpFormatter):
         if not coms:
             return
 
-        description = obj.long_desc or ""
-        tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
-
         if await ctx.embed_requested():
-
-            emb = {
-                "embed": {"title": "", "description": ""},
-                "footer": {"text": ""},
-                "fields": [],
-            }
-
-            emb["footer"]["text"] = tagline
-            if description:
-                emb["embed"]["description"] = f"*{description[:250]}*"
+            emb = await self.embed_template(help_settings, ctx)
+            if description := obj.long_desc or "":
+                emb["embed"]["description"] = f"{description[:250]}"
 
             all_cog_text = ""
             spacer_list = chain(*(i[1].keys() for i in coms))
@@ -201,41 +207,17 @@ class BaguetteHelp(commands.RedHelpFormatter):
             else:
                 await self.send_pages(ctx, pages, embed=True, help_settings=help_settings)
         else:
-            # fix this
-            await ctx.send("Kindly enable embeds")
+            await ctx.send(_("You need to enable embeds to use the help menu"))
 
     async def format_cog_help(self, ctx: Context, obj: commands.Cog, help_settings: HelpSettings):
         coms = await self.get_cog_help_mapping(ctx, obj, help_settings=help_settings)
         if not (coms or help_settings.verify_exists):
             return
 
-        description = obj.format_help_for_context(ctx)
-        tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
-
         if await ctx.embed_requested():
-            emb = {
-                "embed": {"title": "", "description": ""},
-                "footer": {"text": ""},
-                "fields": [],
-            }
-
-            emb["footer"]["text"] = tagline
-            if description:
-                splitted = description.split("\n\n")
-                name = splitted[0]
-                value = "\n\n".join(splitted[1:])
-                if not value:
-                    value = EMPTY_STRING
-                field = EmbedField(f"{name[:252]}", value[:1024], False)
-                emb["fields"].append(field)
+            emb = await self.embed_template(help_settings, ctx, obj.format_help_for_context(ctx))
 
             if coms:
-
-                def shorten_line(a_line: str) -> str:
-                    if len(a_line) < 70:  # embed max width needs to be lower
-                        return a_line
-                    return a_line[:67] + "..."
-
                 spacing = len(max(coms.keys(), key=len))
                 command_text = "\n".join(
                     shorten_line(f"`{name:<{spacing}}:`{command.format_shortdoc_for_context(ctx)}")
@@ -252,7 +234,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
             await self.send_pages(ctx, pages, embed=True, help_settings=help_settings)
         else:
-            await ctx.send("Enable embeds pls")
+            await ctx.send(_("You need to enable embeds to use the help menu"))
 
     async def format_command_help(
         self, ctx: Context, obj: commands.Command, help_settings: HelpSettings
@@ -272,7 +254,6 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
         description = command.description or ""
 
-        tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
         signature = _(
             "`Syntax: {ctx.clean_prefix}{command.qualified_name} {command.signature}`"
         ).format(ctx=ctx, command=command)
@@ -283,16 +264,11 @@ class BaguetteHelp(commands.RedHelpFormatter):
             subcommands = await self.get_group_help_mapping(ctx, grp, help_settings=help_settings)
 
         if await ctx.embed_requested():
-            emb = {
-                "embed": {"title": "", "description": ""},
-                "footer": {"text": ""},
-                "fields": [],
-            }
+            emb = await self.embed_template(help_settings, ctx)
 
             if description:
-                emb["embed"]["title"] = f"*{description[:250]}*"
+                emb["embed"]["title"] = f"{description[:250]}"
 
-            emb["footer"]["text"] = tagline
             emb["embed"]["description"] = signature
 
             command_help = command.format_help_for_context(ctx)
@@ -315,12 +291,6 @@ class BaguetteHelp(commands.RedHelpFormatter):
                     emb["fields"].append(EmbedField("Cooldowns", "\n".join(cooldowns), False))
 
             if subcommands:
-
-                def shorten_line(a_line: str) -> str:
-                    if len(a_line) < 70:  # embed max width needs to be lower
-                        return a_line
-                    return a_line[:67] + ".."
-
                 spacing = len(max(subcommands.keys(), key=len))
                 subtext = "\n" + "\n".join(
                     shorten_line(f"`{name:<{spacing}}:`{command.format_shortdoc_for_context(ctx)}")
@@ -336,33 +306,13 @@ class BaguetteHelp(commands.RedHelpFormatter):
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
             await self.send_pages(ctx, pages, embed=True, help_settings=help_settings)
         else:
-            await ctx.send("Enable embeds pls")
+            await ctx.send(_("You need to enable embeds to use the help menu"))
 
     async def format_bot_help(
         self, ctx: Context, help_settings: HelpSettings, get_pages: bool = False
     ):
-        description = ctx.bot.description or ""
-        tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
-        if not await ctx.embed_requested():  # Maybe redirect to non-embed minimal format
-            await ctx.send(_("You need to enable embeds to use custom help menu"))
-        else:
-            emb = {
-                "embed": {"title": "", "description": ""},
-                "footer": {"text": ""},
-                "fields": [],
-            }
-
-            emb["footer"]["text"] = tagline
-            if description:
-                splitted = description.split("\n\n")
-                name = splitted[0]
-                value = "\n\n".join(splitted[1:])
-                if not value:
-                    value = EMPTY_STRING
-                field = EmbedField(name[:252], value[:1024], False)
-                emb["fields"].append(field)
-
-            emb["title"] = _("{} Help Menu").format(ctx.me.name)
+        if await ctx.embed_requested():
+            emb = await self.embed_template(help_settings, ctx, ctx.bot.description)
             filtered_categories = await self.filter_categories(ctx, GLOBAL_CATEGORIES)
             for i in pagify(
                 "\n".join(
@@ -386,6 +336,26 @@ class BaguetteHelp(commands.RedHelpFormatter):
                     add_emojis=((await self.config.settings())["react"]) and True,
                     emoji_mapping=filtered_categories,
                 )
+        else:
+            await ctx.send(_("You need to enable embeds to use the help menu"))
+
+    # util to reduce code dupes
+    async def embed_template(self, help_settings, ctx, description=None):
+        emb = {
+            "embed": {"title": "", "description": ""},
+            "footer": {"text": ""},
+            "fields": [],
+        }
+        if description:
+            splitted = description.split("\n\n")
+            name = splitted[0]
+            value = "\n\n".join(splitted[1:])
+            if not value:
+                value = EMPTY_STRING
+            field = EmbedField(name[:250], value[:1024], False)
+            emb["fields"].append(field)
+        emb["footer"]["text"] = (help_settings.tagline) or self.get_default_tagline(ctx)
+        return emb
 
     # TODO maybe try lazy loading
     async def make_embeds(
@@ -431,7 +401,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
             embed = discord.Embed(color=color, **embed_dict["embed"])
 
             if page_count > 1:
-                description = _("*Page {page_num} of {page_count}*\n{content_description}").format(
+                description = _("Page {page_num} of {page_count}\n{content_description}").format(
                     content_description=embed.description,
                     page_num=i,
                     page_count=page_count,

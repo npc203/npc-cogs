@@ -456,9 +456,10 @@ class CustomHelp(commands.Cog):
                 else:
                     return item[1]
 
-        # TODO bunch the config calls?
+        to_config = {}  # format: {cat_index:[(name,value),..],..}
         for category in parsed_data:
             if uncat_name == category:
+                # uncategory occur only once so no need to bunch config calls for this
                 async with self.config.uncategorised() as unconf_cat:
                     for item in parsed_data[category]:
                         if tmp := validity_checker(category, item):
@@ -467,16 +468,24 @@ class CustomHelp(commands.Cog):
                             failed.append((item, category))
                         continue
             elif category in available_categories:
-                async with self.config.categories() as conf_cat:
-                    cat_index = available_categories.index(category)
-                    for item in parsed_data[category]:
-                        if tmp := validity_checker(category, item):
-                            conf_cat[cat_index][item[0]] = tmp
-                        else:
-                            failed.append((item, category))
+                cat_index = available_categories.index(category)
+                to_config[cat_index] = []
+
+                for item in parsed_data[category]:
+                    if tmp := validity_checker(category, item):
+                        to_config[cat_index].append((item[0], tmp))
+                    else:
+                        failed.append((item, category))
             else:
                 # TODO make this a lil neater for Everything failed?
                 failed.append((("[Not a valid category name]", "Everything"), category))
+
+        if to_config:
+            async with self.config.categories() as conf_cat:
+                for ind in to_config:
+                    for name, value in to_config[ind]:
+                        conf_cat[ind][name] = value
+
         for page in pagify(
             f"Successfully added the edits"
             if not failed

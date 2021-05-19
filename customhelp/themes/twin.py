@@ -1,7 +1,14 @@
 from ..abc import ThemesMeta
 from ..core.base_help import (
-    EMPTY_STRING, GLOBAL_CATEGORIES, CategoryConvert, Context, EmbedField,
-    HelpSettings, _, pagify)
+    EMPTY_STRING,
+    GLOBAL_CATEGORIES,
+    CategoryConvert,
+    Context,
+    EmbedField,
+    HelpSettings,
+    _,
+    pagify,
+)
 
 
 class TwinHelp(ThemesMeta):
@@ -10,29 +17,8 @@ class TwinHelp(ThemesMeta):
     async def format_bot_help(
         self, ctx: Context, help_settings: HelpSettings, get_pages: bool = False
     ):
-        description = ctx.bot.description or ""
-        tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
-        if not await ctx.embed_requested():  # Maybe redirect to non-embed minimal format
-            await ctx.send(_("You need to enable embeds to use custom help menu"))
-        else:
-            emb = {
-                "embed": {"title": "", "description": ""},
-                "footer": {"text": ""},
-                "fields": [],
-            }
-
-            emb["footer"]["text"] = tagline
-            if description:
-                splitted = description.split("\n\n")
-                name = splitted[0]
-                value = "\n\n".join(splitted[1:])
-                if not value:
-                    value = EMPTY_STRING
-                field = EmbedField(name[:252], value[:1024], False)
-                emb["fields"].append(field)
-
-            emb["title"] = _("{} Help Menu").format(ctx.me.name)
-
+        if await ctx.embed_requested():
+            emb = await self.embed_template(help_settings, ctx, ctx.bot.description)
             filtered_categories = await self.filter_categories(ctx, GLOBAL_CATEGORIES)
             for cat in filtered_categories:
                 if cat.cogs:
@@ -55,6 +41,8 @@ class TwinHelp(ThemesMeta):
                     add_emojis=((await self.config.settings())["react"]) and True,
                     emoji_mapping=filtered_categories,
                 )
+        else:
+            await ctx.send(_("You need to enable embeds to use the help menu"))
 
     async def format_category_help(
         self,
@@ -69,27 +57,8 @@ class TwinHelp(ThemesMeta):
         )
         if not coms:
             return
-
-        description = obj.long_desc or ""
-        tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
-
         if await ctx.embed_requested():
-
-            emb = {
-                "embed": {"title": "", "description": ""},
-                "footer": {"text": ""},
-                "fields": [],
-            }
-
-            emb["footer"]["text"] = tagline
-            if description:
-                splitted = description.split("\n\n")
-                name = splitted[0]
-                value = "\n\n".join(splitted[1:])
-                if not value:
-                    value = EMPTY_STRING
-                field = EmbedField(name[:252], value[:1024], False)
-                emb["fields"].append(field)
+            emb = await self.embed_template(help_settings, ctx, obj.long_desc)
 
             for cog_name, data in coms:
                 title = f"__**{cog_name}**__" if cog_name else _("**No Category:**")
@@ -110,5 +79,4 @@ class TwinHelp(ThemesMeta):
             else:
                 await self.send_pages(ctx, pages, embed=True, help_settings=help_settings)
         else:
-            # fix this
-            await ctx.send("Kindly enable embeds")
+            await ctx.send(_("You need to enable embeds to use the help menu"))
