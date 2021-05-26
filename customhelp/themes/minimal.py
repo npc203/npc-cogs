@@ -76,7 +76,7 @@ class MinimalHelp(ThemesMeta):
         coms = await self.get_cog_help_mapping(ctx, obj, help_settings=help_settings)
         if not (coms or help_settings.verify_exists):
             return
-        description = obj.long_desc or ""
+        description = obj.format_help_for_context(ctx) or ""
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
         full_text = f"{description}\n\n{tagline}\n\n"
 
