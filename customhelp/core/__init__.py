@@ -6,10 +6,11 @@ from .dpy_menus import NoReplyMenus, ReplyMenus, get_button_menu
 GLOBAL_CATEGORIES = []
 ARROWS = {}
 
-__BaseMenu = None
+__BaseMenu = ReplyMenus
+use_buttons = False
 
 
-def set_menu(*, replies: bool, buttons: bool):
+def set_menu(*, replies: bool, buttons: bool, validate_buttons: bool = False):
     global __BaseMenu
     if replies:
         if dpy_version <= "1.5.0":
@@ -17,10 +18,13 @@ def set_menu(*, replies: bool, buttons: bool):
         __BaseMenu = ReplyMenus
         return "Enabled replies for help menus.", True
     elif buttons:
-        try:
-            __BaseMenu = get_button_menu()
-        except RuntimeError as error:
-            return str(error), 0
+        if validate_buttons:
+            try:
+                __BaseMenu = get_button_menu()
+            except RuntimeError as error:
+                return str(error), 0
+        global use_buttons
+        use_buttons = True
         return "Enabled buttons for help menus.", True
     else:
         __BaseMenu = NoReplyMenus
@@ -29,4 +33,11 @@ def set_menu(*, replies: bool, buttons: bool):
 
 # wew thanks jack
 def get_menu():
+    global __BaseMenu
+    global use_buttons
+    if use_buttons:
+        try:
+            __BaseMenu = get_button_menu()
+        except RuntimeError:
+            __BaseMenu = ReplyMenus
     return __BaseMenu

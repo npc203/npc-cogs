@@ -45,25 +45,27 @@ class BaseMenu(menus.MenuPages, inherit_buttons=False):
         # self.cog = cog
         self.page_start = page_start
 
-    async def show_page(self, page_number, payload = None): 
+    async def show_page(self, page_number, payload):
         # added unused payload arg since ButtonMenu requires the button to be passed
         # when showing a page with InteractionButton.update
-        page = await self._source.get_page(page_number)
-        self.current_page = page_number
-        kwargs = await self._get_kwargs_from_page(page)
-        await self.message.edit(**kwargs)
+        await super().show_page(page_number)
 
+    async def change_source(self, source, payload):
+        await super().change_source(source)
 
-    async def show_checked_page(self, page_number: int, payload = None) -> None:
+    def add_button(self, button, *, react=False, interaction=None):
+        return super().add_button(button, react=react)
+
+    async def show_checked_page(self, page_number: int, payload) -> None:
         max_pages = self._source.get_max_pages()
         try:
             if max_pages is None or page_number < max_pages and page_number >= 0:
                 # If it doesn't give maximum pages, it cannot be checked
-                await self.show_page(page_number)
+                await self.show_page(page_number, payload)
             elif page_number >= max_pages:
-                await self.show_page(0)
+                await self.show_page(0, payload)
             else:
-                await self.show_page(max_pages - 1)
+                await self.show_page(max_pages - 1, payload)
         except IndexError:
             # An error happened that can be handled, so ignore it.
             pass
@@ -84,7 +86,9 @@ class ReplyMenus(BaseMenu, inherit_buttons=False):
     async def send_initial_message(self, ctx, channel):
         page = await self._source.get_page(0)
         kwargs = await self._get_kwargs_from_page(page)
-        kwargs["reference"] = ctx.message.to_reference(fail_if_not_exists=False) # sends message silently when message is deleted
+        kwargs["reference"] = ctx.message.to_reference(
+            fail_if_not_exists=False
+        )  # sends message silently when message is deleted
         return await ctx.send(**kwargs)
 
     async def _get_kwargs_from_page(self, page):
@@ -99,15 +103,20 @@ class ReplyMenus(BaseMenu, inherit_buttons=False):
             kwargs["embed"] = value
         return kwargs
 
+
 def get_button_menu():
     try:
-        from slashtags import ButtonMenu
+        from slashtags import BaseButtonMenu
     except ImportError as exc:
         raise RuntimeError("Button menus require the `slashtags` cog to be loaded.") from exc
 
-    class HelpButtonMenu(ButtonMenu, BaseMenu, inherit_buttons=False):
-        async def show_page(self, page_number, button = None):
-            cls = ButtonMenu if button else BaseMenu
+    class HelpButtonMenu(BaseButtonMenu, BaseMenu, inherit_buttons=False):
+        async def show_page(self, page_number, button):
+            cls = BaseButtonMenu if button else BaseMenu
             await cls.show_page(self, page_number, button)
+
+        async def change_source(self, source, button):
+            cls = BaseButtonMenu if button else BaseMenu
+            await cls.change_source(self, source, button)
 
     return HelpButtonMenu
