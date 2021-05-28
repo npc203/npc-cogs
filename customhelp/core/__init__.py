@@ -60,8 +60,8 @@ def get_menu():
         try:
             return get_button_menu(use_replies)
         except RuntimeError:
+            # User unloaded slashtags, so fallback to normal menu
             pass
     if use_replies:
         return ReplyMenus
-    else:
-        return NoReplyMenus
+    return NoReplyMenus

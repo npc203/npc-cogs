@@ -54,7 +54,7 @@ class CustomHelp(commands.Cog):
     A custom customisable help for fun and profit
     """
 
-    __version__ = "0.7.1"
+    __version__ = "0.8.0"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -781,7 +781,7 @@ class CustomHelp(commands.Cog):
 
     @settings.command(aliases=["usereplies", "reply"])
     async def usereply(self, ctx, option: bool):
-        """Enable/Disable help menus to use replies"""
+        """Enable/Disable replies"""
         response, success = set_menu(replies=option, buttons=None)
         if success:
             await self.config.settings.replies.set(option)

@@ -7,8 +7,8 @@ from redbot.vendored.discord.ext import menus
 
 # None of the below classes are done by me, it's mostly copy paste/ edited from a piece of code
 # from trusty which got circulated around to me from !nowo. All credits go to him.
+# Annd phen did some epico button magic.
 # Not using an AsyncIterator cause even the core help loads all the commands at once.
-# TODO remove redundant code
 
 
 class ListPages(menus.ListPageSource):
@@ -79,9 +79,6 @@ class BaseMenu(menus.MenuPages, inherit_buttons=False):
         return payload.emoji in self.buttons
 
 
-NoReplyMenus = BaseMenu
-
-
 class ReplyMenus(BaseMenu, inherit_buttons=False):
     async def send_initial_message(self, ctx, channel):
         page = await self._source.get_page(0)
@@ -123,3 +120,6 @@ def get_button_menu(use_replies: bool):
             await cls.change_source(self, source, button)
 
     return HelpButtonMenu
+
+
+NoReplyMenus = BaseMenu
