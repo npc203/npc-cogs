@@ -104,15 +104,19 @@ async def react_page(ctx, emoji, help_settings, bypass_checks=False):
     if pages:
 
         async def action(menu, payload):
-            await menu.change_source(ListPages(pages))
+            await menu.change_source(ListPages(pages), payload)
             if len(pages) == 1:
                 # If any one button is present, disable it's functionality cause its a 1 page menu.
                 if ARROWS["left"] in map(str, menu._buttons.keys()):
                     menu.add_button(empty_button(ARROWS["left"]))
                     menu.add_button(empty_button(ARROWS["right"]))
             else:
-                asyncio.create_task(menu.add_button(prev_page(ARROWS["left"]), react=True))
-                asyncio.create_task(menu.add_button(next_page(ARROWS["right"]), react=True))
+                asyncio.create_task(
+                    menu.add_button(prev_page(ARROWS["left"]), react=True, interaction=payload)
+                )
+                asyncio.create_task(
+                    menu.add_button(next_page(ARROWS["right"]), react=True, interaction=payload)
+                )
 
         return menus.Button(emoji, action)
     else:
@@ -124,7 +128,7 @@ async def home_page(ctx, emoji, help_settings):
     if pages:
 
         async def action(menu, payload):
-            await menu.change_source(ListPages(pages))
+            await menu.change_source(ListPages(pages), payload)
             if len(pages) == 1 and ARROWS["left"] in map(str, menu._buttons.keys()):
                 menu.add_button(empty_button(ARROWS["left"]))
                 menu.add_button(empty_button(ARROWS["right"]))
@@ -137,7 +141,7 @@ async def home_page(ctx, emoji, help_settings):
 def first_page(emoji):
     async def go_to_first_page(self, payload):
         """go to the first page"""
-        await self.show_page(0)
+        await self.show_page(0, payload)
 
     return menus.Button(
         emoji, go_to_first_page, position=menus.First(), skip_if=_skip_double_triangle_buttons
@@ -147,7 +151,7 @@ def first_page(emoji):
 def last_page(emoji):
     async def go_to_last_page(self, payload):
         """go to the last page"""
-        await self.show_page(self._source.get_max_pages() - 1)
+        await self.show_page(self._source.get_max_pages() - 1, payload)
 
     return menus.Button(emoji, go_to_last_page, skip_if=_skip_double_triangle_buttons)
 
@@ -155,7 +159,7 @@ def last_page(emoji):
 def prev_page(emoji):
     async def go_to_previous_page(self, payload):
         """go to the previous page"""
-        await self.show_checked_page(self.current_page - 1)
+        await self.show_checked_page(self.current_page - 1, payload)
 
     return menus.Button(emoji, go_to_previous_page, skip_if=_skip_single_arrows)
 
@@ -163,7 +167,7 @@ def prev_page(emoji):
 def next_page(emoji):
     async def go_to_next_page(self, payload):
         """go to the next page"""
-        await self.show_checked_page(self.current_page + 1)
+        await self.show_checked_page(self.current_page + 1, payload)
 
     return menus.Button(emoji, go_to_next_page, skip_if=_skip_single_arrows)
 

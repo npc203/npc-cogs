@@ -37,7 +37,7 @@ Config Structure:
       "categories":
       [
             {
-                "name" : name 
+                "name" : name
                 "desc" : desc
                 "long_desc":longer description
                 "cogs" : []
@@ -84,6 +84,7 @@ class CustomHelp(commands.Cog):
                 "thumbnail": None,
                 "timeout": 120,
                 "replies": True,
+                "buttons": False,
                 "arrows": {
                     "right": "\N{BLACK RIGHTWARDS ARROW}\N{VARIATION SELECTOR-16}",
                     "left": "\N{LEFTWARDS BLACK ARROW}\N{VARIATION SELECTOR-16}",
@@ -154,7 +155,7 @@ class CustomHelp(commands.Cog):
         await self.refresh_arrows()
 
         settings = await self.config.settings()
-        set_menu(settings["replies"])
+        set_menu(replies=settings["replies"], buttons=settings.get("buttons", False))
         if not settings["set_formatter"]:
             return
         main_theme = BaguetteHelp(self.bot, self.config)
@@ -245,6 +246,7 @@ class CustomHelp(commands.Cog):
             "thumbnail": "thumbnail",
             "timeout": "Timeout(secs)",
             "replies": "Use replies",
+            "buttons": "Use buttons",
         }
         other_settings = []
         # url doesnt exist now, that's why the check. sorry guys.
@@ -780,10 +782,18 @@ class CustomHelp(commands.Cog):
     @settings.command(aliases=["usereplies", "reply"])
     async def usereply(self, ctx, option: bool):
         """Enable/Disable help menus to use replies"""
-        res = set_menu(option)
-        if res[1]:
+        response, success = set_menu(replies=option, buttons=None)
+        if success:
             await self.config.settings.replies.set(option)
-        await ctx.send(res[0])
+        await ctx.send(response)
+
+    @settings.command(aliases=["buttons"])
+    async def usebuttons(self, ctx, option: bool):
+        """Enable/disable button menus."""
+        response, success = set_menu(replies=None, buttons=option)
+        if success:
+            await self.config.settings.buttons.set(option)
+        await ctx.send(response)
 
     @settings.command()
     async def timeout(self, ctx, wait: int):
