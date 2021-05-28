@@ -23,9 +23,7 @@ def shorten_line(a_line: str) -> str:
 
 class RepoUrl(commands.Converter):
     async def convert(self, ctx, argument):
-        if argument.startswith("http"):
-            pass
-        else:
+        if not argument.startswith("http"):
             return argument
         raise discord.ext.commands.BadArgument()
 
@@ -186,18 +184,22 @@ class GhTools(commands.Cog):
             "created_at": "Created On",
             "updated_at": "Last Updated",
         }
-        for x in a:
+        for x, value in a.items():
             if r[x]:
-                emb.add_field(name=a[x], value=r[x], inline=True)
+                emb.add_field(name=value, value=r[x], inline=True)
         await ctx.send(embed=emb)
 
 
 class EmbPages(menus.GroupByPageSource):
     async def format_page(self, menu, entry):
         emb = discord.Embed(title=entry.key + " Commits", color=await menu.ctx.embed_color())
-        desc = ""
-        for thing in entry.items:
-            desc += thing.name + "\n" + (box(thing.value.strip()) + "\n" if thing.value else "")
+        desc = "".join(
+            thing.name
+            + "\n"
+            + (box(thing.value.strip()) + "\n" if thing.value else "")
+            for thing in entry.items
+        )
+
         emb.description = desc
         emb.set_footer(text=f"Page {menu.current_page + 1}/{self.get_max_pages()}")
         return emb

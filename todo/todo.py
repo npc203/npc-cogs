@@ -126,10 +126,7 @@ class Todo(commands.Cog):
                         )
             else:
                 for i, x in enumerate(todos):
-                    if isinstance(x, list):
-                        todo_text += f"{i}. {x[1]}\n"
-                    else:
-                        todo_text += f"{i}. {x}\n"
+                    todo_text += f"{i}. {x[1]}\n" if isinstance(x, list) else f"{i}. {x}\n"
                 pagified = tuple(pagify(todo_text))
                 # not embeds and menus
                 if await self.config.menus():
