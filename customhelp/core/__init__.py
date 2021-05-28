@@ -42,11 +42,11 @@ def set_menu(*, replies: bool, buttons: bool, validate_buttons: bool = False):
             use_buttons = False
             return "Disabled buttons for help menus.", True
 
-    if buttons is False and replies is False:
+    if not buttons and not replies:
         use_replies = False
         use_buttons = False
         return "Reset the help menu to vanilla.", True
-    elif buttons is True and replies is True:
+    elif buttons and replies:
         return "Enabled replies and buttons for help menus.", True
 
     raise RuntimeError(f"unreachable code reached: replies={replies}, buttons={buttons}")
