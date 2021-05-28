@@ -7,8 +7,8 @@ from redbot.vendored.discord.ext import menus
 
 # None of the below classes are done by me, it's mostly copy paste/ edited from a piece of code
 # from trusty which got circulated around to me from !nowo. All credits go to him.
+# Annd phen did some epico button magic.
 # Not using an AsyncIterator cause even the core help loads all the commands at once.
-# TODO remove redundant code
 
 
 class ListPages(menus.ListPageSource):
@@ -79,6 +79,7 @@ class BaseMenu(menus.MenuPages, inherit_buttons=False):
         return payload.emoji in self.buttons
 
 
+<<<<<<< HEAD
 NoReplyMenus = BaseMenu
 
 
@@ -103,6 +104,29 @@ class ReplyMenus(BaseMenu, inherit_buttons=False):
             kwargs["embed"] = value
         return kwargs
 
+=======
+class ReplyMenus(BaseMenu, inherit_buttons=False):
+    async def send_initial_message(self, ctx, channel):
+        page = await self._source.get_page(0)
+        kwargs = await self._get_kwargs_from_page(page)
+        kwargs["reference"] = ctx.message.to_reference(
+            fail_if_not_exists=False
+        )  # sends message silently when message is deleted
+        return await ctx.send(**kwargs)
+
+    async def _get_kwargs_from_page(self, page):
+        # Do this if you dont want to ping the user
+        kwargs = {"allowed_mentions": discord.AllowedMentions(replied_user=False)}
+        value = await discord.utils.maybe_coroutine(self._source.format_page, self, page)
+        if isinstance(value, dict):
+            kwargs.update(value)
+        elif isinstance(value, str):
+            kwargs["content"] = value
+        elif isinstance(value, discord.Embed):
+            kwargs["embed"] = value
+        return kwargs
+
+>>>>>>> buttons-help
 
 def get_button_menu(use_replies: bool):
     try:
@@ -123,3 +147,9 @@ def get_button_menu(use_replies: bool):
             await cls.change_source(self, source, button)
 
     return HelpButtonMenu
+<<<<<<< HEAD
+=======
+
+
+NoReplyMenus = BaseMenu
+>>>>>>> buttons-help
