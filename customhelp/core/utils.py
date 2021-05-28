@@ -137,7 +137,7 @@ async def home_page(ctx, emoji, help_settings):
 def first_page(emoji):
     async def go_to_first_page(self, payload):
         """go to the first page"""
-        await self.show_page(0)
+        await self.show_page(0, payload)
 
     return menus.Button(
         emoji, go_to_first_page, position=menus.First(), skip_if=_skip_double_triangle_buttons
@@ -147,7 +147,7 @@ def first_page(emoji):
 def last_page(emoji):
     async def go_to_last_page(self, payload):
         """go to the last page"""
-        await self.show_page(self._source.get_max_pages() - 1)
+        await self.show_page(self._source.get_max_pages() - 1, payload)
 
     return menus.Button(emoji, go_to_last_page, skip_if=_skip_double_triangle_buttons)
 
@@ -155,7 +155,7 @@ def last_page(emoji):
 def prev_page(emoji):
     async def go_to_previous_page(self, payload):
         """go to the previous page"""
-        await self.show_checked_page(self.current_page - 1)
+        await self.show_checked_page(self.current_page - 1, payload)
 
     return menus.Button(emoji, go_to_previous_page, skip_if=_skip_single_arrows)
 
@@ -163,7 +163,7 @@ def prev_page(emoji):
 def next_page(emoji):
     async def go_to_next_page(self, payload):
         """go to the next page"""
-        await self.show_checked_page(self.current_page + 1)
+        await self.show_checked_page(self.current_page + 1, payload)
 
     return menus.Button(emoji, go_to_next_page, skip_if=_skip_single_arrows)
 

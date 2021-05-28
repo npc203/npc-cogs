@@ -84,6 +84,7 @@ class CustomHelp(commands.Cog):
                 "thumbnail": None,
                 "timeout": 120,
                 "replies": True,
+                "buttons": False,
                 "arrows": {
                     "right": "\N{BLACK RIGHTWARDS ARROW}\N{VARIATION SELECTOR-16}",
                     "left": "\N{LEFTWARDS BLACK ARROW}\N{VARIATION SELECTOR-16}",
@@ -154,7 +155,7 @@ class CustomHelp(commands.Cog):
         await self.refresh_arrows()
 
         settings = await self.config.settings()
-        set_menu(settings["replies"])
+        set_menu(replies=settings["replies"], buttons=settings.get("buttons", False))
         if not settings["set_formatter"]:
             return
         main_theme = BaguetteHelp(self.bot, self.config)
@@ -780,10 +781,20 @@ class CustomHelp(commands.Cog):
     @settings.command(aliases=["usereplies", "reply"])
     async def usereply(self, ctx, option: bool):
         """Enable/Disable help menus to use replies"""
-        res = set_menu(option)
-        if res[1]:
+        response, setting = set_menu(replies=option, buttons=False)
+        if setting:
             await self.config.settings.replies.set(option)
-        await ctx.send(res[0])
+            await self.config.settings.buttons.set(not option)
+        await ctx.send(response)
+
+    @settings.command(aliases=["buttons"])
+    async def usebuttons(self, ctx, option: bool):
+        """Enable/disable button menus."""
+        response, setting = set_menu(replies=False, buttons=option)
+        if setting:
+            await self.config.settings.buttons.set(option)
+            await self.config.settings.replies.set(not option)
+        await ctx.send(response)
 
     @settings.command()
     async def timeout(self, ctx, wait: int):
