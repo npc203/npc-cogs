@@ -37,7 +37,7 @@ Config Structure:
       "categories":
       [
             {
-                "name" : name 
+                "name" : name
                 "desc" : desc
                 "long_desc":longer description
                 "cogs" : []
@@ -246,6 +246,7 @@ class CustomHelp(commands.Cog):
             "thumbnail": "thumbnail",
             "timeout": "Timeout(secs)",
             "replies": "Use replies",
+            "buttons": "Use buttons",
         }
         other_settings = []
         # url doesnt exist now, that's why the check. sorry guys.
@@ -781,19 +782,17 @@ class CustomHelp(commands.Cog):
     @settings.command(aliases=["usereplies", "reply"])
     async def usereply(self, ctx, option: bool):
         """Enable/Disable help menus to use replies"""
-        response, setting = set_menu(replies=option, buttons=False)
-        if setting:
+        response, success = set_menu(replies=option, buttons=None)
+        if success:
             await self.config.settings.replies.set(option)
-            await self.config.settings.buttons.set(not option)
         await ctx.send(response)
 
     @settings.command(aliases=["buttons"])
     async def usebuttons(self, ctx, option: bool):
         """Enable/disable button menus."""
-        response, setting = set_menu(replies=False, buttons=option)
-        if setting:
+        response, success = set_menu(replies=None, buttons=option)
+        if success:
             await self.config.settings.buttons.set(option)
-            await self.config.settings.replies.set(not option)
         await ctx.send(response)
 
     @settings.command()

@@ -6,38 +6,62 @@ from .dpy_menus import NoReplyMenus, ReplyMenus, get_button_menu
 GLOBAL_CATEGORIES = []
 ARROWS = {}
 
-__BaseMenu = ReplyMenus
 use_buttons = False
+use_replies = True
 
 
 def set_menu(*, replies: bool, buttons: bool, validate_buttons: bool = False):
-    global __BaseMenu
-    if replies:
-        if dpy_version <= "1.5.0":
-            return "You need to have discord.py version 1.6.0 or greater to use replies.", False
-        __BaseMenu = ReplyMenus
-        return "Enabled replies for help menus.", True
-    elif buttons:
-        if validate_buttons:
-            try:
-                __BaseMenu = get_button_menu()
-            except RuntimeError as error:
-                return str(error), 0
-        global use_buttons
-        use_buttons = True
-        return "Enabled buttons for help menus.", True
-    else:
-        __BaseMenu = NoReplyMenus
+    global use_replies
+    global use_buttons
+
+    if replies is not None:
+        if replies:
+            if dpy_version <= "1.5.0":
+                return (
+                    "You need to have discord.py version 1.6.0 or greater to use replies.",
+                    False,
+                )
+            use_replies = True
+            if buttons is None:
+                return "Enabled replies for help menus.", True
+        else:
+            use_replies = False
+            if buttons is None:
+                return "Disabled replies for help menus.", True
+
+    if buttons is not None:
+        if buttons:
+            if validate_buttons:
+                try:
+                    get_button_menu(use_replies)
+                except RuntimeError as error:
+                    return str(error), 0
+            use_buttons = True
+            return "Enabled buttons for help menus.", True
+        else:
+            use_buttons = False
+            return "Disabled buttons for help menus.", True
+
+    if buttons is False and replies is False:
+        use_replies = False
+        use_buttons = False
         return "Reset the help menu to vanilla.", True
+    elif buttons is True and replies is True:
+        return "Enabled replies and buttons for help menus.", True
+
+    raise RuntimeError(f"unreachable code reached: replies={replies}, buttons={buttons}")
 
 
 # wew thanks jack
 def get_menu():
-    global __BaseMenu
     global use_buttons
+    global use_replies
     if use_buttons:
         try:
-            __BaseMenu = get_button_menu()
+            return get_button_menu(use_replies)
         except RuntimeError:
-            __BaseMenu = ReplyMenus
-    return __BaseMenu
+            pass
+    if use_replies:
+        return ReplyMenus
+    else:
+        return NoReplyMenus

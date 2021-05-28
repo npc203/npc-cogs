@@ -45,7 +45,7 @@ class BaseMenu(menus.MenuPages, inherit_buttons=False):
         # self.cog = cog
         self.page_start = page_start
 
-    async def show_page(self, page_number, payload):
+    async def show_page(self, page_number, payload=None):
         # added unused payload arg since ButtonMenu requires the button to be passed
         # when showing a page with InteractionButton.update
         await super().show_page(page_number)
@@ -56,7 +56,7 @@ class BaseMenu(menus.MenuPages, inherit_buttons=False):
     def add_button(self, button, *, react=False, interaction=None):
         return super().add_button(button, react=react)
 
-    async def show_checked_page(self, page_number: int, payload) -> None:
+    async def show_checked_page(self, page_number: int, payload=None):
         max_pages = self._source.get_max_pages()
         try:
             if max_pages is None or page_number < max_pages and page_number >= 0:
@@ -104,13 +104,16 @@ class ReplyMenus(BaseMenu, inherit_buttons=False):
         return kwargs
 
 
-def get_button_menu():
+def get_button_menu(use_replies: bool):
     try:
         from slashtags import BaseButtonMenu
     except ImportError as exc:
         raise RuntimeError("Button menus require the `slashtags` cog to be loaded.") from exc
 
     class HelpButtonMenu(BaseButtonMenu, BaseMenu, inherit_buttons=False):
+        async def send_initial_message(self, ctx, channel: discord.TextChannel):
+            return await super().send_initial_message(ctx, channel, reply=use_replies)
+
         async def show_page(self, page_number, button):
             cls = BaseButtonMenu if button else BaseMenu
             await cls.show_page(self, page_number, button)
