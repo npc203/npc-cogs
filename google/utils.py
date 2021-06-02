@@ -61,7 +61,7 @@ def get_query(ctx, url):
     return query
 
 
-def get_card(soup, final):
+def get_card(soup, final, kwargs):
     """Getting cards if present, here started the pain"""
     # common card
     if card := soup.find("div", class_="g mnr-c g-blk"):

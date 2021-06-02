@@ -416,7 +416,7 @@ class Google(Yandex, commands.Cog):
         kwargs = {"stats": h2t(str(soup.find("div", id="result-stats")))}
 
         if cards:
-            get_card(soup, final)
+            get_card(soup, final, kwargs)
 
         for res in soup.findAll("div", class_="g"):
             if name := res.find("div", class_="yuRUbf"):

@@ -13,7 +13,7 @@ import json
 class Yandex:
     @commands.group()
     async def yandex(self, ctx):
-        pass
+        """Yandex related search commands"""
 
     @yandex.command(aliases=["rev"])
     async def yandex_reverse(self, ctx, *, url: str = None):
