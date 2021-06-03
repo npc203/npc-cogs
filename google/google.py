@@ -14,6 +14,7 @@ from html2text import html2text as h2t
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import humanize_number
+from redbot.vendored.discord.ext import menus
 from .utils import get_card, get_query, nsfwcheck, s, Source, ResultMenu
 from .yandex import Yandex
 
@@ -64,6 +65,7 @@ class Google(Yandex, commands.Cog):
                             query[:44] + "\N{HORIZONTAL ELLIPSIS}" if len(query) > 45 else query
                         ),
                         color=await ctx.embed_color(),
+                        url=kwargs["redir"],
                     )
                     for result in group:
                         desc = (
@@ -287,21 +289,24 @@ class Google(Yandex, commands.Cog):
         else:
             isnsfw = nsfwcheck(ctx)
             async with ctx.typing():
-                response = await self.get_result(query, images=True, nsfw=isnsfw)
-                size = len(tuple(response))
-                pages = [
-                    discord.Embed(
-                        title=f"Pages: {i}/{size}",
-                        color=await ctx.embed_color(),
-                        description="Some images might not be visible.",
-                    )
-                    .set_image(url=j)
-                    .set_footer(text=f"Safe Search: {not isnsfw}")
-                    for i, j in enumerate(response, 1)
-                ]
+                response, kwargs = await self.get_result(query, images=True, nsfw=isnsfw)
+                size = len(response)
 
-            if pages:
-                await ResultMenu(source=Source(pages, per_page=1)).start(ctx)
+                class ImgSource(menus.ListPageSource):
+                    async def format_page(self, menu, entry):
+                        return (
+                            discord.Embed(
+                                title=f"Pages: {menu.current_page+1}/{size}",
+                                color=await ctx.embed_color(),
+                                description="Some images might not be visible.",
+                                url=kwargs["redir"],
+                            )
+                            .set_image(url=entry)
+                            .set_footer(text=f"Safe Search: {not isnsfw}")
+                        )
+
+            if size > 0:
+                await ResultMenu(source=ImgSource(response, per_page=1)).start(ctx)
             else:
                 await ctx.send("No result")
 
@@ -384,20 +389,23 @@ class Google(Yandex, commands.Cog):
         async def get_html(url, encoded):
             async with self.session.get(url + encoded, headers=self.options) as resp:
                 self.cookies = resp.cookies
-                return await resp.text()
+                return await resp.text(), resp.url
 
         if not nsfw:
             encoded += "&safe=active"
-        if not images:
-            url = "https://www.google.com/search?q="
-            text = await get_html(url, encoded)
-            prep = functools.partial(self.parser_text, text)
-        else:
-            # TYSM fixator, for the non-js query url
-            url = "https://www.google.com/search?tbm=isch&q="
-            text = await get_html(url, encoded)
-            prep = functools.partial(self.parser_image, text)
-        return await self.bot.loop.run_in_executor(None, prep)
+
+        # TYSM fixator, for the non-js query url
+        url = (
+            "https://www.google.com/search?tbm=isch&q="
+            if images
+            else "https://www.google.com/search?q="
+        )
+        text, redir = await get_html(url, encoded)
+        prep = functools.partial(self.parser_image if images else self.parser_text, text)
+
+        fin, kwargs = await self.bot.loop.run_in_executor(None, prep)
+        kwargs["redir"] = redir
+        return fin, kwargs
 
     def reverse_search(self, text):
         soup = BeautifulSoup(text, features="html.parser")
@@ -440,4 +448,4 @@ class Google(Yandex, commands.Cog):
 
     def parser_image(self, html):
         # first 2 are google static logo images
-        return self.link_regex.findall(html)[2:]
+        return self.link_regex.findall(html)[2:], {}
