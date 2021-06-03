@@ -69,10 +69,9 @@ class GhTools(commands.Cog):
             installed, cog_installable = await self._downloader.is_installed(package)
             if installed and cog_installable.repo_name != "MISSING_REPO":
                 full_path = str(self._path / cog_installable.repo_name)
-                gr = pd.GitRepository(full_path)
-                hashes = gr.get_commits_modified_file(package)
+                hashes = pd.git.Git(full_path).get_commits_modified_file(package)
                 commits = itertools.islice(
-                    pd.RepositoryMining(
+                    pd.Repository(
                         full_path,
                         only_commits=hashes,
                         only_in_branch=cog_installable.repo.branch,
@@ -88,7 +87,7 @@ class GhTools(commands.Cog):
                 )
         else:
             commits = itertools.islice(
-                pd.RepositoryMining(
+                pd.Repository(
                     str(repo.folder_path),
                     only_in_branch=repo.branch,
                     order="reverse",
@@ -194,9 +193,7 @@ class EmbPages(menus.GroupByPageSource):
     async def format_page(self, menu, entry):
         emb = discord.Embed(title=entry.key + " Commits", color=await menu.ctx.embed_color())
         desc = "".join(
-            thing.name
-            + "\n"
-            + (box(thing.value.strip()) + "\n" if thing.value else "")
+            thing.name + "\n" + (box(thing.value.strip()) + "\n" if thing.value else "")
             for thing in entry.items
         )
 
