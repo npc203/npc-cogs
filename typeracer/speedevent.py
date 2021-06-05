@@ -18,7 +18,7 @@ class Speedevent:
         self.leaderboard = []
 
     async def start(self):
-        a_string, status_code = await get_text(self.settings, self.ctx.guild.id)
+        a_string, status_code = await get_text(self.settings)
         if not status_code:
             await self.ctx.send("Something went wrong while getting the text")
             return

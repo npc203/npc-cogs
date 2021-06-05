@@ -42,6 +42,7 @@ class TypeRacer(commands.Cog):
     @commands.is_owner()
     @typer.command()
     async def show(self, ctx):
+        """Show the details of ongoing typer events globally"""
         emb = Embed(title="Ongoing Type racer stats", color=await ctx.embed_color())
         if self.jobs["guilds"]:
             emb.add_field(name="Speedevents", value=len(self.jobs["guilds"]))

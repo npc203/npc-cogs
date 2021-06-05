@@ -1,10 +1,23 @@
 from difflib import ndiff
-from html.parser import HTMLParser
-from random import randint
+from random import randint, sample
 
 from aiohttp import ClientSession
 from fuzzywuzzy import fuzz
 from tabulate import tabulate
+from redbot.core import data_manager
+from pathlib import Path
+
+# can't use bundled_data_path cause outside class
+path = Path(__file__).absolute().parent / "data"
+data = {}
+
+# https://www.mit.edu/~ecprice/wordlist.10000
+with open(path / "filtered.txt", "r", encoding="utf8") as f:
+    data["gibberish"] = f.read().split()
+
+# https://raw.githubusercontent.com/ccpalettes/sublime-lorem-text/master/wordlist/word_list_fixed.txt
+with open(path / "lorem.txt", "r", encoding="utf8") as f:
+    data["lorem"] = f.read().split()
 
 
 async def evaluate(ctx, a_string: str, b_string: str, time_taken, dm_id, author_name=None):
@@ -52,31 +65,11 @@ async def evaluate(ctx, a_string: str, b_string: str, time_taken, dm_id, author_
         )
 
 
-async def get_text(settings, guild_id: int) -> tuple:
+async def get_text(settings) -> tuple:
     """Gets the paragraph for the test"""
-    # TODO add customisable length of text and difficuilty
-    url = "http://www.randomtext.me/api/"
-    url += f'{settings["type"]}/p-1/{settings["text_size"][0]}-{settings["text_size"][1]}'
-    async with ClientSession() as session:
-        async with session.get(url) as f:
-            if f.status == 200:
-                resp = await f.json()
-            else:
-                return ("Something went wrong while getting the text", 0)
-    cleanup = HTMLFilter()
-    cleanup.feed(resp["text_out"])
-    a_string = cleanup.text.strip()
+    length = randint(settings["text_size"][0], settings["text_size"][1])
+    a_string = " ".join(sample(data[settings["type"]], length)) + "."
     return (a_string, 1)
-
-
-class HTMLFilter(HTMLParser):
-    """For HTML to text properly without any dependencies.
-    Credits: https://gist.github.com/ye/050e898fbacdede5a6155da5b3db078d"""
-
-    text = ""
-
-    def handle_data(self, data):
-        self.text += data
 
 
 def nocheats(text: str) -> str:

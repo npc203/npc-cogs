@@ -14,7 +14,7 @@ class Single:
     async def start(self):
         """Start the test, Display the question and get result"""
         async with self.ctx.typing():
-            a_string, status_code = await get_text(self.settings, self.ctx.guild.id)
+            a_string, status_code = await get_text(self.settings)
         if status_code:
             self.task = asyncio.create_task(self.task_personal_race(self.ctx, a_string))
         else:
