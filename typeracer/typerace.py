@@ -74,9 +74,22 @@ class TypeRacer(commands.Cog):
     async def speedevent(self, ctx):
         """Play a speed test event with multiple players"""
 
+    @commands.mod_or_permissions(manage_messages=True)
     @speedevent.command(name="start")
-    async def start_event(self, ctx, countdown: int = None):
-        """Start a typing speed test event \n Takes an optional countdown argument to start the test\n(Be warned that cheating gets you disqualified)\nThis lasts for 3 minutes at max, and stops if everyone completed"""
+    async def start_event(self, ctx, countdown: int = None, *, args=""):
+        """Start a typing speed test event
+        Use `--all` for everyone to be added to the contest
+
+        Takes an optional countdown argument to start the test
+        (Be warned that cheating gets you disqualified)
+
+        This lasts for 3 minutes at max, and stops if everyone completed
+
+        Examples:
+        `[p]speedevent start`
+        `[p]speedevent start 20`
+        `[p]speedevent start 30 --all`
+        """
         if ctx.guild.id in self.jobs["guilds"]:
             await ctx.send("There's already a speedtest event running in this guild")
         elif countdown and countdown > 300:
@@ -86,10 +99,19 @@ class TypeRacer(commands.Cog):
                 ctx,
                 countdown or await self.config.guild(ctx.guild).time_start(),
                 await self.config.guild(ctx.guild).all(),
+                all=True if "--all" in args else False,
             )
             self.jobs["guilds"][ctx.guild.id] = test
             await test.start()
             self.jobs["guilds"].pop(ctx.guild.id)
+
+    @commands.mod_or_permissions(manage_messages=True)
+    @speedevent.command(name="stop")
+    async def stop_event(self, ctx):
+        if ctx.guild.id in self.jobs["guilds"]:
+            await self.jobs["guilds"][ctx.guild.id].stop(str(ctx.author))
+        else:
+            await ctx.send("No speedevents found.")
 
     @speedevent.command()
     async def join(self, ctx):
@@ -134,7 +156,7 @@ class TypeRacer(commands.Cog):
     @typerset.command(name="type")
     async def type_of_text(self, ctx, type_txt: str):
         """Set the type of text to generate.
-        Types available: lorem,gibberish"""
+        Types available: lorem, gibberish"""
         check = ("lorem", "gibberish")
         if type_txt in check:
             await self.config.guild_from_id(ctx.guild.id).type.set(type_txt)

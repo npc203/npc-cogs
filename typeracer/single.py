@@ -41,7 +41,7 @@ class Single:
             )
         await asyncio.sleep(1)
         await msg.edit(content="```" + nocheats(a_string) + "```")
-        start = time.time()
+        start = time.perf_counter()
         try:
             b_string = (
                 await ctx.bot.wait_for(
@@ -51,9 +51,9 @@ class Single:
                     and m.channel.id == ctx.channel.id,
                 )
             ).content.strip()
+            end = time.perf_counter()
         except asyncio.TimeoutError:
             await msg.edit(content="Sorry you were way too slow, timed out")
             raise asyncio.CancelledError
-        end = time.time()
         time_taken = end - start
         return time_taken, b_string
