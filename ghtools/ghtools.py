@@ -1,8 +1,6 @@
 import datetime
 import itertools
-import os
 from types import SimpleNamespace as sp
-from typing import Union
 
 import aiohttp
 import discord
@@ -171,7 +169,7 @@ class GhTools(commands.Cog):
         a = {
             "id": "UserID",
             "name": "Display Name",
-            "public_repos": "Public repos",
+            "public_repos": "Public Repos",
             "public_gists": "Public gists",
             "twitter_username": "Twitter",
             "location": "Location",
@@ -179,7 +177,6 @@ class GhTools(commands.Cog):
             "email": "Email",
             "followers": "Followers",
             "following": "Following",
-            "public_repos": "Public Repos",
             "created_at": "Created On",
             "updated_at": "Last Updated",
         }

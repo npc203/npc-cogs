@@ -61,12 +61,12 @@ class Speedevent:
 
     async def join(self, user_id, nick):
         if self.event_started:
-            return await self.ctx.send(f"Sorry event already started and ongoing")
+            return await self.ctx.send("Sorry event already started and ongoing")
 
         if self.all:
-            notify = await self.ctx.send(f"This event is open for all, You don't need to join in")
+            notify = await self.ctx.send("This event is open for all, You don't need to join in")
         elif user_id in self.joined:
-            notify = await self.ctx.send(f"You already joined in")
+            notify = await self.ctx.send("You already joined in")
         else:
             self.joined[user_id] = nick
             notify = await self.ctx.send(f"{nick} has joined in")

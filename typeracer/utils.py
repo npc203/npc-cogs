@@ -1,11 +1,9 @@
 from difflib import ndiff
+from pathlib import Path
 from random import randint, sample
 
-from aiohttp import ClientSession
 from fuzzywuzzy import fuzz
 from tabulate import tabulate
-from redbot.core import data_manager
-from pathlib import Path
 
 # can't use bundled_data_path cause outside class
 path = Path(__file__).absolute().parent / "data"

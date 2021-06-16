@@ -2,15 +2,8 @@ from redbot.core.utils.chat_formatting import box
 from tabulate import tabulate
 
 from ..abc import ThemesMeta
-from ..core.base_help import (
-    EMPTY_STRING,
-    CategoryConvert,
-    Context,
-    EmbedField,
-    HelpSettings,
-    commands,
-    pagify,
-)
+from ..core.base_help import (EMPTY_STRING, CategoryConvert, Context,
+                              EmbedField, HelpSettings, commands, pagify)
 
 grouper = lambda a, n: [a[k : k + n] for k in range(0, len(a), n)]
 

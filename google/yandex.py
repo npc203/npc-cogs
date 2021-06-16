@@ -1,13 +1,12 @@
-from .utils import get_query, nsfwcheck, Source, ResultMenu
-from bs4 import BeautifulSoup
-from html2text import html2text as h2t
-from redbot.core import commands
-
-import aiohttp
-import discord
-import urllib
 import functools
 import json
+import urllib
+
+import discord
+from bs4 import BeautifulSoup
+from redbot.core import commands
+
+from .utils import get_query
 
 
 class Yandex:
@@ -18,7 +17,7 @@ class Yandex:
     @yandex.command(aliases=["rev"])
     async def yandex_reverse(self, ctx, *, url: str = None):
         """Attach or paste the url of an image to reverse search, or reply to a message which has the image/embed with the image"""
-        isnsfw = nsfwcheck(ctx)
+
         if query := get_query(ctx, url):
             pass
         else:
@@ -51,7 +50,7 @@ class Yandex:
                         map(lambda x: f"[{x['text']}]({'https://yandex.com'+x['url']})", result)
                     ),
                 )
-                emb.set_footer(text=f"Powered by yandex")
+                emb.set_footer(text="Powered by yandex")
                 emb.set_thumbnail(url=query)
                 await ctx.send(embed=emb)
             else:

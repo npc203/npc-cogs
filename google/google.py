@@ -3,7 +3,6 @@ import datetime
 import functools
 import json
 import re
-
 import urllib
 from io import BytesIO
 
@@ -15,7 +14,8 @@ from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import humanize_number
 from redbot.vendored.discord.ext import menus
-from .utils import get_card, get_query, nsfwcheck, s, Source, ResultMenu
+
+from .utils import ResultMenu, Source, get_card, get_query, nsfwcheck, s
 from .yandex import Yandex
 
 # TODO Add optional way to use from google search api

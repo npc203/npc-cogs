@@ -22,7 +22,7 @@ class MinimalHelp(ThemesMeta):
         for cat in filtered_categories:
             if cat.cogs:
                 coms = await self.get_category_help_mapping(ctx, cat, help_settings=help_settings)
-                all_cog_text = [" · ".join(f"{name}" for name in data) for _, data in coms]
+                all_cog_text = [" · ".join(f"{name}" for name in data) for cogname, data in coms]
                 all_cog_text = " · ".join(all_cog_text)
                 full_text += f"\n\n__**{cat.name}**__: {all_cog_text}"
         text_no = list(pagify(full_text))
@@ -56,7 +56,7 @@ class MinimalHelp(ThemesMeta):
 
         spacer_list = chain(*(i[1].keys() for i in coms))
         spacing = len(max(spacer_list, key=len))
-        for _, data in coms:
+        for cogname, data in coms:
             full_text += "\n".join(
                 f"`{name:<{spacing}}`:{command.format_shortdoc_for_context(ctx)}"
                 for name, command in data.items()

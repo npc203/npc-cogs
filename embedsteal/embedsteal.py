@@ -21,7 +21,7 @@ class EmbedSteal(commands.Cog):
 
     @commands.command(aliases=["ge", "stealembed"])
     async def getembed(self, ctx, printit: bool = False):
-        if hasattr(ctx.message, "reference") and ctx.message.reference != None:
+        if hasattr(ctx.message, "reference") and ctx.message.reference is not None:
             msg = ctx.message.reference.resolved
             if isinstance(msg, discord.Message):
                 if hasattr(msg, "embeds"):
@@ -45,7 +45,7 @@ class EmbedSteal(commands.Cog):
     @commands.command()
     @commands.is_owner()
     async def e(self, ctx):
-        if hasattr(ctx.message, "reference") and ctx.message.reference != None:
+        if hasattr(ctx.message, "reference") and ctx.message.reference is not None:
             msg = ctx.message.reference.resolved
             if isinstance(msg, discord.Message):
                 check = msg.content

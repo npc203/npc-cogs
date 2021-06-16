@@ -1,10 +1,11 @@
-from html2text import html2text as h2t
-from collections import namedtuple
-import discord
+import re
 import textwrap
+from collections import namedtuple
+
+import discord
+from html2text import html2text as h2t
 from redbot.core.utils.chat_formatting import pagify
 from redbot.vendored.discord.ext import menus
-import re
 
 nsfwcheck = lambda ctx: (not ctx.guild) or ctx.channel.is_nsfw()
 
@@ -13,7 +14,7 @@ s = namedtuple("searchres", "url title desc")
 
 def reply(ctx):
     # Helper reply grabber
-    if hasattr(ctx.message, "reference") and ctx.message.reference != None:
+    if hasattr(ctx.message, "reference") and ctx.message.reference is not None:
         msg = ctx.message.reference.resolved
         if isinstance(msg, discord.Message):
             return msg

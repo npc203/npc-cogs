@@ -1,6 +1,3 @@
-import asyncio
-
-import discord
 from redbot.vendored.discord.ext import menus
 
 from .game import Game
