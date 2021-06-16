@@ -486,7 +486,7 @@ class CustomHelp(commands.Cog):
                         conf_cat[ind][name] = value
 
         for page in pagify(
-            f"Successfully added the edits"
+            "Successfully added the edits"
             if not failed
             else "The following things failed:\n"
             + "\n".join(
@@ -702,7 +702,7 @@ class CustomHelp(commands.Cog):
         to_config = []  # [(index_of_category,cog_name),()] (maybe use namedtuples here?)
         uncat = []
         invalid = []
-        # wait ctx.send("You can't remove cogs from uncategorised category")
+
         def get_category_util(name):
             for ind in range(len(GLOBAL_CATEGORIES)):
                 if name in GLOBAL_CATEGORIES[ind].cogs:
@@ -994,7 +994,7 @@ class CustomHelp(commands.Cog):
             if thing != GLOBAL_CATEGORIES[-1]:
                 try:
                     to_config.append(GLOBAL_CATEGORIES.index(thing))
-                except:
+                except ValueError:
                     failed.append(thing)
             else:
                 failed.append(thing)

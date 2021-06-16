@@ -6,16 +6,32 @@ from typing import List, Union, cast
 import discord
 from redbot.core import commands
 from redbot.core.commands.context import Context
-from redbot.core.commands.help import (HelpSettings, NoCommand, NoSubCommand,
-                                       _, dpy_commands, mass_purge)
+from redbot.core.commands.help import (
+    HelpSettings,
+    NoCommand,
+    NoSubCommand,
+    _,
+    dpy_commands,
+    mass_purge,
+)
 from redbot.core.utils.chat_formatting import pagify
 
 from . import ARROWS, GLOBAL_CATEGORIES, get_menu
 from .category import Category, CategoryConvert, get_category
 from .dpy_menus import ListPages
-from .utils import (close_menu, first_page, get_aliases, get_cooldowns,
-                    get_perms, home_page, last_page, next_page, prev_page,
-                    react_page, shorten_line)
+from .utils import (
+    close_menu,
+    first_page,
+    get_aliases,
+    get_cooldowns,
+    get_perms,
+    home_page,
+    last_page,
+    next_page,
+    prev_page,
+    react_page,
+    shorten_line,
+)
 
 HelpTarget = Union[
     commands.Command,
@@ -511,7 +527,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
             # This condition is made using a simple kmap.
             if (
                 (ctx.channel.is_nsfw() if hasattr(ctx.channel, "is_nsfw") else True)
-                or not name in blocklist["nsfw"]
-            ) and (is_owner or not name in blocklist["dev"]):
+                or name not in blocklist["nsfw"]
+            ) and (is_owner or name not in blocklist["dev"]):
                 final.append(name)
         return final

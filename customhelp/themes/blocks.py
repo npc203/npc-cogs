@@ -3,9 +3,14 @@ from tabulate import tabulate
 
 from ..abc import ThemesMeta
 from ..core.base_help import (
-    EMPTY_STRING, GLOBAL_CATEGORIES, CategoryConvert, Context, EmbedField,
-    HelpSettings, _, cast, commands, get_aliases, get_cooldowns, get_perms,
-    pagify)
+    EMPTY_STRING,
+    CategoryConvert,
+    Context,
+    EmbedField,
+    HelpSettings,
+    commands,
+    pagify,
+)
 
 grouper = lambda a, n: [a[k : k + n] for k in range(0, len(a), n)]
 
@@ -79,7 +84,6 @@ class Blocks(ThemesMeta):
             return
 
         description = obj.format_help_for_context(ctx)
-        tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
 
         cmd_list = tabulate(
             grouper(list(map(lambda x: ctx.clean_prefix + x, sorted(coms.keys()))), 3),
