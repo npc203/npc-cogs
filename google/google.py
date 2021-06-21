@@ -439,7 +439,10 @@ class Google(Yandex, commands.Cog):
             if desc := res.find("div", class_="IsZvec"):
                 if remove := desc.find("span", class_="f"):
                     remove.decompose()
-                desc = h2t(str(desc.find_all("span")[-1]))[:500]
+                if final_desc := desc.find_all("span"):
+                    desc = h2t(str(final_desc[-1]))[:500]
+                else:
+                    desc = "Nothing found"
             else:
                 desc = "Not found"
             if title:
