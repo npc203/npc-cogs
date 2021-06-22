@@ -59,7 +59,7 @@ Setup
 6. | Now the main help menu must look a little better.
    | |Default command|
 
-7.  *butt weight there's more.*
+7.  *but wait, there's more.*
 
 Themes
 -------
