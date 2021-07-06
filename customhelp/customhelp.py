@@ -812,7 +812,7 @@ class CustomHelp(commands.Cog):
         else:
             await ctx.send(
                 "Your next message should be with the specfied format as follows(see docs for more info).\n"
-                "IF U ENTER AN INVALID EMOJI YOUR HELP WILL BREAK.\n"
+                "**If you enter an invalid emoji your help will break.**\n"
                 "Example:\n"
                 "left :↖️\n"
                 "right:↗️\n"
