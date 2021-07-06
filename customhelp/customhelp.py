@@ -248,13 +248,14 @@ class CustomHelp(commands.Cog):
             "replies": "Use replies",
             "buttons": "Use buttons",
         }
-        other_settings = []
-        # url doesnt exist now, that's why the check. sorry guys.
-        for i, j in settings.items():
-            if i in setting_mapping:
-                other_settings.append(f"`{setting_mapping[i]:<13}`: {j}")
+        other_settings = [
+            f"`{setting_mapping[i]:<13}`: {j}"
+            for i, j in settings.items()
+            if i in setting_mapping
+        ]
+
         val = await self.config.theme()
-        val = "\n".join([f"`{i:<10}`: " + (j if j else "default") for i, j in val.items()])
+        val = "\n".join(f"`{i:<10}`: " + (j or "default") for i, j in val.items())
         emb = discord.Embed(
             title="Custom help settings",
             description=f"Cog Version: {self.__version__}",
@@ -445,15 +446,14 @@ class CustomHelp(commands.Cog):
         def validity_checker(category, item):
             """Returns the thing needs to be saved on config if valid, else None"""
             if item[0] in check:
-                if item[0] == "name":
-                    if not (item[1] in available_categories):
-                        return item[1]
-                # dupe emoji and valid emoji?
-                elif item[0] == "reaction":
-                    if item[1] not in already_present_emojis:
-                        return str(emoji_converter(self.bot, item[1]))
-                else:
+                if (
+                    item[0] == "name"
+                    and item[1] not in available_categories
+                    or item[0] not in ["name", "reaction"]
+                ):
                     return item[1]
+                elif item[0] != "name" and item[1] not in already_present_emojis:
+                    return str(emoji_converter(self.bot, item[1]))
 
         to_config = {}  # format: {cat_index:[(name,value),..],..}
         for category in parsed_data:
