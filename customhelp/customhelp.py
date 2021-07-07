@@ -332,7 +332,9 @@ class CustomHelp(commands.Cog):
         # counter part of edit's yaml bug report fix
         for i in parsed_data.values():
             if any(type(j) != str for j in i):
-                await ctx.send("Invalid Format!")
+                await ctx.send(
+                    f"Invalid Format, Likely you added an extra ':' and value in \n{' : '.join(*i[0].items())}"
+                )
                 return
 
         available_categories = [category.name for category in GLOBAL_CATEGORIES]
@@ -424,7 +426,9 @@ class CustomHelp(commands.Cog):
         # twin's bug report fix
         for i in parsed_data.values():
             if any(type(j) == str for j in i):
-                await ctx.send("Invalid Format!")
+                await ctx.send(
+                    f"Invalid Format, Likely you added an extra ' : ' and value in \n{':'.join(*i[0].items())}"
+                )
                 return
         # Some more rearrangement parsed_data = {category:[('name', 'notrandom'), ('emoji', 'asds'), ('emoji', '😓'), ('desc', 'this iasdiuasd')]}
         parsed_data = {
@@ -840,9 +844,9 @@ class CustomHelp(commands.Cog):
             raw = data.split("\n")
             for emj in raw:
                 tmp = emj.split(":", 1)
-                tmp = [i.strip() for i in tmp]
+                tmp = [i.strip() for i in tmp]  # tmp = ["left","full_emoji"]
                 if len(tmp) != 2 or tmp[0] not in checks:
-                    await ctx.send("Invalid format")
+                    await ctx.send(f"Can't parse \n `{emj}`")
                     return
                 else:
                     if tmp[1] not in already_present_emojis:
@@ -1051,15 +1055,15 @@ class CustomHelp(commands.Cog):
             await ctx.send("Wrongly formatted")
             return
         except yaml.scanner.ScannerError as e:
-            await ctx.send(box(e.replace("`", "\N{ZWSP}`")))
+            await ctx.send(box(str(e).replace("`", "\N{ZWSP}`")))
             return
         if type(parsed_data) != dict:
-            await ctx.send("Invalid Format")
+            await ctx.send("Invalid Format, Missed a colon probably")
             return
 
         # TODO pls get a better type checking method
         for i in parsed_data:
             if type(parsed_data[i]) != list:
-                await ctx.send("Invalid Format")
+                await ctx.send("Invalid Format, Likely added unwanted spaces")
                 return
         return parsed_data
