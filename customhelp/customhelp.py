@@ -361,7 +361,7 @@ class CustomHelp(commands.Cog):
         # {"new": [{cat_conf_structure,...}, {...}] , "existing": { index: [cogs], ..}}
         to_config = {"new": [], "existing": {}}
         for category in parsed_data:
-            if uncat_name == category:
+            if uncat_name == category or " " in category:
                 failed_cogs.append(category)
                 continue
             # check if category exist
@@ -388,7 +388,7 @@ class CustomHelp(commands.Cog):
                 else "Nothing successful"
             )
             + (
-                f"\n\nThe following categorie(s)/cog(s) failed due to invalid or already present in a category: `{'`,`'.join(failed_cogs)}` "
+                f"\n\nThe following categorie(s)/cog(s) failed due to invalid name or already present in a category: `{'`,`'.join(failed_cogs)}` "
                 if failed_cogs
                 else ""
             )
@@ -818,6 +818,7 @@ class CustomHelp(commands.Cog):
                 "right:↗️\n"
                 "cross:❎\n"
                 "home :🏛️\n"
+                "Note: There's also `force_left` and `force_right`"
             )
             try:
                 msg = await self.bot.wait_for(
@@ -1050,7 +1051,7 @@ class CustomHelp(commands.Cog):
             await ctx.send("Wrongly formatted")
             return
         except yaml.scanner.ScannerError as e:
-            await ctx.send(box(e))
+            await ctx.send(box(e.replace("`", "\N{ZWSP}`")))
             return
         if type(parsed_data) != dict:
             await ctx.send("Invalid Format")
