@@ -184,7 +184,7 @@ class CustomHelp(commands.Cog):
             else:
                 GLOBAL_CATEGORIES[-1].cogs.append(cog_name)
 
-    @checks.is_owner()
+    @commands.is_owner()
     @commands.group()
     async def chelp(self, ctx):
         """Configure your custom help"""
