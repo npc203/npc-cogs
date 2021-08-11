@@ -181,7 +181,7 @@ def get_card(soup, final, kwargs):
         final_text = "\N{ZWSP}\n**"
         if source := card.find("div", class_="vk_sh c8Zgcf"):
             final_text += "`" + h2t(str(source)).strip("\n")
-        if dest := card.find("div", class_="dDoNo ikb4Bb vk_bk gsrt gzfeS"):
+        if dest := card.find("div", class_="dDoNo ikb4Bb gsrt gzfeS"):
             final_text += " " + h2t(str(dest)).strip("\n") + "`**"
         if time := card.find("div", class_="hqAUc"):
             if remove := time.find("select"):
