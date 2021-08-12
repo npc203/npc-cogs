@@ -26,6 +26,11 @@ class Bible(commands.Cog):
                 async with session.get("https://www.biblegateway.com/passage/?search=" + args) as resp:
                     soup = BeautifulSoup(await resp.text(), "html.parser")
                     text = soup.find("div", {"class": "std-text"})
+
+                    # No result checks
+                    if text is None:
+                        return await ctx.send("No results found, Kindly make sure the verse exists or use the format of `book chapter:verse-range`")
+                        
                     # Remove cross references
                     for sup in text.find_all("sup", {"class": "crossreference"}):
                         sup.decompose()
