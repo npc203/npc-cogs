@@ -25,7 +25,7 @@ To add cogs from this repo to your instance, do these steps:
 | TypeRacer | Alpha |<details><summary>Typing speed test</summary>Test your typing skills with this cog</details>
 | CustomHelp | Beta |<details><summary>A category themed custom help</summary>Kindly read https://npc-cogs.readthedocs.io/en/latest/customhelp.html on how to setup</details>
 | Snake | Beta | <details><summary>A simple Snake Game</summary>This is a classical snake game, uses dpy menus. Be fully aware of this cog spamming the channel ratelimit buckets</details>
-| Bible | Beta | <details><summary>Get bible verses</summary>Powered by biblegateway, this cog can get bible verses</details>
+| Bible | Beta | <details><summary>Get bible verses or get references for words</summary>Powered by biblegateway, this cog can get bible verses and also can reverse search by getting the references for the searched word</details>
 | EmbedSteal | N/A | <details><summary>THIS IS NOT A PROPER COG</summary>DO NOT INSTALL THIS</details>
                                                                                                                                                                                                                           
 ## Credits
