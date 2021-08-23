@@ -195,19 +195,21 @@ def get_card(soup, final, kwargs):
         final.append(s(None, "Unit Conversion", final_text))
         return
 
-    # Definition cards
+    # Definition cards -
     if card := soup.find("div", class_="KIy09e"):
         final_text = ""
-        if word := card.find("div", class_="DgZBFd XcVN5d frCXef"):
+        if word := card.find("div", class_="ya2TWb"):
             if sup := word.find("sup"):
                 sup.decompose()
             final_text += "`" + word.text + "`"
-        if pronounciate := card.find("div", class_="S23sjd g30o5d"):
+        if pronounciate := card.find("div", class_="S23sjd"):
             final_text += "   |   " + pronounciate.text
-        if type_ := card.find("div", class_="pgRvse vdBwhd ePtbIe"):
+        if type_ := card.find("span", class_="YrbPuc"):
             final_text += "   |   " + type_.text + "\n\n"
-        if definition := card.find("div", class_="L1jWkf h3TRxf"):
-            for text in definition.findAll("div")[:2]:
+        if definition := card.find("div", class_="LTKOO sY7ric"):
+            if remove_flex_row := definition.find(class_="bqVbBf jfFgAc CqMNyc"):
+                remove_flex_row.decompose()
+            for text in definition.findAll("span"):
                 tmp = h2t(str(text))
                 if tmp.count("\n") < 5:
                     final_text += "`" + tmp.strip("\n").replace("\n", " ") + "`" + "\n"
