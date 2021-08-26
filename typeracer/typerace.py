@@ -117,10 +117,12 @@ class TypeRacer(commands.Cog):
         else:
             test = Speedevent(
                 ctx,
-                countdown or await self.config.guild_from_id(ctx.guild.id).time_start(),
+                countdown
+                or await self.config.guild_from_id(ctx.guild.id).time_start(),
                 await self.config.guild_from_id(ctx.guild.id).all(),
-                all=True if "--all" in args else False,
+                all="--all" in args,
             )
+
             self.jobs["guilds"][ctx.guild.id] = test
             await test.start()
             self.jobs["guilds"].pop(ctx.guild.id)
