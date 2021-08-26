@@ -17,12 +17,13 @@ class TypeRacer(commands.Cog):
             "type": "gibberish",
             "dm": True,
         }
+        self.config.register_guild(**default_guild)
         default_user = {
             "text_size": (10, 20),
             "type": "gibberish",
         }
-        self.config.register_guild(**default_user)
-        self.config.register_user(**default_guild)
+        self.config.register_user(**default_user)
+        
         self.jobs = {"guilds": {}, "personal": {}}
     
     @commands.group()
@@ -74,13 +75,13 @@ class TypeRacer(commands.Cog):
             await ctx.send("You already are running a speedtest")
         else:
             if self.is_guild:
-                test = Single(ctx, await self.config.guild(ctx.guild).all(),self.is_guild)
+                test = Single(ctx, await self.config.guild_from_id(ctx.guild.id).all(),self.is_guild)
                 self.jobs["personal"][ctx.author.id] = test
                 await test.start()
                 self.jobs["personal"].pop(ctx.author.id)
 
             else:
-                test=Single(ctx,await self.config.user(ctx.author).all(),self.is_guild)
+                test=Single(ctx,await self.config.user_from_id(ctx.author.id).all(),self.is_guild)
                 self.jobs["personal"][ctx.author.id] = test
                 await test.start()
                 self.jobs["personal"].pop(ctx.author.id)
@@ -123,8 +124,8 @@ class TypeRacer(commands.Cog):
         else:
             test = Speedevent(
                 ctx,
-                countdown or await self.config.guild(ctx.guild).time_start(),
-                await self.config.guild(ctx.guild).all(),
+                countdown or await self.config.guild_from_id(ctx.guild.id).time_start(),
+                await self.config.guild_from_id(ctx.guild.id).all(),
                 all=True if "--all" in args else False,
             )
             self.jobs["guilds"][ctx.guild.id] = test
@@ -161,7 +162,7 @@ class TypeRacer(commands.Cog):
             if self.is_guild:
                 await self.config.guild_from_id(ctx.guild.id).time_start.set(num)
             else:
-                await self.config.user(ctx.author).time_start.set(num)
+                await self.config.user_from_id(ctx.author.id).time_start.set(num)
             await ctx.send(f"Changed delay to {num}")
         else:
             await ctx.send("The Min limit is 10 seconds\nThe Max limit is 1000 seconds")
@@ -174,7 +175,7 @@ class TypeRacer(commands.Cog):
             if self.is_guild:
                 await self.config.guild_from_id(ctx.guild.id).text_size.set((min, max))
             else:
-                await self.config.user(ctx.author).text_size.set((min, max))
+                await self.config.user_from_id(ctx.author.id).text_size.set((min, max))
             await ctx.send(f"The number of words are changed to\nMinimum:{min}\nMaximum:{max}")
         else:
             await ctx.send(
@@ -198,7 +199,7 @@ class TypeRacer(commands.Cog):
             if self.is_guild:
                 await self.config.guild_from_id(ctx.guild.id).type.set(type_txt)
             else:
-                await self.config.user(ctx.author).type.set(type_txt)
+                await self.config.user_from_id(ctx.author.id).type.set(type_txt)
             await ctx.send(f"Changed type to {type_txt}")
         else:
             await ctx.send("Only two valid types available: gibberish,lorem")
