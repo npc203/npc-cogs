@@ -1,7 +1,7 @@
 from ..abc import ThemesMeta
-from ..core.base_help import (
-    EMPTY_STRING, GLOBAL_CATEGORIES, CategoryConvert, Context, EmbedField,
-    HelpSettings, _, chain, commands, pagify, shorten_line)
+from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, CategoryConvert,
+                              Context, EmbedField, HelpSettings, _, chain,
+                              commands, pagify, shorten_line)
 
 
 class Mixture(ThemesMeta):
@@ -107,10 +107,7 @@ class Mixture(ThemesMeta):
 
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
             await self.send_pages(
-                ctx,
-                pages,
-                embed=True,
-                help_settings=help_settings,
+                ctx, pages, embed=True, help_settings=help_settings,
             )
         else:
             await ctx.send(_("You need to enable embeds to use the help menu"))

@@ -43,10 +43,7 @@ async def evaluate(ctx, a_string: str, b_string: str, time_taken, dm_id, author_
     wpm = len(a_string) / 5 / (time_taken / 60)
     if accuracy > 66:  # TODO add to config
         verdict = [
-            (
-                "WPM (Correct Words per minute)",
-                wpm - (mistakes / (time_taken / 60)),
-            ),
+            ("WPM (Correct Words per minute)", wpm - (mistakes / (time_taken / 60)),),
             ("Raw WPM (Without accounting mistakes)", wpm),
             ("Accuracy(Levenshtein)", accuracy),
             ("Words Given", len(a_string.split())),

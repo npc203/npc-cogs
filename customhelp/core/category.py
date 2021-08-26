@@ -7,12 +7,7 @@ from . import GLOBAL_CATEGORIES
 
 class Category:
     def __init__(
-        self,
-        name: str,
-        desc: str,
-        cogs: list,
-        reaction: str = None,
-        long_desc: str = None,
+        self, name: str, desc: str, cogs: list, reaction: str = None, long_desc: str = None,
     ):
         self.name = name
         self.desc = desc

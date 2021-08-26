@@ -18,12 +18,7 @@ from .utils import (close_menu, first_page, get_aliases, get_cooldowns,
                     react_page, shorten_line)
 
 HelpTarget = Union[
-    commands.Command,
-    commands.Group,
-    commands.Cog,
-    CategoryConvert,
-    dpy_commands.bot.BotBase,
-    str,
+    commands.Command, commands.Group, commands.Cog, CategoryConvert, dpy_commands.bot.BotBase, str,
 ]
 
 EmbedField = namedtuple("EmbedField", "name value inline")
@@ -111,11 +106,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
         return sorted_iterable
 
     async def send_help(
-        self,
-        ctx: Context,
-        help_for: HelpTarget = None,
-        *,
-        from_help_command: bool = False,
+        self, ctx: Context, help_for: HelpTarget = None, *, from_help_command: bool = False,
     ):
         """
         This delegates to other functions.
@@ -343,10 +334,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
     # TODO maybe try lazy loading
     async def make_embeds(
-        self,
-        ctx,
-        embed_dict: dict,
-        help_settings: HelpSettings,
+        self, ctx, embed_dict: dict, help_settings: HelpSettings,
     ):
         """Returns Embed pages (Really copy paste from core)"""
         pages = []
@@ -386,9 +374,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
             if page_count > 1:
                 description = _("Page {page_num} of {page_count}\n{content_description}").format(
-                    content_description=embed.description,
-                    page_num=i,
-                    page_count=page_count,
+                    content_description=embed.description, page_num=i, page_count=page_count,
                 )
                 embed.description = description
 
@@ -456,9 +442,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 # We need to wrap this in a task to not block after-sending-help interactions.
                 # The channel has to be TextChannel as we can't bulk-delete from DMs
                 async def _delete_delay_help(
-                    channel: discord.TextChannel,
-                    messages: List[discord.Message],
-                    delay: int,
+                    channel: discord.TextChannel, messages: List[discord.Message], delay: int,
                 ):
                     await asyncio.sleep(delay)
                     await mass_purge(messages, channel)

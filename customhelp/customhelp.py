@@ -65,19 +65,12 @@ class CustomHelp(commands.Cog):
             "command": "format_command_help",
         }
         self.config = Config.get_conf(
-            self,
-            identifier=278198241009,
-            force_registration=True,  # I'm gonna regret this
+            self, identifier=278198241009, force_registration=True,  # I'm gonna regret this
         )
         self.chelp_global = {
             "categories": [],
             "theme": {"cog": None, "category": None, "command": None, "main": None},
-            "uncategorised": {
-                "name": None,
-                "desc": None,
-                "long_desc": None,
-                "reaction": None,
-            },
+            "uncategorised": {"name": None, "desc": None, "long_desc": None, "reaction": None,},
             "settings": {
                 "react": True,
                 "set_formatter": False,
@@ -262,9 +255,7 @@ class CustomHelp(commands.Cog):
         )
         emb.add_field(name="Theme", value=val)
         emb.add_field(
-            name="Other Settings",
-            value="\n".join(other_settings),
-            inline=False,
+            name="Other Settings", value="\n".join(other_settings), inline=False,
         )
 
         emb.add_field(
@@ -620,8 +611,7 @@ class CustomHelp(commands.Cog):
                 self.bot._help_formatter,
                 self.feature_list[feature],
                 MethodType(
-                    getattr(BaguetteHelp, self.feature_list[feature]),
-                    self.bot._help_formatter,
+                    getattr(BaguetteHelp, self.feature_list[feature]), self.bot._help_formatter,
                 ),
             )
         else:

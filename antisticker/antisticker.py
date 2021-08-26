@@ -13,11 +13,7 @@ class AntiSticker(commands.Cog):
 
     def __init__(self, bot: Red) -> None:
         self.bot = bot
-        self.config = Config.get_conf(
-            self,
-            identifier=3782421,
-            force_registration=True,
-        )
+        self.config = Config.get_conf(self, identifier=3782421, force_registration=True,)
 
     @commands.Cog.listener("on_message_without_command")
     async def runner(self, msg):

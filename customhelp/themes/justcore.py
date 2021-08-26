@@ -48,10 +48,7 @@ class JustCore(ThemesMeta):
                 return pages
             else:
                 await self.send_pages(
-                    ctx,
-                    pages,
-                    embed=True,
-                    help_settings=help_settings,
+                    ctx, pages, embed=True, help_settings=help_settings,
                 )
 
         else:
@@ -80,10 +77,7 @@ class JustCore(ThemesMeta):
                     emb["fields"].append(field)
                 pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
                 await self.send_pages(
-                    ctx,
-                    pages,
-                    embed=True,
-                    help_settings=help_settings,
+                    ctx, pages, embed=True, help_settings=help_settings,
                 )
         else:
             await ctx.send(_("You need to enable embeds to use the help menu"))
@@ -182,10 +176,7 @@ class JustCore(ThemesMeta):
                     emb["fields"].append(field)
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
             await self.send_pages(
-                ctx,
-                pages,
-                embed=True,
-                help_settings=help_settings,
+                ctx, pages, embed=True, help_settings=help_settings,
             )
         else:
             await ctx.send(_("You need to enable embeds to use the help menu"))

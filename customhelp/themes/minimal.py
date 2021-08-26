@@ -8,10 +8,7 @@ class MinimalHelp(ThemesMeta):
     """This is a no embed minimal theme for the simplistic people.\nThis won't use reactions.\nThanks OwO for design advices"""
 
     async def format_bot_help(
-        self,
-        ctx: Context,
-        help_settings: HelpSettings,
-        get_pages: bool = False,
+        self, ctx: Context, help_settings: HelpSettings, get_pages: bool = False,
     ):
         description = ctx.bot.description or ""
         tagline = (help_settings.tagline) or self.get_default_tagline(ctx)
@@ -66,10 +63,7 @@ class MinimalHelp(ThemesMeta):
         if get_pages:
             return text_no
         await self.send_pages(
-            ctx,
-            text_no,
-            embed=False,
-            help_settings=help_settings,
+            ctx, text_no, embed=False, help_settings=help_settings,
         )
 
     async def format_cog_help(self, ctx: Context, obj: commands.Cog, help_settings: HelpSettings):
@@ -149,8 +143,5 @@ class MinimalHelp(ThemesMeta):
                 full_text += f"{title}{page}"
         text_no = list(pagify(full_text))
         await self.send_pages(
-            ctx,
-            text_no,
-            embed=False,
-            help_settings=help_settings,
+            ctx, text_no, embed=False, help_settings=help_settings,
         )

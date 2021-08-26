@@ -23,9 +23,7 @@ class Speak(commands.Cog):
         hook = await self.get_hook(ctx)
         await ctx.message.delete()
         await hook.send(
-            username=ctx.author.display_name,
-            avatar_url=ctx.author.avatar_url,
-            content=sentence,
+            username=ctx.author.display_name, avatar_url=ctx.author.avatar_url, content=sentence,
         )
 
     @checks.bot_has_permissions(manage_webhooks=True, manage_messages=True)
@@ -35,9 +33,7 @@ class Speak(commands.Cog):
         hook = await self.get_hook(ctx)
         await ctx.message.delete()
         await hook.send(
-            username=mention.display_name,
-            avatar_url=mention.avatar_url,
-            content=sentence,
+            username=mention.display_name, avatar_url=mention.avatar_url, content=sentence,
         )
 
     @checks.bot_has_permissions(manage_webhooks=True, manage_messages=True)

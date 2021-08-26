@@ -1,7 +1,6 @@
 from ..abc import ThemesMeta
-from ..core.base_help import (
-    EMPTY_STRING, GLOBAL_CATEGORIES, CategoryConvert, Context, EmbedField,
-    HelpSettings, _, pagify)
+from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, CategoryConvert,
+                              Context, EmbedField, HelpSettings, _, pagify)
 
 
 class DannyHelp(ThemesMeta):
@@ -72,10 +71,7 @@ class DannyHelp(ThemesMeta):
                 return pages
             else:
                 await self.send_pages(
-                    ctx,
-                    pages,
-                    embed=True,
-                    help_settings=help_settings,
+                    ctx, pages, embed=True, help_settings=help_settings,
                 )
 
         else:

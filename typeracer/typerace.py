@@ -23,26 +23,32 @@ class TypeRacer(commands.Cog):
             "type": "gibberish",
         }
         self.config.register_user(**default_user)
-        
+
         self.jobs = {"guilds": {}, "personal": {}}
-    
+
     @commands.group()
     async def typer(self, ctx):
         """Commands to start and stop personal typing speed test"""
-        
 
     @typer.command()
     async def settings(self, ctx):
         """Shows the current setting in the guild"""
         emb = Embed(color=await ctx.embed_color())
-        settings =  await self.config.guild_from_id(ctx.guild.id).all()if ctx.guild else await self.config.user_from_id(ctx.author.id).all()
-    
+        settings = (
+            await self.config.guild_from_id(ctx.guild.id).all()
+            if ctx.guild
+            else await self.config.user_from_id(ctx.author.id).all()
+        )
+
         val = (
-                f"`Type       `:{settings['type']}\n"
-                + ((f"`Send dms   `:{settings['dm']}\n"
-                + f"`Start timer`:{settings['time_start']}\n")if ctx.guild else '')
-                + f"`No of Words`:{settings['text_size'][0]} - {settings['text_size'][1]}\n"
+            f"`Type       `:{settings['type']}\n"
+            + (
+                (f"`Send dms   `:{settings['dm']}\n" + f"`Start timer`:{settings['time_start']}\n")
+                if ctx.guild
+                else ""
             )
+            + f"`No of Words`:{settings['text_size'][0]} - {settings['text_size'][1]}\n"
+        )
         emb.add_field(name="TyperRacer settings", value=val)
         await ctx.send(embed=emb)
 
@@ -63,11 +69,17 @@ class TypeRacer(commands.Cog):
         if ctx.author.id in self.jobs["personal"]:
             await ctx.send("You already are running a speedtest")
         else:
-            test = Single(ctx, await (self.config.guild_from_id(ctx.guild.id).all()if ctx.guild else self.config.user_from_id(ctx.author.id).all()))
+            test = Single(
+                ctx,
+                await (
+                    self.config.guild_from_id(ctx.guild.id).all()
+                    if ctx.guild
+                    else self.config.user_from_id(ctx.author.id).all()
+                ),
+            )
             self.jobs["personal"][ctx.author.id] = test
             await test.start()
             self.jobs["personal"].pop(ctx.author.id)
-                
 
     @typer.command()
     async def stop(self, ctx):
@@ -149,12 +161,17 @@ class TypeRacer(commands.Cog):
         """Sets the number of minimum and maximum number of words
         Range: min>0 and max<=100"""
         if min > 0 and max <= 100:
-            await (self.config.guild_from_id(ctx.guild.id).text_size.set((min, max))if ctx.guild else self.config.user_from_id(ctx.author.id).text_size.set((min, max)))
+            await (
+                self.config.guild_from_id(ctx.guild.id).text_size.set((min, max))
+                if ctx.guild
+                else self.config.user_from_id(ctx.author.id).text_size.set((min, max))
+            )
             await ctx.send(f"The number of words are changed to\nMinimum:{min}\nMaximum:{max}")
         else:
             await ctx.send(
                 "The minimum number of words must be greater than 0\nThe maxiumum number of words must be less than or equal to 100 "
             )
+
     @commands.guild_only()
     @typerset.command()
     async def dm(self, ctx, toggle: bool):
@@ -169,7 +186,11 @@ class TypeRacer(commands.Cog):
         Types available: lorem, gibberish"""
         check = ("lorem", "gibberish")
         if type_txt in check:
-            await (self.config.guild_from_id(ctx.guild.id).type.set(type_txt)if ctx.guild else self.config.user_from_id(ctx.author.id).type.set(type_txt))
+            await (
+                self.config.guild_from_id(ctx.guild.id).type.set(type_txt)
+                if ctx.guild
+                else self.config.user_from_id(ctx.author.id).type.set(type_txt)
+            )
             await ctx.send(f"Changed type to {type_txt}")
         else:
             await ctx.send("Only two valid types available: gibberish,lorem")

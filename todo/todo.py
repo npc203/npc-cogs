@@ -21,11 +21,7 @@ class Todo(commands.Cog):
 
     def __init__(self, bot: Red) -> None:
         self.bot = bot
-        self.config = Config.get_conf(
-            self,
-            identifier=6732102719277,
-            force_registration=True,
-        )
+        self.config = Config.get_conf(self, identifier=6732102719277, force_registration=True,)
         self.config.register_user(todos=[])
         self.config.register_global(menus=True)
 
@@ -239,10 +235,7 @@ class Source(menus.ListPageSource):
 class ResultMenu(menus.MenuPages, inherit_buttons=False):
     def __init__(self, **kwargs):
         super().__init__(
-            **kwargs,
-            timeout=60,
-            clear_reactions_after=True,
-            delete_message_after=True,
+            **kwargs, timeout=60, clear_reactions_after=True, delete_message_after=True,
         )
 
     def _skip_double_triangle_buttons(self):
