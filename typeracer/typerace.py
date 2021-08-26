@@ -114,7 +114,7 @@ class TypeRacer(commands.Cog):
         Examples:
         `[p]speedevent start`
         `[p]speedevent start 20`
-        `[p]speedevent start 30 --all`That command is not available in DMs
+        `[p]speedevent start 30 --all`
         """
         if ctx.guild.id in self.jobs["guilds"]:
             await ctx.send("There's already a speedtest event running in this guild")
