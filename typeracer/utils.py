@@ -19,7 +19,7 @@ with open(path / "lorem.txt", "r", encoding="utf8") as f:
 
 
 async def evaluate(ctx, a_string: str, b_string: str, time_taken, dm_id, author_name=None):
-    """ Returns None on personal event, returns [time_taken,wpm,mistakes] on speedevents"""
+    """Returns None on personal event, returns [time_taken,wpm,mistakes] on speedevents"""
     user_obj = ctx.guild.get_member(dm_id) if dm_id else ctx.author
     special_send = user_obj.send if dm_id else ctx.send
     if not author_name:
@@ -43,7 +43,10 @@ async def evaluate(ctx, a_string: str, b_string: str, time_taken, dm_id, author_
     wpm = len(a_string) / 5 / (time_taken / 60)
     if accuracy > 66:  # TODO add to config
         verdict = [
-            ("WPM (Correct Words per minute)", wpm - (mistakes / (time_taken / 60)),),
+            (
+                "WPM (Correct Words per minute)",
+                wpm - (mistakes / (time_taken / 60)),
+            ),
             ("Raw WPM (Without accounting mistakes)", wpm),
             ("Accuracy(Levenshtein)", accuracy),
             ("Words Given", len(a_string.split())),

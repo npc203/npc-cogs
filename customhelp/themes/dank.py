@@ -78,7 +78,9 @@ class DankHelp(ThemesMeta):
                 pagify(all_cog_text, page_length=1000, delims=[","], shorten_by=0)
             ):
                 field = EmbedField(
-                    EMPTY_STRING, page[1:] if page.startswith(",") else page, False,
+                    EMPTY_STRING,
+                    page[1:] if page.startswith(",") else page,
+                    False,
                 )
                 emb["fields"].append(field)
 
@@ -87,7 +89,10 @@ class DankHelp(ThemesMeta):
                 return pages
             else:
                 await self.send_pages(
-                    ctx, pages, embed=True, help_settings=help_settings,
+                    ctx,
+                    pages,
+                    embed=True,
+                    help_settings=help_settings,
                 )
         else:
             await ctx.send(_("You need to enable embeds to use the help menu"))
@@ -164,7 +169,10 @@ class DankHelp(ThemesMeta):
 
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
             await self.send_pages(
-                ctx, pages, embed=True, help_settings=help_settings,
+                ctx,
+                pages,
+                embed=True,
+                help_settings=help_settings,
             )
         else:
             await ctx.send(_("You need to enable embeds to use the help menu"))

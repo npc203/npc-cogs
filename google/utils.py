@@ -242,7 +242,10 @@ class Source(menus.ListPageSource):
 class ResultMenu(menus.MenuPages, inherit_buttons=False):
     def __init__(self, **kwargs):
         super().__init__(
-            **kwargs, timeout=60, clear_reactions_after=True, delete_message_after=True,
+            **kwargs,
+            timeout=60,
+            clear_reactions_after=True,
+            delete_message_after=True,
         )
 
     def _skip_double_triangle_buttons(self):

@@ -71,7 +71,10 @@ class DannyHelp(ThemesMeta):
                 return pages
             else:
                 await self.send_pages(
-                    ctx, pages, embed=True, help_settings=help_settings,
+                    ctx,
+                    pages,
+                    embed=True,
+                    help_settings=help_settings,
                 )
 
         else:

@@ -86,7 +86,9 @@ class GhTools(commands.Cog):
         else:
             commits = itertools.islice(
                 pd.Repository(
-                    str(repo.folder_path), only_in_branch=repo.branch, order="reverse",
+                    str(repo.folder_path),
+                    only_in_branch=repo.branch,
+                    order="reverse",
                 ).traverse_commits(),
                 count,
             )
@@ -101,7 +103,9 @@ class GhTools(commands.Cog):
             async with ctx.typing():
                 data = await self.get_commit_infos(self.bot._cog_mgr, repo=repo, count=30)
                 if data:
-                    pages = ResultMenu(source=EmbPages(data, per_page=5, key=lambda x: x.repo),)
+                    pages = ResultMenu(
+                        source=EmbPages(data, per_page=5, key=lambda x: x.repo),
+                    )
                     await pages.start(ctx)
 
         else:
@@ -118,7 +122,9 @@ class GhTools(commands.Cog):
                 self.bot._cog_mgr, package=packages[0], count=10 or commit_count
             )
             if data:
-                pages = ResultMenu(source=EmbPages(data, per_page=5, key=lambda x: x.package),)
+                pages = ResultMenu(
+                    source=EmbPages(data, per_page=5, key=lambda x: x.package),
+                )
                 await pages.start(ctx)
             else:
                 await ctx.send("Package not found")
@@ -197,7 +203,10 @@ class EmbPages(menus.GroupByPageSource):
 class ResultMenu(menus.MenuPages, inherit_buttons=False):
     def __init__(self, **kwargs):
         super().__init__(
-            **kwargs, timeout=60, clear_reactions_after=True, delete_message_after=True,
+            **kwargs,
+            timeout=60,
+            clear_reactions_after=True,
+            delete_message_after=True,
         )
 
     def _skip_double_triangle_buttons(self):

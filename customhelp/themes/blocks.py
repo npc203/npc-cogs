@@ -29,7 +29,10 @@ class Blocks(ThemesMeta):
         for cog_name, data in coms:
             all_cog_text.extend(map(lambda x: ctx.clean_prefix + x, data.keys()))
 
-        all_cog_str = tabulate(grouper(all_cog_text, 3), tablefmt="plain",)
+        all_cog_str = tabulate(
+            grouper(all_cog_text, 3),
+            tablefmt="plain",
+        )
 
         if await ctx.embed_requested():
 
@@ -42,7 +45,11 @@ class Blocks(ThemesMeta):
                 emb["embed"]["description"] = f"{description[:250]}"
 
             for page in pagify(all_cog_str, page_length=998, shorten_by=0):
-                field = EmbedField(EMPTY_STRING, box(page), False,)
+                field = EmbedField(
+                    EMPTY_STRING,
+                    box(page),
+                    False,
+                )
                 emb["fields"].append(field)
 
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
@@ -50,7 +57,10 @@ class Blocks(ThemesMeta):
                 return pages
             else:
                 await self.send_pages(
-                    ctx, pages, embed=True, help_settings=help_settings,
+                    ctx,
+                    pages,
+                    embed=True,
+                    help_settings=help_settings,
                 )
         else:
             await self.send_pages(
@@ -83,7 +93,10 @@ class Blocks(ThemesMeta):
 
                 pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
                 await self.send_pages(
-                    ctx, pages, embed=True, help_settings=help_settings,
+                    ctx,
+                    pages,
+                    embed=True,
+                    help_settings=help_settings,
                 )
         else:
             await self.send_pages(

@@ -72,7 +72,9 @@ class Google(Yandex, commands.Cog):
                             f"[{result.url[:60]}]({result.url})\n" if result.url else ""
                         ) + f"{result.desc}"[:1024]
                         emb.add_field(
-                            name=f"{result.title}", value=desc or "Nothing", inline=False,
+                            name=f"{result.title}",
+                            value=desc or "Nothing",
+                            inline=False,
                         )
                     emb.description = f"Page {num} of {len(groups)}"
                     emb.set_footer(
@@ -177,10 +179,12 @@ class Google(Yandex, commands.Cog):
                 )
                 if info.get("volumeInfo").get("authors"):
                     embed.add_field(
-                        name="Authors", value=", ".join(info.get("volumeInfo").get("authors")),
+                        name="Authors",
+                        value=", ".join(info.get("volumeInfo").get("authors")),
                     )
                 embed.add_field(
-                    name="Publisher", value=info.get("volumeInfo").get("publisher", "Unknown"),
+                    name="Publisher",
+                    value=info.get("volumeInfo").get("publisher", "Unknown"),
                 )
                 if info.get("volumeInfo").get("pageCount"):
                     embed.add_field(
@@ -193,7 +197,8 @@ class Google(Yandex, commands.Cog):
                 )
                 if info.get("volumeInfo").get("categories"):
                     embed.add_field(
-                        name="Category", value=", ".join(info.get("volumeInfo").get("categories")),
+                        name="Category",
+                        value=", ".join(info.get("volumeInfo").get("categories")),
                     )
                 if info.get("saleInfo").get("retailPrice"):
                     currency_format = (
@@ -202,7 +207,8 @@ class Google(Yandex, commands.Cog):
                         f"({info.get('saleInfo').get('buyLink')} 'Click to buy on Google Books!')"
                     )
                     embed.add_field(
-                        name="Retail Price", value=currency_format,
+                        name="Retail Price",
+                        value=currency_format,
                     )
                 epub_available = (
                     "✅" if info.get("accessInfo").get("epub").get("isAvailable") else "❌"
@@ -344,7 +350,9 @@ class Google(Yandex, commands.Cog):
                     for i in group:
                         desc = (f"[{i.url[:60]}]({i.url})\n" if i.url else "") + f"{i.desc}"[:1024]
                         emb.add_field(
-                            name=f"{i.title}", value=desc or "Nothing", inline=False,
+                            name=f"{i.title}",
+                            value=desc or "Nothing",
+                            inline=False,
                         )
                     emb.set_footer(
                         text=f"Safe Search: {not isnsfw} | "
