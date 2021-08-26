@@ -7,9 +7,10 @@ from .utils import evaluate, get_text, nocheats
 class Single:
     """Single personal typing test stuff"""
 
-    def __init__(self, ctx, settings):
+    def __init__(self, ctx, settings,is_global=True):
         self.ctx = ctx
         self.settings = settings
+        self.is_global = is_global
 
     async def start(self):
         """Start the test, Display the question and get result"""

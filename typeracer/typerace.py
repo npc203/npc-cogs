@@ -17,25 +17,42 @@ class TypeRacer(commands.Cog):
             "type": "gibberish",
             "dm": True,
         }
-        self.config.register_guild(**default_guild)
+        default_user = {
+            "text_size": (10, 20),
+            "type": "gibberish",
+        }
+        self.config.register_guild(**default_user)
+        self.config.register_user(**default_guild)
         self.jobs = {"guilds": {}, "personal": {}}
-
-    @commands.guild_only()
+    
     @commands.group()
     async def typer(self, ctx):
         """Commands to start and stop personal typing speed test"""
+        self.is_guild=bool(ctx.guild)
+        
+        
+
 
     @typer.command()
     async def settings(self, ctx):
         """Shows the current setting in the guild"""
-        settings = await self.config.guild_from_id(ctx.guild.id).all()
         emb = Embed(color=await ctx.embed_color())
-        val = (
-            f"`Type       `:{settings['type']}\n"
-            + f"`Send dms   `:{settings['dm']}\n"
-            + f"`Start timer`:{settings['time_start']}\n"
-            + f"`No of Words`:{settings['text_size'][0]} - {settings['text_size'][1]}\n"
-        )
+        if self.is_guild:
+            settings = await self.config.guild_from_id(ctx.guild.id).all()
+            val = (
+                f"`Type       `:{settings['type']}\n"
+                + f"`Send dms   `:{settings['dm']}\n"
+                + f"`Start timer`:{settings['time_start']}\n"
+                + f"`No of Words`:{settings['text_size'][0]} - {settings['text_size'][1]}\n"
+            )
+            
+        else:
+            settings = await self.config.user_from_id(ctx.author.id).all()
+            val = (
+                f"`Type       `:{settings['type']}\n"
+                + f"`No of Words`:{settings['text_size'][0]} - {settings['text_size'][1]}\n"
+            )
+
         emb.add_field(name="TyperRacer settings", value=val)
         await ctx.send(embed=emb)
 
@@ -56,10 +73,19 @@ class TypeRacer(commands.Cog):
         if ctx.author.id in self.jobs["personal"]:
             await ctx.send("You already are running a speedtest")
         else:
-            test = Single(ctx, await self.config.guild(ctx.guild).all())
-            self.jobs["personal"][ctx.author.id] = test
-            await test.start()
-            self.jobs["personal"].pop(ctx.author.id)
+            if self.is_guild:
+                test = Single(ctx, await self.config.guild(ctx.guild).all(),self.is_guild)
+                self.jobs["personal"][ctx.author.id] = test
+                await test.start()
+                self.jobs["personal"].pop(ctx.author.id)
+
+            else:
+                test=Single(ctx,await self.config.user(ctx.author).all(),self.is_guild)
+                self.jobs["personal"][ctx.author.id] = test
+                await test.start()
+                self.jobs["personal"].pop(ctx.author.id)
+                
+                
 
     @typer.command()
     async def stop(self, ctx):
@@ -88,7 +114,7 @@ class TypeRacer(commands.Cog):
         Examples:
         `[p]speedevent start`
         `[p]speedevent start 20`
-        `[p]speedevent start 30 --all`
+        `[p]speedevent start 30 --all`That command is not available in DMs
         """
         if ctx.guild.id in self.jobs["guilds"]:
             await ctx.send("There's already a speedtest event running in this guild")
@@ -124,13 +150,18 @@ class TypeRacer(commands.Cog):
     @commands.mod_or_permissions(administrator=True)
     @commands.group()
     async def typerset(self, ctx):
+        self.is_guild=bool(ctx.guild)
         """Settings for the typing speed test"""
 
+    @commands.guild_only()
     @typerset.command()
     async def time(self, ctx, num: int):
         """Sets the time delay (in seconds) to start a speedtest event (max limit = 1000 seconds)"""
         if num <= 1000 and num >= 10:
-            await self.config.guild_from_id(ctx.guild.id).time_start.set(num)
+            if self.is_guild:
+                await self.config.guild_from_id(ctx.guild.id).time_start.set(num)
+            else:
+                await self.config.user(ctx.author).time_start.set(num)
             await ctx.send(f"Changed delay to {num}")
         else:
             await ctx.send("The Min limit is 10 seconds\nThe Max limit is 1000 seconds")
@@ -140,18 +171,23 @@ class TypeRacer(commands.Cog):
         """Sets the number of minimum and maximum number of words
         Range: min>0 and max<=100"""
         if min > 0 and max <= 100:
-            await self.config.guild_from_id(ctx.guild.id).text_size.set((min, max))
+            if self.is_guild:
+                await self.config.guild_from_id(ctx.guild.id).text_size.set((min, max))
+            else:
+                await self.config.user(ctx.author).text_size.set((min, max))
             await ctx.send(f"The number of words are changed to\nMinimum:{min}\nMaximum:{max}")
         else:
             await ctx.send(
                 "The minimum number of words must be greater than 0\nThe maxiumum number of words must be less than or equal to 100 "
             )
-
+    @commands.guild_only()
     @typerset.command()
     async def dm(self, ctx, toggle: bool):
-        """Toggle whether the bot should send analytics in the dm or not"""
-        await self.config.guild_from_id(ctx.guild.id).dm.set(toggle)
-        await ctx.send(f"I will {'' if toggle else 'not'} send the speedevent analytics in dms")
+        """Toggle whether the bot should send analytics in the dm or not
+        Toggles available: false, true"""
+        if self.is_guild:
+            await self.config.guild_from_id(ctx.guild.id).dm.set(toggle)
+            await ctx.send(f"I will {'' if toggle else 'not'} send the speedevent analytics in dms")
 
     @typerset.command(name="type")
     async def type_of_text(self, ctx, type_txt: str):
@@ -159,7 +195,10 @@ class TypeRacer(commands.Cog):
         Types available: lorem, gibberish"""
         check = ("lorem", "gibberish")
         if type_txt in check:
-            await self.config.guild_from_id(ctx.guild.id).type.set(type_txt)
+            if self.is_guild:
+                await self.config.guild_from_id(ctx.guild.id).type.set(type_txt)
+            else:
+                await self.config.user(ctx.author).type.set(type_txt)
             await ctx.send(f"Changed type to {type_txt}")
         else:
             await ctx.send("Only two valid types available: gibberish,lorem")
