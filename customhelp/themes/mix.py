@@ -1,7 +1,7 @@
 from ..abc import ThemesMeta
-from ..core.base_help import (
-    EMPTY_STRING, GLOBAL_CATEGORIES, CategoryConvert, Context, EmbedField,
-    HelpSettings, _, chain, commands, pagify, shorten_line)
+from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, CategoryConvert,
+                              Context, EmbedField, HelpSettings, _, chain,
+                              commands, pagify, shorten_line)
 
 
 class Mixture(ThemesMeta):

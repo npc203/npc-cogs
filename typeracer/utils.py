@@ -19,7 +19,7 @@ with open(path / "lorem.txt", "r", encoding="utf8") as f:
 
 
 async def evaluate(ctx, a_string: str, b_string: str, time_taken, dm_id, author_name=None):
-    """ Returns None on personal event, returns [time_taken,wpm,mistakes] on speedevents"""
+    """Returns None on personal event, returns [time_taken,wpm,mistakes] on speedevents"""
     user_obj = ctx.guild.get_member(dm_id) if dm_id else ctx.author
     special_send = user_obj.send if dm_id else ctx.send
     if not author_name:

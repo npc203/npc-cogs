@@ -1,3 +1,5 @@
+import re
+
 import aiohttp
 import discord
 from bs4 import BeautifulSoup
@@ -6,8 +8,8 @@ from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import pagify
 from redbot.core.utils.menus import DEFAULT_CONTROLS, menu
-from .utils import group_embed_fields, EmbedField
-import re
+
+from .utils import EmbedField, group_embed_fields
 
 
 class Bible(commands.Cog):
