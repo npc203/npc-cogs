@@ -11,7 +11,7 @@ from redbot.core.commands.help import (HelpSettings, NoCommand, NoSubCommand,
 from redbot.core.utils.chat_formatting import pagify
 
 from . import ARROWS, GLOBAL_CATEGORIES, get_menu
-from .category import Category, CategoryConvert, get_category
+from .category import Category, get_category
 from .dpy_menus import ListPages
 from .utils import (close_menu, first_page, get_aliases, get_cooldowns,
                     get_perms, home_page, last_page, next_page, prev_page,
@@ -21,7 +21,7 @@ HelpTarget = Union[
     commands.Command,
     commands.Group,
     commands.Cog,
-    CategoryConvert,
+    Category,
     dpy_commands.bot.BotBase,
     str,
 ]
@@ -39,7 +39,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
         self.config = config
 
     @staticmethod
-    async def parse_command(ctx, help_for: str):
+    async def parse_command(ctx, help_for: str) -> HelpTarget:
         """
         Handles parsing
         """
@@ -53,6 +53,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
             return maybe_cateory
 
         alias = None
+        alias_name = None
         # TODO does this wreck havoc?
         if alias_cog := ctx.bot.get_cog("Alias"):
             alias_name = help_for
@@ -78,7 +79,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
             else:
                 last = com
         # This does take an extra 0.1 seconds to complete. but worth it?
-        if alias:
+        if alias and alias_name:
             com_alias = com.copy()
             com_alias.parent = None
             com_alias.cog = com.cog
@@ -98,7 +99,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
         isuncategory = False
         if category.name == GLOBAL_CATEGORIES[-1].name:
             isuncategory = True
-            sorted_cogs.append(None)  # Need to add commands with no category here as well >_>
+            sorted_cogs.append(None)  # TODO Need to add commands with no category here as well >_>
         for cogname in sorted_cogs:
             cog = ctx.bot.get_cog(cogname)
             # Simple kmaps for these conditions, math is dark magic
@@ -148,12 +149,13 @@ class BaguetteHelp(commands.RedHelpFormatter):
         elif isinstance(help_for, Category):
             await self.format_category_help(ctx, help_for, help_settings=help_settings)
         else:
+            help_for: commands.Command
             await self.format_command_help(ctx, help_for, help_settings=help_settings)
 
     async def format_category_help(
         self,
         ctx: Context,
-        obj: CategoryConvert,
+        obj: Category,
         help_settings: HelpSettings,
         get_pages: bool = False,
         **kwargs,
@@ -481,7 +483,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 final_menu.add_button(last_page(ARROWS["force_right"]))
 
             # TODO important!
-            if add_emojis:
+            if add_emojis and emoji_mapping:
                 # Adding additional category emojis
                 for cat in emoji_mapping:
                     if cat.reaction:

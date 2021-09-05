@@ -1,5 +1,5 @@
 from ..abc import ThemesMeta
-from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, CategoryConvert,
+from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, Category,
                               Context, EmbedField, HelpSettings, _, pagify)
 
 
@@ -42,7 +42,7 @@ class DannyHelp(ThemesMeta):
     async def format_category_help(
         self,
         ctx: Context,
-        obj: CategoryConvert,
+        obj: Category,
         help_settings: HelpSettings,
         get_pages: bool = False,
         **kwargs,

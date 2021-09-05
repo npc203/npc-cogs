@@ -3,6 +3,7 @@ from redbot.core import Config, commands
 
 from .single import Single
 from .speedevent import Speedevent
+from .utils import typerset_check
 
 
 class TypeRacer(commands.Cog):
@@ -141,7 +142,7 @@ class TypeRacer(commands.Cog):
         else:
             await ctx.send("Event has not started yet")
 
-    @commands.mod_or_permissions(administrator=True)
+    @typerset_check()
     @commands.group()
     async def typerset(self, ctx):
         """Settings for the typing speed test"""

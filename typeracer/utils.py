@@ -3,7 +3,9 @@ from pathlib import Path
 from random import randint, sample
 
 from fuzzywuzzy import fuzz
+from redbot.core import commands
 from tabulate import tabulate
+from redbot.core.utils.mod import is_mod_or_superior
 
 # can't use bundled_data_path cause outside class
 path = Path(__file__).absolute().parent / "data"
@@ -16,6 +18,22 @@ with open(path / "filtered.txt", "r", encoding="utf8") as f:
 # https://raw.githubusercontent.com/ccpalettes/sublime-lorem-text/master/wordlist/word_list_fixed.txt
 with open(path / "lorem.txt", "r", encoding="utf8") as f:
     data["lorem"] = f.read().split()
+
+
+def typerset_check():
+    async def predicate(ctx):
+        if ctx.guild is None:
+            return True
+        return (
+            # Owner check cause is_mod_or_superior doesn't respect it
+            (ctx.author.id == ctx.bot.owner_id)
+            # Mod or higher
+            or (await is_mod_or_superior(ctx.bot, ctx.author))
+            # Guild Admin
+            or ctx.channel.permissions_for(ctx.author).administrator
+        )
+
+    return commands.check(predicate)
 
 
 async def evaluate(ctx, a_string: str, b_string: str, time_taken, dm_id, author_name=None):
@@ -72,8 +90,8 @@ async def get_text(settings) -> tuple:
 
 def nocheats(text: str) -> str:
     """To catch Cheaters upto some extent"""
-    text = list(text)
+    text_list = list(text)
     size = len(text)
     for _ in range(size // 5):
-        text.insert(randint(0, size), "​")
-    return "".join(text)
+        text_list.insert(randint(0, size), "​")
+    return "".join(text_list)

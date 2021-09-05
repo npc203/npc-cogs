@@ -10,7 +10,7 @@ from types import MethodType
 
 import discord
 import yaml
-from redbot.core import Config, checks, commands
+from redbot.core import Config, commands
 from redbot.core.bot import Red
 from redbot.core.i18n import Translator, cog_i18n
 from redbot.core.utils import menus, predicates
@@ -196,6 +196,18 @@ class CustomHelp(commands.Cog):
         for theme in themes.list:
             emb.add_field(name=theme, value=themes.list[theme].__doc__, inline=False)
         await ctx.send(embed=emb)
+
+    @chelp.command()
+    async def refresh(self, ctx):
+        """Force refresh the list of categories, This would reset all the uninstalled/unloaded cogs and will put them into uncategorised."""
+        all_cogs = set(self.bot.cogs.keys())
+
+        async with self.config.categories() as my_categories:
+            for category in my_categories:
+                category["cogs"][:] = [cog for cog in category["cogs"] if cog in all_cogs]
+
+        await self.refresh_cache()
+        await ctx.tick()
 
     @chelp.command()
     async def auto(self, ctx):
@@ -701,7 +713,7 @@ class CustomHelp(commands.Cog):
     async def cog(self, ctx, *cog_names: str):
         """Remove a cog(s) from across categories"""
         # From Core [p]load xD, using set to avoid dupes
-        cog_names = set(map(lambda cog: cog.rstrip(","), cog_names))
+        cog_names: set[str] = set(map(lambda cog: cog.rstrip(","), cog_names))
 
         to_config = []  # [(index_of_category,cog_name),()] (maybe use namedtuples here?)
         uncat = []

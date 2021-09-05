@@ -4,9 +4,9 @@ from redbot.core.utils.chat_formatting import (box, humanize_list,
                                                humanize_number)
 
 from ..abc import ThemesMeta
-from ..core.base_help import (CategoryConvert, Context, EmbedField,
-                              HelpSettings, _, cast, commands, get_cooldowns,
-                              get_perms, pagify, shorten_line)
+from ..core.base_help import (Category, Context, EmbedField, HelpSettings, _,
+                              cast, commands, get_cooldowns, get_perms, pagify,
+                              shorten_line)
 
 
 class JustCore(ThemesMeta):
@@ -15,7 +15,7 @@ class JustCore(ThemesMeta):
     async def format_category_help(
         self,
         ctx: Context,
-        obj: CategoryConvert,
+        obj: Category,
         help_settings: HelpSettings,
         get_pages: bool = False,
         **kwargs,

@@ -1,5 +1,5 @@
 from ..abc import ThemesMeta
-from ..core.base_help import (GLOBAL_CATEGORIES, CategoryConvert, Context,
+from ..core.base_help import (GLOBAL_CATEGORIES, Category, Context,
                               HelpSettings, _, cast, chain, commands,
                               get_aliases, get_cooldowns, get_perms, pagify)
 
@@ -39,7 +39,7 @@ class MinimalHelp(ThemesMeta):
     async def format_category_help(
         self,
         ctx: Context,
-        obj: CategoryConvert,
+        obj: Category,
         help_settings: HelpSettings,
         get_pages: bool = False,
         **kwargs,

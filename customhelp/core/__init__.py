@@ -10,7 +10,7 @@ use_buttons = False
 use_replies = True
 
 
-def set_menu(*, replies: bool, buttons: bool, validate_buttons: bool = False):
+def set_menu(*, replies, buttons, validate_buttons: bool = False):
     global use_replies
     global use_buttons
 
