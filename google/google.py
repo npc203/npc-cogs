@@ -409,9 +409,11 @@ class Google(Yandex, commands.Cog):
 
     def reverse_search(self, text):
         soup = BeautifulSoup(text, features="html.parser")
-        if check := soup.find("div", class_="card-section"):
-            if "The URL doesn't refer" in check.text:
-                return check.text, (None, None)
+        if (
+            check := soup.find("div", class_="card-section")
+            and "The URL doesn't refer" in check.text
+        ):
+            return check.text, (None, None)
         if res := soup.find("input", class_="gLFyf gsfi"):
             return res["value"], (self.parser_text(text, soup=soup, cards=False) or (None, None))
 
