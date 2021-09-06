@@ -450,5 +450,5 @@ class Google(Yandex, commands.Cog):
         return final, kwargs
 
     def parser_image(self, html):
-        # first 2 are google static logo images
-        return self.link_regex.findall(html)[2:], {}
+        # first 3 are google static logo images
+        return self.link_regex.findall(html)[3:], {}
