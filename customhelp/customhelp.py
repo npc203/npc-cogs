@@ -344,9 +344,7 @@ class CustomHelp(commands.Cog):
         # counter part of edit's yaml bug report fix
         for i in parsed_data.values():
             if any(type(j) != str for j in i):
-                await ctx.send(
-                    f"Invalid Format, Likely you added an extra ':' and value in \n{' : '.join(*i[0].items())}"
-                )
+                await ctx.send(f"Invalid Format, Likely you added an extra ':' or '-'")
                 return
 
         available_categories = [category.name for category in GLOBAL_CATEGORIES]
@@ -438,9 +436,7 @@ class CustomHelp(commands.Cog):
         # twin's bug report fix
         for i in parsed_data.values():
             if any(type(j) == str for j in i):
-                await ctx.send(
-                    f"Invalid Format, Likely you added an extra ' : ' and value in \n{':'.join(*i[0].items())}"
-                )
+                await ctx.send(f"Invalid Format, Likely you added an extra ':' or '-'")
                 return
         # Some more rearrangement parsed_data = {category:[('name', 'notrandom'), ('emoji', 'asds'), ('emoji', '😓'), ('desc', 'this iasdiuasd')]}
         parsed_data = {
