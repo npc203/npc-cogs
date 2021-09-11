@@ -357,7 +357,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
         page_char_limit = min(page_char_limit, 5500)
         author_info = {
             "name": _("{ctx.me.display_name} Help Menu").format(ctx=ctx),
-            "icon_url": ctx.me.avatar_url,
+            "icon_url": ctx.me.avatar.with_static_format("png").url,
         }
         offset = len(author_info["name"]) + 20
         foot_text = embed_dict["footer"]["text"]
