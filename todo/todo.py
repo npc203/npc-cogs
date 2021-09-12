@@ -33,12 +33,12 @@ class Todo(commands.Cog):
     async def todo(self, ctx, id_: int):
         """Contains a list of commands to set and retrieve todo tasks \n Use todo <id> to get a specific todo"""
         todos = await self.config.user(ctx.author).todos()
-        if -len(todos) < id_ < len(todos):
+        try:
             if isinstance(todos[id_], list):
                 await ctx.send(todos[id_][1])
             else:
                 await ctx.send(todos[id_])
-        else:
+        except IndexError:
             await ctx.send(f"Invalid ID: {id_}")
 
     @commands.is_owner()
@@ -171,13 +171,13 @@ class Todo(commands.Cog):
         """Remove your todo tasks, supports multiple id removals as well\n eg:[p]todo remove 1 2 3"""
         todos = await self.config.user(ctx.author).todos()
         if len(indices) == 1:
-            if 0 <= indices[0] < len(todos):
+            try:
                 x = todos.pop(indices[0])
                 await self.config.user(ctx.author).todos.set(todos)
                 await ctx.send_interactive(
                     pagify(f"Succesfully removed: {x[1] if isinstance(x,list) else x}")
                 )
-            else:
+            except IndexError:
                 await ctx.send(f"Invalid ID: {indices[0]}")
         else:
             removed = []

@@ -220,10 +220,12 @@ class CustomHelp(commands.Cog):
                 with open(check, "r", encoding="utf-8") as f:
                     try:
                         tmp = json.load(f)
+                        data[k] = [i.lower() for i in tmp["tags"]] if "tags" in tmp else []
                     except json.JSONDecodeError:
                         # TODO Implement logger you lazy bum <_<
                         print("[ERROR] Invaild JSON in cog {}".format(k))
-                    data[k] = [i.lower() for i in tmp["tags"]] if "tags" in tmp else []
+                        data[k] = []
+
             else:
                 data[k] = []
 
@@ -344,7 +346,7 @@ class CustomHelp(commands.Cog):
         # counter part of edit's yaml bug report fix
         for i in parsed_data.values():
             if any(type(j) != str for j in i):
-                await ctx.send(f"Invalid Format, Likely you added an extra ':' or '-'")
+                await ctx.send("Invalid Format, Likely you added an extra ':' or '-'")
                 return
 
         available_categories = [category.name for category in GLOBAL_CATEGORIES]
@@ -359,7 +361,7 @@ class CustomHelp(commands.Cog):
         failed_cogs = []
         success_cogs = []
 
-        def parse_to_config(x):
+        def parse_to_config(x: str):
             cogs = []
             for cog_name in parsed_data[x]:
                 if cog_name in uncategorised:
@@ -436,7 +438,7 @@ class CustomHelp(commands.Cog):
         # twin's bug report fix
         for i in parsed_data.values():
             if any(type(j) == str for j in i):
-                await ctx.send(f"Invalid Format, Likely you added an extra ':' or '-'")
+                await ctx.send("Invalid Format, Likely you added an extra ':' or '-'")
                 return
         # Some more rearrangement parsed_data = {category:[('name', 'notrandom'), ('emoji', 'asds'), ('emoji', '😓'), ('desc', 'this iasdiuasd')]}
         parsed_data = {
