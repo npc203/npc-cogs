@@ -85,23 +85,20 @@ def get_card(soup, final, kwargs):
                 return
 
     # sidepage card
-    if card := soup.find("div", class_="liYKde g VjDLd"):
+    if card := soup.find("div", class_="osrp-blk"):
         if thumbnail := card.find("g-img", attrs={"data-lpage": True}):
             kwargs["thumbnail"] = thumbnail["data-lpage"]
-        if title := soup.find("div", class_="SPZz6b"):
-            if desc := card.find("div", class_="kno-rdesc"):
-                if remove := desc.find(class_="Uo8X3b"):
+        if title := card.find("div", class_=re.compile("ZxoDOe")):
+            if desc := soup.find("div", class_=re.compile("qDOt0b|kno-rdesc")):
+                if remove := desc.find(class_=re.compile("Uo8X3b")):
                     remove.decompose()
 
-                desc = (
-                    textwrap.shorten(h2t(str(desc)), 1024, placeholder="\N{HORIZONTAL ELLIPSIS}")
-                    + "\n"
-                )
+                desc = (textwrap.shorten(h2t(str(desc.span)), 1024, placeholder="...") + "\n")
 
-                if more_info := card.findAll("div", class_="Z1hOCe"):
+                if more_info := soup.findAll("div", class_="Z1hOCe"):
                     for thing in more_info:
                         tmp = thing.findAll("span")
-                        if len(tmp) == 2:
+                        if len(tmp) >= 2:
                             desc2 = f"\n **{tmp[0].text}**`{tmp[1].text.lstrip(':')}`"
                             # More jack advises :D
                             MAX = 1024
@@ -123,7 +120,7 @@ def get_card(soup, final, kwargs):
                     s(
                         None,
                         "Google Featured Card: "
-                        + h2t(str(title)).replace("\n", " ").replace("#", ""),
+                        + h2t(str(title)).replace("\n\n", "\n").replace("#", ""),
                         desc,
                     )
                 )
@@ -256,7 +253,7 @@ class ResultMenu(menus.MenuPages, inherit_buttons=False):
             self.delete_message_after = False
 
     @menus.button(
-        "\N{BLACK LEFT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\ufe0f",
+        "\u23ee\ufe0f",
         position=menus.First(0),
         skip_if=_skip_double_triangle_buttons,
     )
@@ -264,7 +261,7 @@ class ResultMenu(menus.MenuPages, inherit_buttons=False):
         """go to the first page"""
         await self.show_page(0)
 
-    @menus.button("\N{BLACK LEFT-POINTING TRIANGLE}\ufe0f", position=menus.First(1))
+    @menus.button("\u2b05\ufe0f", position=menus.First(1))
     async def go_to_previous_page(self, payload):
         """go to the previous page"""
         if self.current_page == 0:
@@ -272,7 +269,7 @@ class ResultMenu(menus.MenuPages, inherit_buttons=False):
         else:
             await self.show_checked_page(self.current_page - 1)
 
-    @menus.button("\N{BLACK RIGHT-POINTING TRIANGLE}\ufe0f", position=menus.Last(0))
+    @menus.button("\u27a1\ufe0f", position=menus.Last(0))
     async def go_to_next_page(self, payload):
         """go to the next page"""
         if self.current_page == self._source.get_max_pages() - 1:
@@ -281,7 +278,7 @@ class ResultMenu(menus.MenuPages, inherit_buttons=False):
             await self.show_checked_page(self.current_page + 1)
 
     @menus.button(
-        "\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\ufe0f",
+        "\u23ed\ufe0f",
         position=menus.Last(1),
         skip_if=_skip_double_triangle_buttons,
     )
