@@ -26,7 +26,7 @@ class Google(Yandex, commands.Cog):
     A Simple google search with image support as well
     """
 
-    __version__ = "0.0.1"
+    __version__ = "0.0.2"
 
     def __init__(self, bot: Red) -> None:
         self.bot = bot
@@ -70,7 +70,7 @@ class Google(Yandex, commands.Cog):
                 for result in group:
                     desc = (
                         f"[{result.url[:60]}]({result.url})\n" if result.url else ""
-                    ) + f"{result.desc}"[:900]
+                    ) + f"{result.desc}"[:800]
                     emb.add_field(
                         name=f"{result.title}",
                         value=desc or "Nothing",
@@ -136,7 +136,7 @@ class Google(Yandex, commands.Cog):
                 "apiKey": api_key,
                 "q": query,
                 "printType": "all",
-                "maxResults": 40,
+                "maxResults": 20,
                 "orderBy": "relevance",
             }
             try:
