@@ -1,10 +1,10 @@
 import asyncio
-import datetime
 import functools
 import json
 import re
-import urllib
-from io import BytesIO
+from datetime import datetime, timezone
+from textwrap import shorten
+from urllib.parse import quote_plus, urlencode
 
 import aiohttp
 import discord
@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 from html2text import html2text as h2t
 from redbot.core import commands
 from redbot.core.bot import Red
-from redbot.core.utils.chat_formatting import humanize_number
+from redbot.core.utils.chat_formatting import humanize_number, text_to_file
 from redbot.vendored.discord.ext import menus
 
 from .utils import ResultMenu, Source, get_card, get_query, nsfwcheck, s
@@ -31,8 +31,8 @@ class Google(Yandex, commands.Cog):
     def __init__(self, bot: Red) -> None:
         self.bot = bot
         self.options = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36",
-            "accept-language": "en-IN,en-GB;q=0.9,en-US",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.52 Safari/537.36",
+            "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
         }
         self.link_regex = re.compile(
             r"https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*(?:\.png|\.jpe?g|\.gif))"
@@ -50,46 +50,46 @@ class Google(Yandex, commands.Cog):
     @commands.group(invoke_without_command=True)
     @commands.bot_has_permissions(embed_links=True, add_reactions=True)
     async def google(self, ctx, *, query: str = None):
-        """Search in google from discord"""
+        """Google search your query from Discord channel."""
         if not query:
-            await ctx.send("Please enter something to search")
-        else:
-            isnsfw = nsfwcheck(ctx)
-            async with ctx.typing():
-                response, kwargs = await self.get_result(query, nsfw=isnsfw)
-                pages = []
-                groups = [response[n : n + 3] for n in range(0, len(response), 3)]
-                for num, group in enumerate(groups, 1):
-                    emb = discord.Embed(
-                        title="Google Search: {}".format(
-                            query[:44] + "\N{HORIZONTAL ELLIPSIS}" if len(query) > 45 else query
-                        ),
-                        color=await ctx.embed_color(),
-                        url=kwargs["redir"],
-                    )
-                    for result in group:
-                        desc = (
-                            f"[{result.url[:60]}]({result.url})\n" if result.url else ""
-                        ) + f"{result.desc}"[:1024]
-                        emb.add_field(
-                            name=f"{result.title}",
-                            value=desc or "Nothing",
-                            inline=False,
-                        )
-                    emb.description = f"Page {num} of {len(groups)}"
-                    emb.set_footer(
-                        text=f"Safe Search: {not isnsfw} | " + kwargs["stats"].replace("\n", " ")
-                    )
-                    if "thumbnail" in kwargs:
-                        emb.set_thumbnail(url=kwargs["thumbnail"])
+            return await ctx.send("Please enter something to search")
 
-                    if "image" in kwargs and num == 1:
-                        emb.set_image(url=kwargs["image"])
-                    pages.append(emb)
-            if pages:
-                await ResultMenu(source=Source(pages, per_page=1)).start(ctx)
-            else:
-                await ctx.send("No result")
+        isnsfw = nsfwcheck(ctx)
+        async with ctx.typing():
+            response, kwargs = await self.get_result(query, nsfw=isnsfw)
+            pages = []
+            groups = [response[n : n + 3] for n in range(0, len(response), 3)]
+            for num, group in enumerate(groups, 1):
+                emb = discord.Embed(
+                    title="Google Search: {}".format(
+                        query[:44] + "\N{HORIZONTAL ELLIPSIS}" if len(query) > 45 else query
+                    ),
+                    color=await ctx.embed_color(),
+                    url=kwargs["redir"],
+                )
+                for result in group:
+                    desc = (
+                        f"[{result.url[:60]}]({result.url})\n" if result.url else ""
+                    ) + f"{result.desc}"[:900]
+                    emb.add_field(
+                        name=f"{result.title}",
+                        value=desc or "Nothing",
+                        inline=False,
+                    )
+                emb.description = f"Page {num} of {len(groups)}"
+                emb.set_footer(
+                    text=f"Safe Search: {not isnsfw} | " + kwargs["stats"].replace("\n", " ")
+                )
+                if "thumbnail" in kwargs:
+                    emb.set_thumbnail(url=kwargs["thumbnail"])
+
+                if "image" in kwargs and num == 1:
+                    emb.set_image(url=kwargs["image"])
+                pages.append(emb)
+        if pages:
+            await ResultMenu(source=Source(pages, per_page=1)).start(ctx)
+        else:
+            await ctx.send("No results.")
 
     @google.command()
     async def autofill(self, ctx, *, query: str):
@@ -118,19 +118,11 @@ class Google(Yandex, commands.Cog):
     async def book(self, ctx, *, query: str):
         """Search for a book or magazine on Google Books.
 
-        This command requires an API key.
-        To get an API key, you'll first require to enable the API at:
-        https://console.cloud.google.com/flows/enableapi?apiid=books.googleapis.com
+        This command requires an API key. If you are the bot owner,
+        you can follow instructions on below link for how to get one:
+        https://gist.github.com/ow0x/53d2dbf0f753a01b7579cd8c68edbf90
 
-        Once you have enabled the API, you can find out how to acquire the API key at:
-        https://developers.google.com/books/docs/v1/using#APIKey
-
-        Once you get API key, set it in your redbot instance using:
-        ```
-        [p]set api googlebooks api_key <your_api_key>
-        ```
-
-        There are special keywords you can specify in the search terms to search in particular fields.
+        There are special keywords you can specify in the query to search in particular fields.
         You can read more on that in detail over at:
         https://developers.google.com/books/docs/v1/using#PerformingSearch
         """
@@ -152,7 +144,7 @@ class Google(Yandex, commands.Cog):
                     if response.status != 200:
                         return await ctx.send(f"https://http.cat/{response.status}")
                     data = await response.json()
-            except aiohttp.TimeoutError:
+            except asyncio.TimeoutError:
                 return await ctx.send("Operation timed out.")
 
             if len(data.get("items")) == 0:
@@ -163,7 +155,8 @@ class Google(Yandex, commands.Cog):
                 embed = discord.Embed(colour=await ctx.embed_color())
                 embed.title = info.get("volumeInfo").get("title")
                 embed.url = info.get("volumeInfo").get("canonicalVolumeLink")
-                embed.description = info.get("volumeInfo").get("description", "No summary.")[:2000]
+                summary = info.get("volumeInfo").get("description", "No summary.")
+                embed.description = shorten(summary, 500, placeholder="...")
                 embed.set_author(
                     name="Google Books",
                     url="https://books.google.com/",
@@ -246,8 +239,8 @@ class Google(Yandex, commands.Cog):
 
         Or doodles of specific month/year if `month` and `year` values are provided.
         """
-        month = datetime.datetime.now(datetime.timezone.utc).month if not month else month
-        year = datetime.datetime.now(datetime.timezone.utc).year if not year else year
+        month = month or datetime.now(timezone.utc).month
+        year = year or datetime.now(timezone.utc).year
 
         async with ctx.typing():
             base_url = f"https://www.google.com/doodles/json/{year}/{month}"
@@ -329,7 +322,7 @@ class Google(Yandex, commands.Cog):
 
         async with ctx.typing():
             async with self.session.get(
-                "https://www.google.com/searchbyimage?" + urllib.parse.urlencode(encoded),
+                "https://www.google.com/searchbyimage?" + urlencode(encoded),
                 headers=self.options,
             ) as resp:
                 text = await resp.read()
@@ -374,17 +367,18 @@ class Google(Yandex, commands.Cog):
 
     @commands.is_owner()
     @google.command(hidden=True)
-    async def debug(self, ctx, *, url):
+    async def debug(self, ctx, url: str):
+        await ctx.trigger_typing()
         async with self.session.get(url, headers=self.options) as resp:
             text = await resp.text()
-        f = BytesIO(bytes(text, "utf-8"))
-        await ctx.send(file=discord.File(f, filename="filename.html"))
-        f.close()
+        raw_html = BeautifulSoup(text, "html.parser")
+        data = raw_html.prettify()
+        await ctx.send(file=text_to_file(data, filename="google_debug.html"))
 
     async def get_result(self, query, images=False, nsfw=False):
         """Fetch the data"""
         # TODO make this fetching a little better
-        encoded = urllib.parse.quote_plus(query, encoding="utf-8", errors="replace")
+        encoded = quote_plus(query, encoding="utf-8", errors="replace")
 
         async def get_html(url, encoded):
             async with self.session.get(url + encoded, headers=self.options) as resp:
