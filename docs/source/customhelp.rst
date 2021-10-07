@@ -105,14 +105,14 @@ Category Configuration
 1. | ``[p]chelp dev``
    | This will hide categories and only be visible by the bot owner.
    
-2. |``[p]chelp nsfw``
+2. | ``[p]chelp nsfw``
    | This will hide categories to only be visible within NSFW-marked channels.
    
-3. |``[p]chelp auto``
+3. | ``[p]chelp auto``
    | To make a pre-formatted list of categories, this will take tags from your installed cogs
    | and auto-generate a list for you to use in ``[p]chelp create``.
    
-4. |``[p]chelp info``
+4. | ``[p]chelp info``
    | This will provide a description of themes available.
 
 Custom Help Settings
