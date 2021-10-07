@@ -125,7 +125,7 @@ Custom Help Settings
    | Custom Navigation, YAY!
    | If you feel the default arrow icons are boring and plain, and you want to spice up navigation, you're probably looking for this. (Supports custom emotes.)
    | When using custom emotes from servers, your bot must also have access to them to be used.
-   | You can use the emote ID, or use the emote itself in the following format:
+   | You can use the emote ID (``:some_emote:123456789123``), or use the emote itself in the following format:
    
    .. code-block:: javascript
 
@@ -166,12 +166,12 @@ Additional Notes
 
 -  A **Good Practice** is to have the category names all **lowercased** and the category description as **Camelcase**.
   
--  All the reactions and arrow emojis can be **custom** and even **animated**, You can even put the emoji ID (if u don't have nitro).
+-  All the reactions and arrow emojis can be **custom** and even **animated**, you can even put the emoji ID (if you don't have nitro).
   
--  | Free to tell about new themes which you might want to see. Let me know if you think any part of the theme can be made better.
-   | I'm available in the `cog support server <https://discord.gg/GET4DVk>`__.
+-  | Feel free to suggest new themes which you might want to see. Let me know if you think any part of the theme can be made better.
+   | I'm available in the `Cog Support server <https://discord.gg/GET4DVk>`__.
 
--  If the owner of any bot feels that their theme needs to be removed from this cog. Please inform me, I'll remove it.
+-  If the owner of any bot feels that their theme needs to be removed from this cog, please inform me, I'll remove it.
 
 FAQ
 ----
@@ -184,14 +184,14 @@ FAQ
 2. Can I make my own theme in your cog?
     
    | Well you can just learn about the help formatter api.
-   | If u really need categories as well then you can fork my repo,
+   | If you really need categories as well then you can fork my repo,
      navigate to the themes folder, see how the themes are made and make a
      new file in that folder with your custom coded theme and load the cog. 
-   | your theme should magically occur in the ``[p]chelp listthemes``
+   | Your theme should magically appear in the ``[p]chelp listthemes``
 
 3. Some of my reactions are vanishing?
 
-   You are probably having more than 14 categories. A message can only have 14 reactions from a bot at max (I think).
+   You probably have more than 14 categories. A message can only have 14 reactions from a bot at max (I think).
    This is a discord limitation and it's unhandled by the cog.
 
 Credits
