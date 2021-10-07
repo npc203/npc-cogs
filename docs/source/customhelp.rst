@@ -147,10 +147,10 @@ Custom Help Settings
    | This will change how long the reaction menu stays (in seconds) before being removed.
 
 4. | ``[p]chelp settings usebuttons``
-   | If you want to use buttons instead of emote reactions for menus, you'll want to use this commands.
+   | If you want to use buttons instead of emote reactions for menus, you'll want to use this command.
 
    .. note::
-      In order to use buttons, you need ``slashtags`` from `Phen <https://github.com/phenom4n4n/phen-cogs>`__ for them to work properly.
+      In order to use buttons, you need ``slashtags`` from `Phen-cogs <https://github.com/phenom4n4n/phen-cogs>`__ for them to work properly.
 
 5. | ``[p]chelp settings usereactions``
    | This will enable (or disable) the use of reactions for the help menu.
