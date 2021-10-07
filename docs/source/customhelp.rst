@@ -137,6 +137,23 @@ Custom Help Settings
       force_right: emoji
 
 2. | ``[p]chelp settings thumbnail``
+   | If you ever wanted to add a little image on the top right of the embed, you can set the image 
+   | for the thumbnail with a valid link.
+
+3. | ``[p]chelp settings timeout``
+   | This will change how long the reaction menu stays (in seconds) before being removed.
+
+4. | ``[p]chelp settings usebuttons``
+   | If you want to use buttons instead of emote reactions for menus, you'll want to use this commands.
+
+   .. note::
+      In order to use buttons, you need ``slashtags`` from `Phen <https://github.com/phenom4n4n/phen-cogs>`__ for them to work properly.
+
+5. | ``[p]chelp settings usereactions``
+   | This will enable (or disable) the use of reactions for the help menu.
+
+6. | ``[p]chelp settings usereply``
+   | This will have the bot reply to your message after using commands.
 
 Additional Notes
 ----------------
