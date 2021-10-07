@@ -2,22 +2,22 @@ A Customisable Custom Help Cog For Red:
 =======================================
 
 
-| Couldn't get a shorter title. Anyways, the cog introduces categories,meaning you can now bunch up cogs into one blob and give it a name,description and reaction.
+| Couldn't get a shorter title. Anyways, the cog introduces categories, meaning you can now bunch up cogs into one blob and give it a name,description and reaction.
 |
-| This cog is made cause I didn't like 30 help pages for my bot and i wanted to bunch my cogs.
+| This cog is made cause I didn't like 30 help pages for my bot and I wanted to bunch my cogs.
 |
 | Use ``[p]chelp`` to see what can be customised and ``[p]chelp settings`` for even more customisations.
 | 
-| Oh and as an additional bonus, If you have the alias cog loaded. those alias's help can also be retrieved. 
+| As an additional bonus, if you have the alias cog loaded, those aliases will also be retrieved.
 
 Setup
--------
+-----
 *Note: Use* ``[p]chelp set 1`` *to set your help to the custom help, else it'll remain as the normal one* 
 
 1. | Start by doing ``[p]chelp list`` to list all your cogs
 
 2. | Pick the cogs you need to group into a category.
-   | Then use ``[p]chelp create`` , now add the catergorized cogs as shown below.
+   | Then use ``[p]chelp create``, now add the catergorized cogs as shown below.
 
    .. note::
     This command can be run as many times as needed and can load up cogs into existing categories as well.
@@ -35,13 +35,13 @@ Setup
    
    | |create categories|
 
-3. Congrats you just bunched up cogs into categories. Now you can do
+3. Congrats, you just bunched up cogs into categories. Now you can do
    ``[p]help <category>`` to load the help of all those cogs in the category.
 
-4. | Now ``[p]chelp list`` should show the categories made and your help must look cooler! 
+4. | Now ``[p]help`` should show those categories to be that much cooler! 
    | |raw help|
    
-5. | Yay! *but wait* , we need to fill in the blanks
+5. | Yay! *But wait*, we need to fill in the blanks.
    | Use ``[p]chelp edit`` to add the everything you need to customise a category. 
    | The format is simply:
 
@@ -53,57 +53,79 @@ Setup
       - long_desc: long description
       - reaction: reaction emoji
 
-   | you can mix and match, as much as you want. Like the example below
+   | Feel free to mix and match to your liking, as in example below:
    | |editz|
 
-6. | Now the main help menu must look a little better.
+6. | Once you've edited everything, your help menu will look even more impressive!
    | |Default command|
 
-7.  *butt weight there's more.*
+7.  *But wait, there's even more.*
 
 Themes
--------
+------
 
 Introducing themes that were shamesslessly ripped off from other bots cause I'm bad at designing. 
 
-1. | ``[p]chelp listthemes`` to get all the themes and the features available in each of them.
+1. | ``[p]chelp listthemes``
+   | This will get all the themes and the features available in each of them.
    | |list themes|
 
-2. ``[p]chelp load <theme> feature`` to load the respective stuff.
+2. | ``[p]chelp load <theme> <feature>``
+   | This will load the respective theme for a particular feature.
    
    .. note::
       | You can use ``[p]chelp load <theme> all`` to load all the available feature in that theme.
-      | You can mix and match any theme. (you won't lose ur categories <_<)
+      | You can also mix and match any theme. (You will not lose configured categories. <_<)
 
-   | An example of ``[p]chelp load dank main`` is shown below
+   | An example of ``[p]chelp load dank main`` is shown below:
    | |image5| 
 
-3. | ``[p]chelp show`` to show what themes are loaded.
+3. | ``[p]chelp show``
+   | This will show what themes are loaded, along with your current settings.
    | |image6|
      
-4. ``[p]chelp unload feature`` to reset the given feature back to default
+4. | ``[p]chelp unload <feature>``
+   | Run this command to reset the given feature back to default.
 
-5. ``[p]chelp reset`` to reset everything back to the default custom help
+5. | ``[p]chelp reset``
+   | This command will reset the themes to default.
    
 .. note:: 
-    This won't revert to the previous red help, to do so use ``[p]chelp set 0``
+    This won't revert to the regular Red help menu, to do so use ``[p]chelp set 0``
 
-6. wew, wait you thought we are done? *or are we*
+6. Whew, wait you thought we were done? *Or are we...*
 
-More configurablity
+Category Configuration
+----------------------
+
+| Custom Help also has additional configuration available to hide categories in
+| certain circumstances, such as ``developer`` or even ``NSFW`` from public
+| view.
+
+1. | ``[p]chelp dev``
+   | This will hide categories and only be visible by the bot owner.
+   
+2. ``[p]chelp nsfw``
+   | This will hide categories to only be visible within NSFW-marked channels.
+   
+3. ``[p]chelp auto``
+   | To make a pre-formatted list of categories, this will take tags from your installed cogs
+   | and auto-generate a list for you to use in ``[p]chelp create``.
+   
+4. ``[p]chelp info``
+   | This will provide a description of themes available.
+
+Custom Help Settings
 --------------------
 
-1. ``[p]chelp dev`` to add categories that can only be visible by the owner.
-   
-2. ``[p]chelp nsfw`` to add categories that can only be visible in nsfw channels.
-   
-3. ``[p]chelp auto`` to automatically make categories for you based on the tags in cogs!.
-   
-4. ``[p]chelp info`` to see a brief description of categories.
-   
-5. | Custom Arrows, YAY!
-   | If you feel the default arrow icons are boring and plain, this is what you probably need (Supports emotes ofc).
-   | You can also use plain emoji ids, The format is
+| Additional settings in Custom Help can be configured via ``[p]chelp settings``, including but not limited to 
+| custom navigation, thumbnails, using replies, and more.
+
+1. | ``[p]chelp settings arrows``
+   | Custom Navigation, YAY!
+   | If you feel the default arrow icons are boring and plain, and you want to spice up navigation, you're probably looking for this. (Supports custom emotes.)
+   | When using custom emotes from servers, your bot must also have access to them to be used.
+   | You can use the emote ID, or use the emote itself in the following format:
    
    .. code-block:: javascript
 
@@ -114,8 +136,10 @@ More configurablity
       force_left: emoji
       force_right: emoji
 
+2. | ``[p]chelp settings thumbnail``
+
 Additional Notes
------------------
+----------------
 
 -  Don't be a moron trying to mix minimal theme (non-embed) with the other embed-based themes.
 
