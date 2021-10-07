@@ -74,7 +74,7 @@ def get_cooldowns(command):
 
 # Add aliases
 def get_aliases(command, original):
-    if alias := command.aliases:
+    if alias := list(command.aliases):
         if original in alias:
             alias.remove(original)
             alias.append(command.name)
