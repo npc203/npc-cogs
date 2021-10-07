@@ -140,6 +140,9 @@ Custom Help Settings
    | If you ever wanted to add a little image on the top right of the embed, you can set the image 
    | for the thumbnail with a valid link.
 
+   .. note::
+      The link must be a direct image link, ending in GIF, JPG, or PNG.
+
 3. | ``[p]chelp settings timeout``
    | This will change how long the reaction menu stays (in seconds) before being removed.
 
