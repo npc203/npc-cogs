@@ -46,11 +46,19 @@ class Speak(commands.Cog):
         """Says the given text with the specified name and avatar"""
         hook = await self.get_hook(ctx)
         await ctx.message.delete()
-        await hook.send(
-            username=username,
-            avatar_url=avatar,
-            content=sentence,
-        )
+        if avatar.startswith("http"):
+            if 1<len(username)<=80:
+                await hook.send(
+                    username=username,
+                    avatar_url=avatar,
+                    content=sentence,
+                )
+            else:
+                await ctx.send("You must include a username of less than 80 characters.")
+                await ctx.send_help()
+        else:
+            await ctx.send("You must include a URL to define the webhook avatar.")
+            await ctx.send_help()
 
     @checks.bot_has_permissions(manage_webhooks=True, manage_messages=True)
     @commands.group(invoke_without_command=False)
