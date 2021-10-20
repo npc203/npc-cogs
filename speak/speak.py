@@ -39,6 +39,18 @@ class Speak(commands.Cog):
             avatar_url=mention.avatar_url,
             content=sentence,
         )
+        
+    @checks.bot_has_permissions(manage_webhooks=True, manage_messages=True)
+    @commands.command()
+    async def telluser(self, ctx, username: str, avatar: str, *, sentence: str):
+        """Says the given text with the specified name and avatar"""
+        hook = await self.get_hook(ctx)
+        await ctx.message.delete()
+        await hook.send(
+            username=username,
+            avatar_url=avatar,
+            content=sentence,
+        )
 
     @checks.bot_has_permissions(manage_webhooks=True, manage_messages=True)
     @commands.group(invoke_without_command=False)
