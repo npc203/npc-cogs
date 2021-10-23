@@ -85,7 +85,7 @@ class CustomHelp(commands.Cog):
                 "timeout": 120,
                 "replies": True,
                 "buttons": False,
-                "delete": False,
+                "deletemessage": False,
                 "arrows": {
                     "right": "\N{BLACK RIGHTWARDS ARROW}\N{VARIATION SELECTOR-16}",
                     "left": "\N{LEFTWARDS BLACK ARROW}\N{VARIATION SELECTOR-16}",
@@ -824,7 +824,7 @@ class CustomHelp(commands.Cog):
     async def deletemessage(self, ctx, toggle: bool):
         """Delete the message that started the help menu."""
         async with self.config.settings() as f:
-            f["delete"] = toggle
+            f["deletemessage"] = toggle
         await ctx.tick()
 
     @settings.command(aliases=["arrow"])
