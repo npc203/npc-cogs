@@ -10,7 +10,7 @@ from redbot.core.commands.help import (HelpSettings, NoCommand, NoSubCommand,
                                        _, dpy_commands, mass_purge)
 from redbot.core.utils.chat_formatting import pagify
 
-from . import ARROWS, GLOBAL_CATEGORIES, get_menu
+from . import ARROWS, GLOBAL_CATEGORIES, get_menu, deletemessage
 from .category import Category, get_category
 from .dpy_menus import ListPages
 from .utils import (close_menu, first_page, get_aliases, get_cooldowns,
@@ -125,6 +125,9 @@ class BaguetteHelp(commands.RedHelpFormatter):
         """
 
         help_settings = await HelpSettings.from_context(ctx)
+        
+        if deletemessage:
+            await ctx.message.delete()
 
         if help_for is None or isinstance(help_for, dpy_commands.bot.BotBase):
             await self.format_bot_help(ctx, help_settings=help_settings)
