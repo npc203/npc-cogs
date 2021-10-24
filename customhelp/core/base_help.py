@@ -126,8 +126,8 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
         help_settings = await HelpSettings.from_context(ctx)
         
-if ctx.channel.permissions_for(ctx.me).manage_messages and await self.config.settings.deletemessage():
-            await ctx.message.delete()
+        if ctx.channel.permissions_for(ctx.me).manage_messages and await self.config.settings.deletemessage():
+                    await ctx.message.delete()
 
         if help_for is None or isinstance(help_for, dpy_commands.bot.BotBase):
             await self.format_bot_help(ctx, help_settings=help_settings)
