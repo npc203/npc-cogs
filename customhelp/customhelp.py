@@ -262,13 +262,13 @@ class CustomHelp(commands.Cog):
             "timeout": "Timeout(secs)",
             "replies": "Use replies",
             "buttons": "Use buttons",
-            "delete": "Delete user message",
+            "deletemessage": "Delete user msg",
         }
         other_settings = []
         # url doesnt exist now, that's why the check. sorry guys.
         for i, j in settings.items():
             if i in setting_mapping:
-                other_settings.append(f"`{setting_mapping[i]:<13}`: {j}")
+                other_settings.append(f"`{setting_mapping[i]:<15}`: {j}")
         val = await self.config.theme()
         val = "\n".join([f"`{i:<10}`: " + (j if j else "default") for i, j in val.items()])
         emb = discord.Embed(
