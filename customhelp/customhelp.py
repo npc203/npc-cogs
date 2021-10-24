@@ -769,7 +769,7 @@ class CustomHelp(commands.Cog):
         for page in pagify(text, page_length=1985, shorten_by=0):
             await ctx.send(box(page, lang="yaml"))
 
-    @chelp.group(name="set",aliases=["settings,setting"])
+    @chelp.group(name="settings",aliases=["setting"])
     async def settings(self, ctx):
         """Change various help settings"""
 
