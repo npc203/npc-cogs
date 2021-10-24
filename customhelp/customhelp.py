@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 import json
 import re
 from collections import Counter, defaultdict
@@ -85,6 +85,7 @@ class CustomHelp(commands.Cog):
                 "timeout": 120,
                 "replies": True,
                 "buttons": False,
+                "deletemessage": False,
                 "arrows": {
                     "right": "\N{BLACK RIGHTWARDS ARROW}\N{VARIATION SELECTOR-16}",
                     "left": "\N{LEFTWARDS BLACK ARROW}\N{VARIATION SELECTOR-16}",
@@ -261,6 +262,7 @@ class CustomHelp(commands.Cog):
             "timeout": "Timeout(secs)",
             "replies": "Use replies",
             "buttons": "Use buttons",
+            "delete": "Delete user message",
         }
         other_settings = []
         # url doesnt exist now, that's why the check. sorry guys.
@@ -817,6 +819,13 @@ class CustomHelp(commands.Cog):
             await ctx.send(f"Sucessfully set timeout to {wait}")
         else:
             await ctx.send("Timeout must be atleast 20 seconds")
+
+    @settings.command(aliases=["deleteusermessage"])
+    async def deletemessage(self, ctx, toggle: bool):
+        """Delete the user message that started the help menu.
+        Note: This only works if the bot has permissions to delete the user message, otherwise it's supressed"""
+        await self.config.settings.deletemessage.set(toggle)
+        await ctx.send(f"Sucessfully set delete user toggle to {toggle}")
 
     @settings.command(aliases=["arrow"])
     async def arrows(self, ctx, *, correct_txt=None):

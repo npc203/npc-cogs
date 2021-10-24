@@ -422,6 +422,9 @@ class BaguetteHelp(commands.RedHelpFormatter):
         # save on config calls
         channel_permissions = ctx.channel.permissions_for(ctx.me)
 
+        if channel_permissions.manage_messages and await self.config.settings.deletemessage():
+            await ctx.message.delete()
+
         if not (channel_permissions.add_reactions and help_settings.use_menus):
 
             max_pages_in_guild = help_settings.max_pages_in_guild
