@@ -822,10 +822,10 @@ class CustomHelp(commands.Cog):
 
     @settings.command(aliases=["deleteusermessage"])
     async def deletemessage(self, ctx, toggle: bool):
-        """Delete the message that started the help menu."""
-        async with self.config.settings() as f:
-            f["deletemessage"] = toggle
-        await ctx.tick()
+        """Delete the user message that started the help menu.
+        Note: This only works if the bot has permissions to delete the user message, otherwise it's supressed"""
+        await self.config.settings.deletemessage.set(toggle)
+        await ctx.send(f"Sucessfully set delete user toggle to {toggle}")
 
     @settings.command(aliases=["arrow"])
     async def arrows(self, ctx, *, correct_txt=None):
