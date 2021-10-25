@@ -32,6 +32,9 @@ class Mixture(ThemesMeta):
                             title = EMPTY_STRING
                         emb["fields"].append(EmbedField(title, "> " + page, False))
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
+
+            emb["thumbnail"] = obj.thumbnail
+
             if get_pages:
                 return pages
             else:
