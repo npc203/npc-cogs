@@ -13,12 +13,14 @@ class Category:
         cogs: list,
         reaction: str = None,
         long_desc: str = None,
+        thumbnail: str = None,
     ):
         self.name = name
         self.desc = desc
         self.long_desc = long_desc
         self.cogs = cogs
         self.reaction = reaction
+        self.thumbnail = thumbnail
 
     def __eq__(self, item):
         return item == self.name
