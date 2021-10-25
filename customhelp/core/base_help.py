@@ -187,6 +187,8 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 emb["fields"].append(field)
                 title = EMPTY_STRING
 
+            emb["thumbnail"] = obj.thumbnail
+
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
             if get_pages:
                 return pages
@@ -352,7 +354,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
     ):
         """Returns Embed pages (Really copy paste from core)"""
         pages = []
-        thumbnail_url = await self.config.settings.thumbnail()
+        thumbnail_url = await self.config.settings.thumbnail() or embed_dict.get("thumbnail",None)
         page_char_limit = help_settings.page_char_limit
         page_char_limit = min(page_char_limit, 5500)
         author_info = {
