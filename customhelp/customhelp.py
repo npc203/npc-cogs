@@ -42,6 +42,7 @@ Config Structure:
                 "long_desc":longer description
                 "cogs" : []
                 "reaction":None
+                "thumbnail":None
             }
      ]
     }
@@ -77,6 +78,7 @@ class CustomHelp(commands.Cog):
                 "desc": None,
                 "long_desc": None,
                 "reaction": None,
+                "thumbnail": None,
             },
             "settings": {
                 "react": True,
@@ -422,7 +424,7 @@ class CustomHelp(commands.Cog):
                 "Your next message should be a yaml with the specfied format as in the docs\n"
                 "Example:\n"
                 "category1:\n"
-                " - name: newname(use this ONLY for renaming)\n - reaction: \U0001f604\n - desc: short description\n - long_desc: long description (Optional,only displayed in dank theme)"
+                " - name: newname(use this ONLY for renaming)\n - reaction: \U0001f604\n - desc: short description\n - long_desc: long description (Optional,only displayed in dank theme)\n - thumbnail: embed thumbnail"
             )
             try:
                 msg = await self.bot.wait_for(
@@ -447,7 +449,7 @@ class CustomHelp(commands.Cog):
             i: [(k, v) for f in my_list for k, v in f.items()]
             for i, my_list in parsed_data.items()
         }
-        check = ["name", "desc", "long_desc", "reaction"]
+        check = ["name", "desc", "long_desc", "reaction", "thumbnail"]
         available_categories = [category.name for category in GLOBAL_CATEGORIES]
         # Remove uncategorised
         available_categories.pop(-1)
