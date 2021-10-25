@@ -40,6 +40,8 @@ class Blocks(ThemesMeta):
             emb["embed"]["title"] = (
                 (str(obj.reaction) if obj.reaction else "") + " " + obj.name.capitalize()
             )
+            
+            emb["thumbnail"] = obj.thumbnail
 
             if description := obj.long_desc:
                 emb["embed"]["description"] = f"{description[:250]}"
