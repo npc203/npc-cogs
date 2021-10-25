@@ -31,6 +31,8 @@ class JustCore(ThemesMeta):
             if description := obj.long_desc:
                 emb["embed"]["title"] = f"{description[:250]}"
 
+            emb["thumbnail"] = obj.thumbnail
+
             for cog_name, data in coms:
                 title = f"**__{cog_name}:__**"
                 cog_text = "\n".join(
