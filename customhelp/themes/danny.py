@@ -25,6 +25,9 @@ class DannyHelp(ThemesMeta):
                             title = EMPTY_STRING
                         emb["fields"].append(EmbedField(title, cog_names, True))
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
+
+            emb["thumbnail"] = obj.thumbnail
+
             if get_pages:
                 return pages
             else:
