@@ -17,6 +17,8 @@ class DankHelp(ThemesMeta):
             description = ctx.bot.description or ""
             emb["embed"]["description"] = description
 
+            emb["thumbnail"] = obj.thumbnail
+
             filtered_categories = await self.filter_categories(ctx, GLOBAL_CATEGORIES)
             # Maybe add category desc with long_desc somewhere?
             for cat in filtered_categories:
