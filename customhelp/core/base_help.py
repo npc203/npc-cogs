@@ -12,13 +12,14 @@ from redbot.core.commands.help import (
     NoSubCommand,
     _,
     dpy_commands,
-    mass_purge,
 )
+from redbot.core.utils.mod import mass_purge
 from redbot.core.utils.chat_formatting import pagify
 
 from customhelp.core.views import SelectHelpBar
 
-from . import ARROWS, GLOBAL_CATEGORIES, get_menu
+from . import ARROWS, GLOBAL_CATEGORIES
+from .menu_handler import get_menu
 from .category import Category, get_category
 from .dpy_menus import ListPages, BaseMenu
 from .utils import (
@@ -375,7 +376,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
         page_char_limit = min(page_char_limit, 5500)
         author_info = {
             "name": _("{ctx.me.display_name} Help Menu").format(ctx=ctx),
-            "icon_url": ctx.me.avatar_url,
+            "icon_url": ctx.me.avatar.url,
         }
         offset = len(author_info["name"]) + 20
         foot_text = embed_dict["footer"]["text"]
@@ -496,35 +497,40 @@ class BaguetteHelp(commands.RedHelpFormatter):
             final_menu_class = get_menu()
             if isinstance(final_menu_class, BaseMenu):
                 final_menu = final_menu_class(ListPages(pages))
-            else:
-                final_menu = final_menu_class(pages)
-                options = []
-                # select_bar = SelectHelpBar([])
-                # final_menu.add_item(select_bar)
+                for thing in trans:
+                    final_menu.add_button(trans[thing](ARROWS[thing]))
 
-            # for thing in trans:
-            #     final_menu.add_button(trans[thing](ARROWS[thing]))
+                if not add_emojis:
+                    # Add force left and right reactions when emojis are off, cause why not xD
+                    final_menu.add_button(first_page(ARROWS["force_left"]))
+                    final_menu.add_button(last_page(ARROWS["force_right"]))
 
-            # if not add_emojis:
-            #     # Add force left and right reactions when emojis are off, cause why not xD
-            #     final_menu.add_button(first_page(ARROWS["force_left"]))
-            #     final_menu.add_button(last_page(ARROWS["force_right"]))
-
-            # TODO important!
-            if add_emojis and emoji_mapping:
-                # Adding additional category emojis
-                for cat in emoji_mapping:
-                    if cat.reaction:
-                        options.append(
-                            discord.SelectOption(
-                                label=cat.name, description=cat.desc, emoji=cat.reaction
+                if add_emojis and emoji_mapping:
+                    # Adding additional category emojis
+                    for cat in emoji_mapping:
+                        if cat.reaction:
+                            final_menu.add_button(
+                                await react_page(
+                                    ctx, cat.reaction, help_settings, bypass_checks=True
+                                )
                             )
-                        )
-                        # final_menu.add_button(
-                        #     await react_page(ctx, cat.reaction, help_settings, bypass_checks=True)
-                        # )
-                # final_menu.add_button(await home_page(ctx, ARROWS["home"], help_settings))
-            await final_menu.start(ctx)
+                    final_menu.add_button(await home_page(ctx, ARROWS["home"], help_settings))
+                    await final_menu.start(ctx)
+
+            else:
+                options = []
+
+                if add_emojis and emoji_mapping:
+                    # Adding additional category emojis
+                    for cat in emoji_mapping:
+                        if cat.reaction:
+                            options.append(
+                                discord.SelectOption(
+                                    label=cat.name, description=cat.desc, emoji=cat.reaction
+                                )
+                            )
+                final_menu = final_menu_class(pages, options,help_settings, bypass_checks=True)
+                await final_menu.start(ctx)
 
     async def blacklist(self, ctx, name) -> bool:
         """Some blacklist checks utils

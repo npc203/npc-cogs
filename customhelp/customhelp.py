@@ -17,10 +17,10 @@ from redbot.core.utils import menus, predicates
 from redbot.core.utils.chat_formatting import box, pagify
 from tabulate import tabulate
 
-from .core.views import MenuView
-
 from . import themes
-from .core import ARROWS, GLOBAL_CATEGORIES, set_menu
+from .core import ARROWS, GLOBAL_CATEGORIES
+from .core.views import MenuView
+from .core.menu_handler import set_menu
 from .core.base_help import EMPTY_STRING, BaguetteHelp
 from .core.category import Category, get_category
 from .core.utils import LINK_REGEX, emoji_converter
@@ -81,6 +81,7 @@ class CustomHelp(commands.Cog):
                 "reaction": None,
             },
             "settings": {
+                "react": True,
                 "set_formatter": False,
                 "thumbnail": None,
                 "timeout": 120,

@@ -61,7 +61,7 @@ class BaseMenu(menus.MenuPages, inherit_buttons=False):
         """Just extends the default reaction_check to use owner_ids"""
         if payload.message_id != self.message.id:
             return False
-        if payload.user_id not in (*self.bot.owner_ids, self._author_id):
+        if payload.user_id not in (*self.bot.owner_ids, self._author_id):  # type:ignore
             return False
         return payload.emoji in self.buttons
 
@@ -77,7 +77,7 @@ class ReplyMenus(BaseMenu, inherit_buttons=False):
 
     async def _get_kwargs_from_page(self, page):
         # Do this if you dont want to ping the user
-        kwargs = {"allowed_mentions": discord.AllowedMentions(replied_user=False)}
+        kwargs: dict[str, Any] = {"allowed_mentions": discord.AllowedMentions(replied_user=False)}
         value = await discord.utils.maybe_coroutine(self._source.format_page, self, page)
         if isinstance(value, dict):
             kwargs.update(value)
@@ -100,11 +100,11 @@ def get_button_menu(use_replies: bool):
 
         async def show_page(self, page_number, button):
             cls = BaseButtonMenu if button else BaseMenu
-            await cls.show_page(self, page_number, button)
+            await cls.show_page(self, page_number)
 
         async def change_source(self, source, button):
             cls = BaseButtonMenu if button else BaseMenu
-            await cls.change_source(self, source, button)
+            await cls.change_source(self, source)
 
     return HelpButtonMenu
 
