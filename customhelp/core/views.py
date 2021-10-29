@@ -67,9 +67,12 @@ class BaseInteractionMenu(discord.ui.View):
             self.add_item(obj)
             obj.setup()
 
-    async def start(self, ctx: commands.Context):
+    async def start(self, ctx: commands.Context, usereply: bool = True):
         # TODO Confidently embeds lol, generalize this
-        self.message = await ctx.send(embed=self.pages[0], view=self)
+        if usereply:
+            self.message = await ctx.reply(embed=self.pages[0], view=self, mention_author=False)
+        else:
+            self.message = await ctx.send(embed=self.pages[0], view=self)
         self.ctx = ctx
         self.valid_ids = list(ctx.bot.owner_ids)
         self.valid_ids.append(ctx.author.id)
@@ -87,9 +90,6 @@ class BaseInteractionMenu(discord.ui.View):
         self.pages = new_source
         self.max_page = len(new_source)
         self.curr_page = 0
-        print(self.max_page)
-        print(*self.children, sep="\n")
-        print("-" * 20)
         if self.max_page > 1:
             self.children[-2].disabled = False  # type: ignore right arrow
 
@@ -185,8 +185,7 @@ class DoubleLeftButton(BaseButton):
         super().__init__(emoji=ARROWS["force_left"])
 
     def setup(self):
-        if self.view.max_page <= 2:
-            self.disabled = True
+        self.disabled = True
 
     def edit_buttons(self):
         view: BaseInteractionMenu = self.view

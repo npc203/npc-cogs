@@ -19,7 +19,7 @@ from redbot.core.utils.chat_formatting import pagify
 from customhelp.core.views import SelectHelpBar
 
 from . import ARROWS, GLOBAL_CATEGORIES
-from .menu_handler import get_menu
+from .menu_handler import get_menu,use_replies
 from .category import Category, get_category
 from .dpy_menus import ListPages, BaseMenu
 from .utils import (
@@ -530,7 +530,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                                 )
                             )
                 final_menu = final_menu_class(pages, options,help_settings, bypass_checks=True)
-                await final_menu.start(ctx)
+                await final_menu.start(ctx,use_replies)
 
     async def blacklist(self, ctx, name) -> bool:
         """Some blacklist checks utils
