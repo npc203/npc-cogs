@@ -17,6 +17,8 @@ from redbot.core.utils import menus, predicates
 from redbot.core.utils.chat_formatting import box, pagify
 from tabulate import tabulate
 
+from .core.views import MenuView
+
 from . import themes
 from .core import ARROWS, GLOBAL_CATEGORIES, set_menu
 from .core.base_help import EMPTY_STRING, BaguetteHelp
@@ -79,12 +81,12 @@ class CustomHelp(commands.Cog):
                 "reaction": None,
             },
             "settings": {
-                "react": True,
                 "set_formatter": False,
                 "thumbnail": None,
                 "timeout": 120,
                 "replies": True,
-                "buttons": False,
+                "menutype": "buttons",  # "emojis","buttons","select"
+                # "arrowtype": "buttons",  # "emojis","buttons" #TODO arrow type later
                 "deletemessage": False,
                 "arrows": {
                     "right": "\N{BLACK RIGHTWARDS ARROW}\N{VARIATION SELECTOR-16}",
@@ -256,10 +258,9 @@ class CustomHelp(commands.Cog):
         settings = await self.config.settings()
         blocklist = await self.config.blacklist()
         setting_mapping = {
-            "react": "usereactions",
             "set_formatter": "iscustomhelp?",
             "thumbnail": "thumbnail",
-            "timeout": "Timeout(secs)",
+            "menus": "Menu-Type",
             "replies": "Use replies",
             "buttons": "Use buttons",
             "deletemessage": "Delete user msg",
@@ -769,16 +770,26 @@ class CustomHelp(commands.Cog):
         for page in pagify(text, page_length=1985, shorten_by=0):
             await ctx.send(box(page, lang="yaml"))
 
-    @chelp.group(name="settings",aliases=["setting"])
+    @chelp.group(name="settings", aliases=["setting"])
     async def settings(self, ctx):
         """Change various help settings"""
 
-    @settings.command(aliases=["usereaction"])
-    async def usereactions(self, ctx, toggle: bool):
-        """Toggles adding reaction for navigation."""
-        async with self.config.settings() as f:
-            f["react"] = toggle
-        await ctx.tick()
+    @settings.command()
+    async def menutype(self, ctx):
+        """Toggles between various menus"""
+        options = [
+            discord.SelectOption(
+                label="Emojis", description="Old-Fashion, Highly ratelimited", emoji="😃"
+            ),
+            discord.SelectOption(label="Buttons", description="Cool chonky buttons", emoji="🔘"),
+            discord.SelectOption(
+                label="Select", description="Minimalistic Dropdown Menus", emoji="⏬"
+            ),
+        ]
+        select_bar = MenuView(ctx.author.id, options, self.config.settings.menutype)
+        select_bar.message = await ctx.send(
+            "Pick your menu type from the list shown", view=select_bar
+        )
 
     @settings.command(aliases=["setthumbnail"])
     async def thumbnail(self, ctx, url: str = None):
@@ -801,14 +812,6 @@ class CustomHelp(commands.Cog):
         response, success = set_menu(replies=option, buttons=None)
         if success:
             await self.config.settings.replies.set(option)
-        await ctx.send(response)
-
-    @settings.command(aliases=["buttons"])
-    async def usebuttons(self, ctx, option: bool):
-        """Enable/disable button menus."""
-        response, success = set_menu(replies=None, buttons=option)
-        if success:
-            await self.config.settings.buttons.set(option)
         await ctx.send(response)
 
     @settings.command()

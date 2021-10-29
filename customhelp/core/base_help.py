@@ -6,16 +6,34 @@ from typing import List, Union, cast
 import discord
 from redbot.core import commands
 from redbot.core.commands.context import Context
-from redbot.core.commands.help import (HelpSettings, NoCommand, NoSubCommand,
-                                       _, dpy_commands, mass_purge)
+from redbot.core.commands.help import (
+    HelpSettings,
+    NoCommand,
+    NoSubCommand,
+    _,
+    dpy_commands,
+    mass_purge,
+)
 from redbot.core.utils.chat_formatting import pagify
+
+from customhelp.core.views import SelectHelpBar
 
 from . import ARROWS, GLOBAL_CATEGORIES, get_menu
 from .category import Category, get_category
-from .dpy_menus import ListPages
-from .utils import (close_menu, first_page, get_aliases, get_cooldowns,
-                    get_perms, home_page, last_page, next_page, prev_page,
-                    react_page, shorten_line)
+from .dpy_menus import ListPages, BaseMenu
+from .utils import (
+    close_menu,
+    first_page,
+    get_aliases,
+    get_cooldowns,
+    get_perms,
+    home_page,
+    last_page,
+    next_page,
+    prev_page,
+    react_page,
+    shorten_line,
+)
 
 HelpTarget = Union[
     commands.Command,
@@ -413,7 +431,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
         embed: bool = True,
         help_settings: HelpSettings = None,
         add_emojis: bool = False,
-        emoji_mapping: list = None,
+        emoji_mapping: List[Category] = None,
     ):
         """
         Sends pages based on settings.
@@ -470,30 +488,42 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
                 asyncio.create_task(_delete_delay_help(destination, messages, delete_delay))
         else:
-            # m = await (ctx.send(embed=pages[0]) if embed else ctx.send(pages[0]))
             trans = {
                 "left": prev_page,
                 "cross": close_menu,
                 "right": next_page,
             }
-            final_menu = get_menu()(ListPages(pages))
-            for thing in trans:
-                final_menu.add_button(trans[thing](ARROWS[thing]))
+            final_menu_class = get_menu()
+            if isinstance(final_menu_class, BaseMenu):
+                final_menu = final_menu_class(ListPages(pages))
+            else:
+                final_menu = final_menu_class(pages)
+                options = []
+                # select_bar = SelectHelpBar([])
+                # final_menu.add_item(select_bar)
 
-            if not add_emojis:
-                # Add force left and right reactions when emojis are off, cause why not xD
-                final_menu.add_button(first_page(ARROWS["force_left"]))
-                final_menu.add_button(last_page(ARROWS["force_right"]))
+            # for thing in trans:
+            #     final_menu.add_button(trans[thing](ARROWS[thing]))
+
+            # if not add_emojis:
+            #     # Add force left and right reactions when emojis are off, cause why not xD
+            #     final_menu.add_button(first_page(ARROWS["force_left"]))
+            #     final_menu.add_button(last_page(ARROWS["force_right"]))
 
             # TODO important!
             if add_emojis and emoji_mapping:
                 # Adding additional category emojis
                 for cat in emoji_mapping:
                     if cat.reaction:
-                        final_menu.add_button(
-                            await react_page(ctx, cat.reaction, help_settings, bypass_checks=True)
+                        options.append(
+                            discord.SelectOption(
+                                label=cat.name, description=cat.desc, emoji=cat.reaction
+                            )
                         )
-                final_menu.add_button(await home_page(ctx, ARROWS["home"], help_settings))
+                        # final_menu.add_button(
+                        #     await react_page(ctx, cat.reaction, help_settings, bypass_checks=True)
+                        # )
+                # final_menu.add_button(await home_page(ctx, ARROWS["home"], help_settings))
             await final_menu.start(ctx)
 
     async def blacklist(self, ctx, name) -> bool:

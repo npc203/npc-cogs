@@ -1,5 +1,7 @@
+from typing_extensions import TypeVarTuple
 from discord import __version__ as dpy_version
 
+from .views import BaseHelpMenu
 from .dpy_menus import NoReplyMenus, ReplyMenus, get_button_menu
 
 # Keeping all global vars in one place
@@ -54,8 +56,7 @@ def set_menu(*, replies, buttons, validate_buttons: bool = False):
 
 # wew thanks jack
 def get_menu():
-    global use_buttons
-    global use_replies
+    return BaseHelpMenu
     if use_buttons:
         try:
             return get_button_menu(use_replies)

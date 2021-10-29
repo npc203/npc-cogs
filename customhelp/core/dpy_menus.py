@@ -26,7 +26,6 @@ class BaseMenu(menus.MenuPages, inherit_buttons=False):
     def __init__(
         self,
         source: menus.PageSource,
-        # cog: commands.Cog,
         clear_reactions_after: bool = True,
         delete_message_after: bool = False,
         timeout: int = 60,
@@ -42,30 +41,18 @@ class BaseMenu(menus.MenuPages, inherit_buttons=False):
             message=message,
             **kwargs,
         )
-        # self.cog = cog
         self.page_start = page_start
 
-    async def show_page(self, page_number, payload=None):
-        # added unused payload arg since ButtonMenu requires the button to be passed
-        # when showing a page with InteractionButton.update
-        await super().show_page(page_number)
-
-    async def change_source(self, source, payload):
-        await super().change_source(source)
-
-    def add_button(self, button, *, react=False, interaction=None):
-        return super().add_button(button, react=react)
-
-    async def show_checked_page(self, page_number: int, payload=None):
+    async def show_checked_page(self, page_number: int):
         max_pages = self._source.get_max_pages()
         try:
             if max_pages is None or page_number < max_pages and page_number >= 0:
                 # If it doesn't give maximum pages, it cannot be checked
-                await self.show_page(page_number, payload)
+                await self.show_page(page_number)
             elif page_number >= max_pages:
-                await self.show_page(0, payload)
+                await self.show_page(0)
             else:
-                await self.show_page(max_pages - 1, payload)
+                await self.show_page(max_pages - 1)
         except IndexError:
             # An error happened that can be handled, so ignore it.
             pass
