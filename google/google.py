@@ -449,6 +449,8 @@ class Google(Yandex, commands.Cog):
             "gstatic.com",
         )
         links = self.link_regex.findall(html)
+        if not links:
+            return None, {}
         ind = 0
         count = 0
         while count <= 10:  # first 10 should be enough for the google icons
