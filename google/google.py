@@ -453,6 +453,8 @@ class Google(Yandex, commands.Cog):
         count = 0
         while count <= 10:  # first 10 should be enough for the google icons
             for remove in excluded_domains:
+                if not links:
+                    return [], {}
                 if remove in links[ind]:
                     links.pop(ind)
                     break
