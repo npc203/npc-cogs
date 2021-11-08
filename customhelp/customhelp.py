@@ -814,7 +814,7 @@ class CustomHelp(commands.Cog):
                 label="Select", description="Minimalistic Dropdown Menus", emoji="⏬"
             ),
         ]
-        select_bar = MenuView(ctx.author.id, options, self.config.settings.menutype)
+        select_bar = MenuView(ctx.author.id, options, self.config.settings.menutype,self._update_conf)
         select_bar.message = await ctx.send(
             "Pick your menu type from the list shown", view=select_bar
         )
@@ -824,20 +824,21 @@ class CustomHelp(commands.Cog):
         """Set your main thumbnail image here.\n use `[p]chelp settings thumbnail` to reset this"""
         if url:
             if re.search(LINK_REGEX, url):
-                async with self.config.settings() as f:
-                    f["thumbnail"] = url
+                await self.config.settings.thumbnail.set(url)
+                self._update_conf("settings", "thumbnail", url)
                 await ctx.tick()
             else:
                 await ctx.send("Enter a valid url")
         else:
-            async with self.config.settings() as f:
-                f["thumbnail"] = None
+            await self.config.settings.thumbnail.set(None)
+            self._update_conf("settings", "thumbnail", None)
             await ctx.send("Reset thumbnail")
 
     @chelp_settings.command(aliases=["usereplies", "reply"])
     async def usereply(self, ctx, option: bool):
         """Enable/Disable replies"""
         await self.config.settings.replies.set(option)
+        self._update_conf("settings", "replies", option)
         await ctx.send(f"{'Enabled' if option else 'Disabled'} reply menus")
 
     @chelp_settings.command()
@@ -845,6 +846,7 @@ class CustomHelp(commands.Cog):
         """Set how long the help menu must stay active"""
         if wait > 20:
             await self.config.settings.timeout.set(wait)
+            self._update_conf("settings", "timeout", wait)
             await ctx.send(f"Sucessfully set timeout to {wait}")
         else:
             await ctx.send("Timeout must be atleast 20 seconds")
@@ -854,6 +856,7 @@ class CustomHelp(commands.Cog):
         """Delete the user message that started the help menu.
         Note: This only works if the bot has permissions to delete the user message, otherwise it's supressed"""
         await self.config.settings.deletemessage.set(toggle)
+        self._update_conf("settings", "deletemessage", toggle)
         await ctx.send(f"Sucessfully set delete user toggle to {toggle}")
 
     @chelp_settings.command(aliases=["arrow"])
@@ -969,6 +972,7 @@ class CustomHelp(commands.Cog):
                 async with self.config.blacklist.nsfw() as conf:
                     if category not in conf:
                         conf.append(category)
+                        self._update_conf("blacklist", "nsfw", conf)
                         await ctx.send(f"Sucessfully added {category} to nsfw category")
                     else:
                         await ctx.send(f"{category} is already present in nsfw blocklist")
@@ -985,6 +989,7 @@ class CustomHelp(commands.Cog):
             async with self.config.blacklist.nsfw() as conf:
                 if category in conf:
                     conf.remove(category)
+                    self._update_conf("blacklist", "nsfw", conf)
                     await ctx.send(f"Sucessfully removed {category} from nsfw category")
                 else:
                     await ctx.send(f"{category} is not present in nsfw blocklist")
@@ -1007,6 +1012,7 @@ class CustomHelp(commands.Cog):
                 async with self.config.blacklist.dev() as conf:
                     if category not in conf:
                         conf.append(category)
+                        self._update_conf("blacklist", "dev", conf)
                         await ctx.send(f"Sucessfully added {category} to dev list")
                     else:
                         await ctx.send(f"{category} is already present in dev list")
@@ -1023,6 +1029,7 @@ class CustomHelp(commands.Cog):
             async with self.config.blacklist.dev() as conf:
                 if category in conf:
                     conf.remove(category)
+                    self._update_conf("blacklist", "dev", conf)
                     await ctx.send(f"Sucessfully removed {category} from dev category")
                 else:
                     await ctx.send(f"{category} is not present in dev list")
@@ -1126,6 +1133,16 @@ class CustomHelp(commands.Cog):
                 await ctx.send(embed=em)
         else:
             await ctx.send("Command not found")
+
+    def _update_conf(self, var, key, value):
+        """Sample:
+        var = settings
+        key = thumbnail
+        value= https://some_url.com"""
+
+        # Only change if it's customhelp formatter
+        if isinstance(self.bot._help_formatter, BaguetteHelp):
+            getattr(self.bot._help_formatter, var)[key] = value
 
     async def parse_yaml(self, ctx, content):
         """Parse the yaml with basic structure checks"""

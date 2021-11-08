@@ -42,6 +42,32 @@ class BaseMenu(menus.MenuPages, inherit_buttons=False):
             **kwargs,
         )
         self.page_start = page_start
+        self.use_reply = False
+
+    async def _get_kwargs_from_page(self, page):
+        kwargs: dict[str, Any] = {"allowed_mentions": discord.AllowedMentions(replied_user=False)}
+        value = await discord.utils.maybe_coroutine(self._source.format_page, self, page)
+        if isinstance(value, dict):
+            kwargs.update(value)
+        elif isinstance(value, str):
+            kwargs["content"] = value
+        elif isinstance(value, discord.Embed):
+            kwargs["embed"] = value
+        return kwargs
+
+    async def send_initial_message(self, ctx, channel):
+        page = await self._source.get_page(0)
+        kwargs = await self._get_kwargs_from_page(page)
+        if self.use_reply:
+            kwargs["reference"] = ctx.message.to_reference(
+                fail_if_not_exists=False
+            )  # sends message silently when message is deleted
+        return await ctx.send(**kwargs)
+
+    async def start(self, ctx, use_reply, channel=None, wait=False):
+        await self._source._prepare_once()
+        self.use_reply = use_reply
+        await super().start(ctx, channel=channel, wait=wait)
 
     async def show_checked_page(self, page_number: int):
         max_pages = self._source.get_max_pages()
@@ -64,28 +90,6 @@ class BaseMenu(menus.MenuPages, inherit_buttons=False):
         if payload.user_id not in (*self.bot.owner_ids, self._author_id):  # type:ignore
             return False
         return payload.emoji in self.buttons
-
-
-class ReplyMenus(BaseMenu, inherit_buttons=False):
-    async def send_initial_message(self, ctx, channel):
-        page = await self._source.get_page(0)
-        kwargs = await self._get_kwargs_from_page(page)
-        kwargs["reference"] = ctx.message.to_reference(
-            fail_if_not_exists=False
-        )  # sends message silently when message is deleted
-        return await ctx.send(**kwargs)
-
-    async def _get_kwargs_from_page(self, page):
-        # Do this if you dont want to ping the user
-        kwargs: dict[str, Any] = {"allowed_mentions": discord.AllowedMentions(replied_user=False)}
-        value = await discord.utils.maybe_coroutine(self._source.format_page, self, page)
-        if isinstance(value, dict):
-            kwargs.update(value)
-        elif isinstance(value, str):
-            kwargs["content"] = value
-        elif isinstance(value, discord.Embed):
-            kwargs["embed"] = value
-        return kwargs
 
 
 def get_button_menu(use_replies: bool):

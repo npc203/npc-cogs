@@ -1,12 +1,36 @@
 import discord
-from typing import List
+from typing import List, Union
+
 from .category import get_category
 from . import ARROWS
 from redbot.core import commands
 
 
 # PICKER MENUS
+class MenuView(discord.ui.View):
+    def __init__(self, uid, options, configset, callback):
+        super().__init__(timeout=120)
+        self.uid = uid
+        self.message: discord.Message
+        self.update_callback = callback
+        self.add_item(MenuPicker(options, configset))
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user.id == self.uid:  # type:ignore
+            return True
+        else:
+            await interaction.response.send_message(
+                "You are not allowed to interact with this menu.", ephemeral=True
+            )
+            return False
+
+    async def on_timeout(self) -> None:
+        await self.message.edit(content="Menu timed out.", view=None)
+
+
 class MenuPicker(discord.ui.Select):
+    view: MenuView
+
     def __init__(self, options, configset):
         self.configset = configset
         super().__init__(
@@ -22,28 +46,8 @@ class MenuPicker(discord.ui.Select):
         await interaction.message.edit(  # type: ignore
             content=f"The menu type is set to type: `{self.values[0]}`", view=None
         )
+        self.view.update_callback("settings", "menutype", self.values[0].lower())
         self.view.stop()  # type:ignore
-
-
-class MenuView(discord.ui.View):
-    def __init__(self, uid, options, configset):
-        super().__init__(timeout=120)
-        self.uid = uid
-        self.message = None
-        self.add_item(MenuPicker(options, configset))
-
-    async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        if interaction.user.id == self.uid:  # type:ignore
-            return True
-        else:
-            await interaction.response.send_message(
-                "You are not allowed to interact with this menu.", ephemeral=True
-            )
-            return False
-
-    async def on_timeout(self) -> None:
-        pass
-        # self.edit(content="Menu timed out.", view=None)
 
 
 # HELP MENU ARROWS
@@ -55,13 +59,20 @@ class BaseInteractionMenu(discord.ui.View):
         self.pages = pages
         self.curr_page = 0
         self.max_page = len(pages)
+
         super().__init__(timeout=timeout)
+        self.children: List[Union[BaseButton, SelectHelpBar]] = []
 
         arrows = [DoubleLeftButton, LeftButton, DeleteButton, RightButton, DoubleRightButton]
         for arrow in arrows:
             obj = arrow()
             self.add_item(obj)
             obj.setup()
+
+    async def on_timeout(self):
+        for child in self.children:
+            child.disabled = True
+        await self.message.edit(view=self)
 
     async def start(self, ctx: commands.Context, usereply: bool = True):
         # TODO Confidently embeds lol, generalize this
@@ -87,10 +98,10 @@ class BaseInteractionMenu(discord.ui.View):
         self.max_page = len(new_source)
         self.curr_page = 0
         if self.max_page > 1:
-            self.children[-2].disabled = False  # type: ignore right arrow
+            self.children[-2].disabled = False  # right arrow
 
         if self.max_page > 2:
-            self.children[-1].disabled = False  # type: ignore double right arrow
+            self.children[-1].disabled = False  # double right arrow
 
 
 class BaseButton(discord.ui.Button):
@@ -139,14 +150,14 @@ class LeftButton(BaseButton):
 
         if view.curr_page > 0:
             view.curr_page -= 1
-            view.children[4].disabled = False  # type: ignore double right arrow
-            view.children[3].disabled = False  # type: ignore right arrow
+            view.children[4].disabled = False  # double right arrow
+            view.children[3].disabled = False  # right arrow
 
         if view.curr_page == 0:
             self.disabled = True
 
         if view.curr_page == 1:
-            view.children[0].disabled = True  # type: ignore double left arrow
+            view.children[0].disabled = True  # double left arrow
 
         return True
 
@@ -164,14 +175,14 @@ class RightButton(BaseButton):
 
         if view.curr_page < view.max_page - 1:
             view.curr_page += 1
-            view.children[0].disabled = False  # type: ignore double left arrow
-            view.children[1].disabled = False  # type: ignore left arrow
+            view.children[0].disabled = False  # double left arrow
+            view.children[1].disabled = False  # left arrow
 
         if view.curr_page == view.max_page - 1:
             self.disabled = True
 
         if view.curr_page == view.max_page - 2:
-            view.children[4].disabled = True  # type: ignore double right arrow
+            view.children[4].disabled = True  # double right arrow
 
         return True
 
@@ -189,9 +200,9 @@ class DoubleLeftButton(BaseButton):
         if view.curr_page != 0:
             view.curr_page = 0
             self.disabled = True
-            view.children[4].disabled = False  # type: ignore double right arrow
-            view.children[3].disabled = False  # type: ignore right arrow
-            view.children[1].disabled = True  # type: ignore left arrow
+            view.children[4].disabled = False  # double right arrow
+            view.children[3].disabled = False  # right arrow
+            view.children[1].disabled = True  # left arrow
             return True
         else:
             return False  # Already in the first page, no need to refresh
@@ -211,9 +222,9 @@ class DoubleRightButton(BaseButton):
         if view.curr_page != view.max_page - 1:
             view.curr_page = view.max_page - 1
             self.disabled = True
-            view.children[0].disabled = False  # type: ignore double left arrow
-            view.children[1].disabled = False  # type: ignore left arrow
-            view.children[3].disabled = True  # type: ignore right arrow
+            view.children[0].disabled = False  # double left arrow
+            view.children[1].disabled = False  # left arrow
+            view.children[3].disabled = True  # right arrow
             return True
         else:
             return False  # Already in the last page, no need to refresh
@@ -261,35 +272,35 @@ class SelectHelpBar(discord.ui.Select):
 
 
 # class DropdownView(discord.ui.View):
-#     def __init__(self, cats, message: discord.Message = None, **kwargs: Any):
-#         super().__init__(timeout=60)
-#         self.message = message
-#         self.ctx = kwargs.get("ctx", None)
-#         self.config = kwargs.get("config", None)
+#    def __init__(self, cats, message: discord.Message = None, **kwargs: Any):
+#        super().__init__(timeout=60)
+#        self.message = message
+#        self.ctx = kwargs.get("ctx", None)
+#        self.config = kwargs.get("config", None)
 
-#         # Adds the dropdown to our view object.
-#         self.add_item(Dropdown(cats=cats, ctx=self.ctx, config=self.config))
+#        # Adds the dropdown to our view object.
+#        self.add_item(Dropdown(cats=cats, ctx=self.ctx, config=self.config))
 
-#     async def on_timeout(self):
-#         for item in self.children:
-#             item.disabled = True
-#         #  self.clear_items()
-#         with contextlib.suppress(discord.NotFound):
-#             await self.message.edit(view=self)
-#         self.stop()
+#    async def on_timeout(self):
+#        for item in self.children:
+#            item.disabled = True
+#        # self.clear_items()
+#        with contextlib.suppress(discord.NotFound):
+#            await self.message.edit(view=self)
+#        self.stop()
 
-#     async def interaction_check(self, interaction: discord.Interaction):
-#         """Just extends the default reaction_check to use owner_ids"""
-#         if interaction.message.id != self.message.id:
-#             await interaction.response.send_message(
-#                 content=_("You are not authorized to interact with this."),
-#                 ephemeral=True,
-#             )
-#             return False
-#         if interaction.user.id not in (*self.ctx.bot.owner_ids, self.ctx.author.id):
-#             await interaction.response.send_message(
-#                 content=_("This is not your help menu. \U0001f928"),
-#                 ephemeral=True,
-#             )
-#             return False
-#         return True
+#    async def interaction_check(self, interaction: discord.Interaction):
+#        """Just extends the default reaction_check to use owner_ids"""
+#        if interaction.message.id != self.message.id:
+#            await interaction.response.send_message(
+#                content=_("You are not authorized to interact with this."),
+#                ephemeral=True,
+#            )
+#            return False
+#        if interaction.user.id not in (*self.ctx.bot.owner_ids, self.ctx.author.id):
+#            await interaction.response.send_message(
+#                content=_("This is not your help menu. \U0001f928"),
+#                ephemeral=True,
+#            )
+#            return False
+#        return True

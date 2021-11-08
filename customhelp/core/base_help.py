@@ -496,9 +496,10 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 "cross": close_menu,
                 "right": next_page,
             }
-            final_menu_class = BaseInteractionMenu
-            if isinstance(final_menu_class, BaseMenu):  # Emoji menus
-                final_menu = final_menu_class(ListPages(pages))
+
+            final_menu = None
+            if self.settings["menutype"] == "emojis":  # Emoji menus
+                final_menu = BaseMenu(ListPages(pages))
                 for thing in trans:
                     final_menu.add_button(trans[thing](ARROWS[thing].emoji))
 
@@ -520,7 +521,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                         await home_page(ctx, ARROWS["home"].emoji, help_settings)
                     )
 
-            else:
+            else:  # Interaction menus
                 options = []
                 if add_emojis and emoji_mapping:
                     # Adding additional category emojis
@@ -531,20 +532,22 @@ class BaguetteHelp(commands.RedHelpFormatter):
                                     label=cat.name, description=cat.desc, emoji=cat.reaction
                                 )
                             )
-                options.append(
-                    discord.SelectOption(
-                        label="Home",
-                        description="Return to the main page",
-                        emoji=ARROWS["home"].emoji,
-                    )
-                )
 
-                final_menu = final_menu_class(pages, help_settings, bypass_checks=True)
+                final_menu = BaseInteractionMenu(
+                    pages, help_settings, bypass_checks=True, timeout=self.settings["timeout"]
+                )
                 if options:
+                    options.append(
+                        discord.SelectOption(
+                            label="Home",
+                            description="Return to the main page",
+                            emoji=ARROWS["home"].emoji,
+                        )
+                    )
                     select_bar = SelectHelpBar(options)
                     final_menu.add_item(select_bar)
-
-            await final_menu.start(ctx, self.settings["replies"])
+            if final_menu:
+                await final_menu.start(ctx, self.settings["replies"])
 
     async def blacklist(self, ctx, name) -> bool:
         """Some blacklist checks utils
