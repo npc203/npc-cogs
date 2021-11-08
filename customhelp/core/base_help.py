@@ -19,8 +19,7 @@ from redbot.core.utils.chat_formatting import pagify
 from customhelp.core.views import SelectHelpBar
 
 from . import ARROWS, GLOBAL_CATEGORIES
-from .menu_handler import get_menu,use_replies
-from .category import Category, get_category
+from .category import Category, Arrow, get_category
 from .dpy_menus import ListPages, BaseMenu
 from .utils import (
     close_menu,
@@ -187,6 +186,8 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
         if await ctx.embed_requested():
             emb = await self.embed_template(help_settings, ctx)
+            emb["thumbnail"] = obj.thumbnail
+
             if description := obj.long_desc or "":
                 emb["embed"]["description"] = f"{description[:250]}"
 
@@ -371,7 +372,9 @@ class BaguetteHelp(commands.RedHelpFormatter):
     ):
         """Returns Embed pages (Really copy paste from core)"""
         pages = []
-        thumbnail_url = await self.config.settings.thumbnail()
+        thumbnail_url = embed_dict.get("thumbnail", None) or (
+            await self.config.settings.thumbnail()
+        )
         page_char_limit = help_settings.page_char_limit
         page_char_limit = min(page_char_limit, 5500)
         author_info = {
@@ -495,7 +498,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 "right": next_page,
             }
             final_menu_class = get_menu()
-            if isinstance(final_menu_class, BaseMenu):
+            if isinstance(final_menu_class, BaseMenu):  # Emoji menus
                 final_menu = final_menu_class(ListPages(pages))
                 for thing in trans:
                     final_menu.add_button(trans[thing](ARROWS[thing]))
@@ -515,11 +518,9 @@ class BaguetteHelp(commands.RedHelpFormatter):
                                 )
                             )
                     final_menu.add_button(await home_page(ctx, ARROWS["home"], help_settings))
-                    await final_menu.start(ctx)
 
             else:
                 options = []
-
                 if add_emojis and emoji_mapping:
                     # Adding additional category emojis
                     for cat in emoji_mapping:
@@ -529,8 +530,18 @@ class BaguetteHelp(commands.RedHelpFormatter):
                                     label=cat.name, description=cat.desc, emoji=cat.reaction
                                 )
                             )
-                final_menu = final_menu_class(pages, options,help_settings, bypass_checks=True)
-                await final_menu.start(ctx,use_replies)
+                options.append(
+                    discord.SelectOption(
+                        label="Home", description="Return to the main page", emoji=ARROWS["home"]
+                    )
+                )
+
+                final_menu = final_menu_class(pages, help_settings, bypass_checks=True)
+                if options:
+                    select_bar = SelectHelpBar(options)
+                    final_menu.add_item(select_bar)
+
+            await final_menu.start(ctx, use_replies)
 
     async def blacklist(self, ctx, name) -> bool:
         """Some blacklist checks utils

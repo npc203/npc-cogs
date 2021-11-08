@@ -1,6 +1,7 @@
 # This contains a bunch of utils
 
 import asyncio
+from typing import Optional
 
 import discord
 from redbot.core.utils.chat_formatting import humanize_timedelta
@@ -14,7 +15,7 @@ EMOJI_REGEX = r"<(?P<animated>a?):(?P<name>[a-zA-Z0-9_]{2,32}):(?P<id>[0-9]{18,2
 LINK_REGEX = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
 
 
-def emoji_converter(bot, emoji):
+def emoji_converter(bot, emoji) -> Optional[str]:
     """General emoji converter"""
     # TODO find a way to detect unicode emojis properly
     if not emoji:

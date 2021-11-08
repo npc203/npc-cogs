@@ -1,24 +1,30 @@
 from typing import Optional
 
 from redbot.core import commands
+from dataclasses import dataclass
 
 from . import GLOBAL_CATEGORIES
 
 
+@dataclass
 class Category:
-    def __init__(
-        self,
-        name: str,
-        desc: str,
-        cogs: list,
-        reaction: str = None,
-        long_desc: str = None,
-    ):
-        self.name = name
-        self.desc = desc
-        self.long_desc = long_desc
-        self.cogs = cogs
-        self.reaction = reaction
+    name: str
+    desc: str
+    cogs: list
+    reaction: Optional[str] = None
+    long_desc: Optional[str] = None
+    thumbnail: Optional[str] = None
+
+    def __eq__(self, item):
+        return item == self.name
+
+
+@dataclass(frozen=True)
+class Arrow:
+    name: str
+    emoji: str
+    text: str
+    style: str
 
     def __eq__(self, item):
         return item == self.name

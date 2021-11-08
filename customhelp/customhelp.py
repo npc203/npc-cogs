@@ -7,6 +7,7 @@ from itertools import chain
 from os import path
 from pathlib import Path
 from types import MethodType
+from typing import Dict, List
 
 import discord
 import yaml
@@ -20,9 +21,8 @@ from tabulate import tabulate
 from . import themes
 from .core import ARROWS, GLOBAL_CATEGORIES
 from .core.views import MenuView
-from .core.menu_handler import set_menu
 from .core.base_help import EMPTY_STRING, BaguetteHelp
-from .core.category import Category, get_category
+from .core.category import Category, Arrow, get_category
 from .core.utils import LINK_REGEX, emoji_converter
 
 _ = Translator("CustomHelp", __file__)
@@ -56,7 +56,7 @@ class CustomHelp(commands.Cog):
     A custom customisable help for fun and profit
     """
 
-    __version__ = "0.8.0"
+    __version__ = "1.0.0"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -72,6 +72,7 @@ class CustomHelp(commands.Cog):
             force_registration=True,  # I'm gonna regret this
         )
         self.chelp_global = {
+            "version": "0.0.0",
             "categories": [],
             "theme": {"cog": None, "category": None, "command": None, "main": None},
             "uncategorised": {
@@ -89,14 +90,14 @@ class CustomHelp(commands.Cog):
                 "menutype": "buttons",  # "emojis","buttons","select"
                 # "arrowtype": "buttons",  # "emojis","buttons" #TODO arrow type later
                 "deletemessage": False,
-                "arrows": {
-                    "right": "\N{BLACK RIGHTWARDS ARROW}\N{VARIATION SELECTOR-16}",
-                    "left": "\N{LEFTWARDS BLACK ARROW}\N{VARIATION SELECTOR-16}",
-                    "cross": "\N{CROSS MARK}",
-                    "home": "\U0001f3d8\U0000fe0f",
-                    "force_right": "\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\N{VARIATION SELECTOR-16}",
-                    "force_left": "\N{BLACK LEFT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\N{VARIATION SELECTOR-16}",
-                },
+                "arrows": [
+                    {"name": "force_left", "emoji": "⏮️", "style": "primary", "text": ""},
+                    {"name": "left", "emoji": "⬅️", "style": "primary", "text": ""},
+                    {"name": "cross", "emoji": "❌", "style": "primary", "text": ""},
+                    {"name": "right", "emoji": "➡️", "style": "primary", "text": ""},
+                    {"name": "force_right", "emoji": "⏭️", "style": "primary", "text": ""},
+                    {"name": "home", "emoji": "🏘️", "style": "primary", "text": ""},
+                ],
             },
             "blacklist": {"nsfw": [], "dev": []},
         }
@@ -115,12 +116,14 @@ class CustomHelp(commands.Cog):
     async def refresh_arrows(self):
         """This is to make the emoji arrows objects be in their proper types"""
         arrows = await self.config.settings.arrows()
-        for name, emoji in arrows.items():
-            if emj := emoji_converter(self.bot, emoji):
-                ARROWS[name] = emj
+        for index, details in enumerate(arrows):
+            if emj := emoji_converter(self.bot, details.pop("emoji")):
+                ARROWS.append(Arrow(**details, emoji=emj))
             else:
                 # back-up measure if the something went wrong
-                ARROWS[name] = self.chelp_global["settings"]["arrows"][name]
+                ARROWS.append(
+                    Arrow(**details, emoji=self.chelp_global["settings"]["arrows"][index]["emoji"])
+                )
 
     async def refresh_cache(self):
         """Get's the config and re-populates the GLOBAL_CATEGORIES"""
@@ -154,12 +157,19 @@ class CustomHelp(commands.Cog):
 
     async def _setup(self):
         """Adds the themes and loads the formatter"""
+
+        # Arrow migration
+        if (await self.config.version()) < "1.0.0":
+            async with self.config.settings.arrows() as arrows:
+                for name, emoji in arrows.items():
+                    arrows[name] = {"emoji": emoji, "style": "primary", "text": ""}
+            await self.config.version.set(self.__version__)
+
         # This is needed to be on top so that Cache gets populated no matter what (supplements chelp create)
         await self.refresh_cache()
         await self.refresh_arrows()
 
         settings = await self.config.settings()
-        set_menu(replies=settings["replies"], buttons=settings.get("buttons", False))
         if not settings["set_formatter"]:
             return
         main_theme = BaguetteHelp(self.bot, self.config)
@@ -216,7 +226,7 @@ class CustomHelp(commands.Cog):
     @chelp.command()
     async def auto(self, ctx):
         """Auto categorise cogs based on it's tags and display them"""
-        data = {}
+        data: Dict[str, List[str]] = {}
         # Thanks trusty pathlib is awesome.
         for k, a in self.bot.cogs.items():
             check = Path(getfile(a.__class__)).parent / "info.json"
@@ -238,7 +248,10 @@ class CustomHelp(commands.Cog):
         groups = defaultdict(set)
         for key, tags in data.items():
             if tags:
-                tag = max(tags, key=popular.get)
+                tag = max(
+                    tags,
+                    key=popular.get,  # type:ignore https://github.com/microsoft/pylance-release/issues/1022
+                )
                 groups[tag].add(key)
 
         final = {"uncategorised": []}
@@ -285,11 +298,12 @@ class CustomHelp(commands.Cog):
             inline=False,
         )
 
-        emb.add_field(
-            name="Arrows",
-            value="\n".join(f"`{i:<7}`: {j}" for i, j in ARROWS.items()),
-            inline=False,
-        )
+        # TODO PAGINATE TO DISPLAY
+        # emb.add_field(
+        #     name="Arrows",
+        #     value="\n".join(f"`{i:<7}`: {j}" for i, j in ARROWS.items()),
+        #     inline=False,
+        # )
 
         if blocklist["nsfw"] or blocklist["dev"]:
             emb.add_field(
@@ -304,7 +318,7 @@ class CustomHelp(commands.Cog):
             )
         await ctx.send(embed=emb)
 
-    @chelp.command(name="set")
+    @chelp.command(name="toggle")
     async def set_formatter(self, ctx, setval: bool):
         """Set to toggle custom formatter or the default help formatter\n`[p]chelp set 0` to turn custom off \n`[p]chelp set 1` to turn it on"""
         async with ctx.typing():
@@ -449,15 +463,15 @@ class CustomHelp(commands.Cog):
             i: [(k, v) for f in my_list for k, v in f.items()]
             for i, my_list in parsed_data.items()
         }
-        check = ["name", "desc", "long_desc", "reaction"]
+        check = ["name", "desc", "long_desc", "reaction", "thumbnail"]
         available_categories = [category.name for category in GLOBAL_CATEGORIES]
         # Remove uncategorised
         available_categories.pop(-1)
         # special naming for uncategorized stuff
         uncat_name = GLOBAL_CATEGORIES[-1].name
-        already_present_emojis = list(
-            str(i.reaction) for i in GLOBAL_CATEGORIES if i.reaction
-        ) + list(ARROWS.values())
+        already_present_emojis = [str(i.reaction) for i in GLOBAL_CATEGORIES if i.reaction] + [
+            i.emoji for i in ARROWS
+        ]
         failed = []  # example: [('desc','categoryname')]
 
         def validity_checker(category, item):
@@ -712,10 +726,10 @@ class CustomHelp(commands.Cog):
         await ctx.send(text)
 
     @remove.command(aliases=["cogs"], require_var_positional=True)
-    async def cog(self, ctx, *cog_names: str):
+    async def cog(self, ctx, *cog_raw_names: str):
         """Remove a cog(s) from across categories"""
         # From Core [p]load xD, using set to avoid dupes
-        cog_names: set[str] = set(map(lambda cog: cog.rstrip(","), cog_names))
+        cog_names: set[str] = set(map(lambda cog: cog.rstrip(","), cog_raw_names))
 
         to_config = []  # [(index_of_category,cog_name),()] (maybe use namedtuples here?)
         uncat = []
@@ -771,11 +785,11 @@ class CustomHelp(commands.Cog):
         for page in pagify(text, page_length=1985, shorten_by=0):
             await ctx.send(box(page, lang="yaml"))
 
-    @chelp.group(name="settings", aliases=["setting"])
-    async def settings(self, ctx):
+    @chelp.group(name="set", aliases=["settings", "setting"])
+    async def chelp_settings(self, ctx):
         """Change various help settings"""
 
-    @settings.command()
+    @chelp_settings.command()
     async def menutype(self, ctx):
         """Toggles between various menus"""
         options = [
@@ -792,9 +806,9 @@ class CustomHelp(commands.Cog):
             "Pick your menu type from the list shown", view=select_bar
         )
 
-    @settings.command(aliases=["setthumbnail"])
+    @chelp_settings.command(aliases=["setthumbnail"])
     async def thumbnail(self, ctx, url: str = None):
-        """Set your thumbnail image here.\n use `[p]chelp settings thumbnail` to reset this"""
+        """Set your main thumbnail image here.\n use `[p]chelp settings thumbnail` to reset this"""
         if url:
             if re.search(LINK_REGEX, url):
                 async with self.config.settings() as f:
@@ -807,15 +821,13 @@ class CustomHelp(commands.Cog):
                 f["thumbnail"] = None
             await ctx.send("Reset thumbnail")
 
-    @settings.command(aliases=["usereplies", "reply"])
+    @chelp_settings.command(aliases=["usereplies", "reply"])
     async def usereply(self, ctx, option: bool):
         """Enable/Disable replies"""
-        response, success = set_menu(replies=option, buttons=None)
-        if success:
-            await self.config.settings.replies.set(option)
-        await ctx.send(response)
+        await self.config.settings.replies.set(option)
+        await ctx.send(f"{'Enabled' if option else 'Disabled'} reply menus")
 
-    @settings.command()
+    @chelp_settings.command()
     async def timeout(self, ctx, wait: int):
         """Set how long the help menu must stay active"""
         if wait > 20:
@@ -824,14 +836,14 @@ class CustomHelp(commands.Cog):
         else:
             await ctx.send("Timeout must be atleast 20 seconds")
 
-    @settings.command(aliases=["deleteusermessage"])
+    @chelp_settings.command(aliases=["deleteusermessage"])
     async def deletemessage(self, ctx, toggle: bool):
         """Delete the user message that started the help menu.
         Note: This only works if the bot has permissions to delete the user message, otherwise it's supressed"""
         await self.config.settings.deletemessage.set(toggle)
         await ctx.send(f"Sucessfully set delete user toggle to {toggle}")
 
-    @settings.command(aliases=["arrow"])
+    @chelp_settings.command(aliases=["arrow"])
     async def arrows(self, ctx, *, correct_txt=None):
         """Add custom arrows for fun and profit"""
         if correct_txt:
@@ -857,42 +869,56 @@ class CustomHelp(commands.Cog):
             except asyncio.TimeoutError:
                 return await ctx.send("Timed out, please try again.")
 
+        if not (yaml_data := await self.parse_yaml(ctx, content)):
+            return
+
         already_present_emojis = list(
             str(i.reaction) for i in GLOBAL_CATEGORIES if i.reaction
         ) + list((await self.config.settings.arrows()).values())
 
-        async def emj_parser(data):
-            parsed = {}
-            checks = ["left", "right", "cross", "home", "force_right", "force_left"]
-            raw = data.split("\n")
-            for emj in raw:
-                tmp = emj.split(":", 1)
-                tmp = [i.strip() for i in tmp]  # tmp = ["left","full_emoji"]
-                if len(tmp) != 2 or tmp[0] not in checks:
-                    await ctx.send(f"Can't parse \n `{emj}`")
-                    return
-                else:
-                    if tmp[1] not in already_present_emojis:
-                        if emoji_converter(self.bot, tmp[1]):
-                            parsed[tmp[0]] = tmp[1]
-                        else:
-                            await ctx.send(f"Invalid Emoji:{tmp[1]}")
-                            return
-                    else:
-                        await ctx.send(f"Already present Emoji:{tmp[1]}")
-                        return
-            return parsed
+        parsed = {}
+        failed = []  # [(reason for failure,arrow_name)]
+        check_name = ("left", "right", "cross", "home", "force_right", "force_left")
+        check_style = list(map(lambda x: x.name, discord.ButtonStyle))
 
-        parsed_data = await emj_parser(content)
-        if not parsed_data:
-            return
+        for arrow, details in yaml_data.items():
+            if arrow not in check_name:
+                failed.append(("Invalid arrow name", arrow))
+
+            else:
+                # Emoji verify
+                if emoji := details.pop("emoji", None):
+                    if emoji in already_present_emojis:
+                        failed.append(("Emoji already present as arrow", arrow))
+                    elif converted := emoji_converter(self.bot, emoji):
+                        parsed[arrow]["emoji"] = converted
+
+                # ButtonStyle verify
+                if style := details.pop("style", None):
+                    if style in check_style:
+                        parsed[arrow]["style"] = style
+                    else:
+                        failed.append(("Invalid button style", arrow))
+
         async with self.config.settings.arrows() as conf:
-            for k, v in parsed_data.items():
-                conf[k] = v
-        await ctx.send(
-            "Successfully added the changes:\n"
-            + "\n".join(f"`{i} `: {j}" for i, j in parsed_data.items())
-        )
+            for name, modified_values in parsed.items():
+                for arrow in conf:
+                    if arrow["name"] == name:
+                        conf[arrow].update(modified_values)
+                        break
+
+        for page in pagify(
+            "Successfully added the edits"
+            if not failed
+            else "The following things failed:\n"
+            + "\n".join(
+                [
+                    f"`{reason[0]}`: {reason[1]}  failed in `{category}`"
+                    for reason, category in failed
+                ]
+            )
+        ):
+            await ctx.send(page)
         await self.refresh_arrows()
 
     @chelp.group()

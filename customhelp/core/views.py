@@ -46,9 +46,9 @@ class MenuView(discord.ui.View):
         # self.edit(content="Menu timed out.", view=None)
 
 
-# HELP MENUS
+# HELP MENU ARROWS
 class BaseInteractionMenu(discord.ui.View):
-    def __init__(self, pages, options, help_settings, bypass_checks, timeout=120):
+    def __init__(self, pages, help_settings, bypass_checks, timeout=120):
         self.cache = {}
         self.help_settings = help_settings
         self.bypass_checks = bypass_checks
@@ -56,10 +56,6 @@ class BaseInteractionMenu(discord.ui.View):
         self.curr_page = 0
         self.max_page = len(pages)
         super().__init__(timeout=timeout)
-
-        if options:
-            select_bar = SelectHelpBar(options)
-            self.add_item(select_bar)
 
         arrows = [DoubleLeftButton, LeftButton, DeleteButton, RightButton, DoubleRightButton]
         for arrow in arrows:
@@ -143,14 +139,14 @@ class LeftButton(BaseButton):
 
         if view.curr_page > 0:
             view.curr_page -= 1
-            view.children[-1].disabled = False  # type: ignore double right arrow
-            view.children[-2].disabled = False  # type: ignore right arrow
+            view.children[4].disabled = False  # type: ignore double right arrow
+            view.children[3].disabled = False  # type: ignore right arrow
 
         if view.curr_page == 0:
             self.disabled = True
 
         if view.curr_page == 1:
-            view.children[-5].disabled = True  # type: ignore double left arrow
+            view.children[0].disabled = True  # type: ignore double left arrow
 
         return True
 
@@ -168,14 +164,14 @@ class RightButton(BaseButton):
 
         if view.curr_page < view.max_page - 1:
             view.curr_page += 1
-            view.children[-5].disabled = False  # type: ignore double left arrow
-            view.children[-4].disabled = False  # type: ignore left arrow
+            view.children[0].disabled = False  # type: ignore double left arrow
+            view.children[1].disabled = False  # type: ignore left arrow
 
         if view.curr_page == view.max_page - 1:
             self.disabled = True
 
         if view.curr_page == view.max_page - 2:
-            view.children[-1].disabled = True  # type: ignore double right arrow
+            view.children[4].disabled = True  # type: ignore double right arrow
 
         return True
 
@@ -193,9 +189,9 @@ class DoubleLeftButton(BaseButton):
         if view.curr_page != 0:
             view.curr_page = 0
             self.disabled = True
-            view.children[-1].disabled = False  # type: ignore double right arrow
-            view.children[-2].disabled = False  # type: ignore right arrow
-            view.children[-4].disabled = True  # type: ignore left arrow
+            view.children[4].disabled = False  # type: ignore double right arrow
+            view.children[3].disabled = False  # type: ignore right arrow
+            view.children[1].disabled = True  # type: ignore left arrow
             return True
         else:
             return False  # Already in the first page, no need to refresh
@@ -215,9 +211,9 @@ class DoubleRightButton(BaseButton):
         if view.curr_page != view.max_page - 1:
             view.curr_page = view.max_page - 1
             self.disabled = True
-            view.children[-5].disabled = False  # type: ignore double left arrow
-            view.children[-4].disabled = False  # type: ignore left arrow
-            view.children[-2].disabled = True  # type: ignore right arrow
+            view.children[0].disabled = False  # type: ignore double left arrow
+            view.children[1].disabled = False  # type: ignore left arrow
+            view.children[3].disabled = True  # type: ignore right arrow
             return True
         else:
             return False  # Already in the last page, no need to refresh
@@ -237,25 +233,31 @@ class SelectHelpBar(discord.ui.Select):
         )
 
     async def callback(self, interaction: discord.Interaction):
+        view = self.view
 
         # Cache categories
         name = self.values[0].lower()
-        if not (category_pages := self.view.cache.get(name, None)):
-            category_name = get_category(name)
-            self.view.cache[
-                name
-            ] = category_pages = await self.view.ctx.bot._help_formatter.format_category_help(
-                self.view.ctx,
-                category_name,
-                self.view.help_settings,
-                get_pages=True,
-                bypass_checks=self.view.bypass_checks,
-            )
+        if not (category_pages := view.cache.get(name, None)):
+            if name == "home":
+                category_pages = await view.ctx.bot._help_formatter.format_bot_help(
+                    view.ctx, view.help_settings, get_pages=True
+                )
+            else:
+                category_obj = get_category(name)
+                view.cache[
+                    name
+                ] = category_pages = await view.ctx.bot._help_formatter.format_category_help(
+                    view.ctx,
+                    category_obj,
+                    view.help_settings,
+                    get_pages=True,
+                    bypass_checks=view.bypass_checks,
+                )
 
         await interaction.response.defer()
         if category_pages:
-            self.view.change_source(category_pages)
-            await self.view.message.edit(embed=category_pages[self.view.curr_page], view=self.view)
+            view.change_source(category_pages)
+            await view.message.edit(embed=category_pages[view.curr_page], view=view)
 
 
 # class DropdownView(discord.ui.View):
