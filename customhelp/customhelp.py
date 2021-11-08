@@ -80,6 +80,7 @@ class CustomHelp(commands.Cog):
                 "desc": None,
                 "long_desc": None,
                 "reaction": None,
+                "thumbnail": None,
             },
             "settings": {
                 "react": True,
@@ -153,6 +154,7 @@ class CustomHelp(commands.Cog):
                 desc=uncat_config["desc"] or "No category commands",
                 long_desc=uncat_config["long_desc"] or "",
                 reaction=emoji_converter(self.bot, uncat_config["reaction"]),
+                thumbnail=uncat_config["thumbnail"],
                 cogs=list(uncategorised),
             )
         )
