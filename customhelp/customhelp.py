@@ -90,15 +90,15 @@ class CustomHelp(commands.Cog):
                 "menutype": "buttons",  # "emojis","buttons","select"
                 # "arrowtype": "buttons",  # "emojis","buttons" #TODO arrow type later
                 "deletemessage": False,
-                "arrows": [
-                    {"name": "force_left", "emoji": "⏮️", "style": "primary", "text": ""},
-                    {"name": "left", "emoji": "⬅️", "style": "primary", "text": ""},
-                    {"name": "cross", "emoji": "❌", "style": "primary", "text": ""},
-                    {"name": "right", "emoji": "➡️", "style": "primary", "text": ""},
-                    {"name": "force_right", "emoji": "⏭️", "style": "primary", "text": ""},
-                    {"name": "home", "emoji": "🏘️", "style": "primary", "text": ""},
-                ],
             },
+            "arrows": [
+                {"name": "force_left", "emoji": "⏮️", "style": "primary", "label": ""},
+                {"name": "left", "emoji": "⬅️", "style": "primary", "label": ""},
+                {"name": "cross", "emoji": "❌", "style": "primary", "label": ""},
+                {"name": "right", "emoji": "➡️", "style": "primary", "label": ""},
+                {"name": "force_right", "emoji": "⏭️", "style": "primary", "label": ""},
+                {"name": "home", "emoji": "🏘️", "style": "primary", "label": ""},
+            ],
             "blacklist": {"nsfw": [], "dev": []},
         }
         self.config.register_global(**self.chelp_global)
@@ -115,8 +115,10 @@ class CustomHelp(commands.Cog):
 
     async def refresh_arrows(self):
         """This is to make the emoji arrows objects be in their proper types"""
-        arrows = await self.config.settings.arrows()
+        arrows = await self.config.arrows()
+        ARROWS.clear()
         for index, details in enumerate(arrows):
+            details["style"] = getattr(discord.ButtonStyle, details["style"])
             if emj := emoji_converter(self.bot, details.pop("emoji")):
                 ARROWS.append(Arrow(**details, emoji=emj))
             else:
@@ -160,9 +162,14 @@ class CustomHelp(commands.Cog):
 
         # Arrow migration
         if (await self.config.version()) < "1.0.0":
+            new_arrows = []
             async with self.config.settings.arrows() as arrows:
                 for name, emoji in arrows.items():
-                    arrows[name] = {"emoji": emoji, "style": "primary", "text": ""}
+                    new_arrows.append(
+                        {"name": name, "emoji": emoji, "style": "primary", "label": ""}
+                    )
+                arrows.clear()
+            await self.config.arrows.set(new_arrows)
             await self.config.version.set(self.__version__)
 
         # This is needed to be on top so that Cache gets populated no matter what (supplements chelp create)
@@ -172,7 +179,9 @@ class CustomHelp(commands.Cog):
         settings = await self.config.settings()
         if not settings["set_formatter"]:
             return
-        main_theme = BaguetteHelp(self.bot, self.config)
+        main_theme = BaguetteHelp(
+            self.bot, await self.config.settings(), await self.config.blacklist()
+        )
         theme = await self.config.theme()
         if all(theme.values()) is not None:
             for feature in theme:
@@ -604,7 +613,9 @@ class CustomHelp(commands.Cog):
         await ctx.bot.wait_for("reaction_add", check=pred)
         if pred.result is True:
             self.bot.reset_help_formatter()
-            self.bot.set_help_formatter(BaguetteHelp(self.bot, self.config))
+            self.bot.set_help_formatter(
+                BaguetteHelp(self.bot, await self.config.settings(), await self.config.blacklist())
+            )
             await self.config.theme.set(
                 {"cog": None, "category": None, "command": None, "main": None}
             )
@@ -853,11 +864,11 @@ class CustomHelp(commands.Cog):
                 "Your next message should be with the specfied format as follows(see docs for more info).\n"
                 "**If you enter an invalid emoji your help will break.**\n"
                 "Example:\n"
-                "left :↖️\n"
-                "right:↗️\n"
-                "cross:❎\n"
-                "home :🏛️\n"
-                "Note: There's also `force_left` and `force_right`"
+                "left :\n"
+                " - emoji: ↖️\n"
+                " - style: success\n"
+                " - label: 'text is cool'\n"
+                "Note: The other arrows are `right`,`cross`, `home`, `force_left` and `force_right`"
             )
             try:
                 msg = await self.bot.wait_for(
@@ -872,24 +883,43 @@ class CustomHelp(commands.Cog):
         if not (yaml_data := await self.parse_yaml(ctx, content)):
             return
 
-        already_present_emojis = list(
-            str(i.reaction) for i in GLOBAL_CATEGORIES if i.reaction
-        ) + list((await self.config.settings.arrows()).values())
+        already_present_emojis = list(str(i.reaction) for i in GLOBAL_CATEGORIES if i.reaction) + [
+            i["emoji"] for i in await self.config.arrows()
+        ]
 
         parsed = {}
         failed = []  # [(reason for failure,arrow_name)]
+        check = ("emoji", "label", "style")
         check_name = ("left", "right", "cross", "home", "force_right", "force_left")
-        check_style = list(map(lambda x: x.name, discord.ButtonStyle))
+        check_style = ["primary", "secondary", "success", "danger"]
 
-        for arrow, details in yaml_data.items():
+        parsed_data = {}
+        for k, v in yaml_data.items():
+            tmp = {}
+            for val in v:
+                final_key, final_val = val.popitem()
+                tmp[final_key] = final_val
+            parsed_data[k] = tmp
+
+        for arrow, details in parsed_data.items():
             if arrow not in check_name:
                 failed.append(("Invalid arrow name", arrow))
-
             else:
+                parsed[arrow] = details
+
+                # Junk
+                remove_key = []
+                for key in details:
+                    if key not in check:
+                        failed.append(((key, "Invalid key"), arrow))
+                        remove_key.append(key)
+                for key in remove_key:
+                    details.pop(key)
+
                 # Emoji verify
                 if emoji := details.pop("emoji", None):
                     if emoji in already_present_emojis:
-                        failed.append(("Emoji already present as arrow", arrow))
+                        failed.append((("emoji", "Emoji already present as arrow"), arrow))
                     elif converted := emoji_converter(self.bot, emoji):
                         parsed[arrow]["emoji"] = converted
 
@@ -898,13 +928,13 @@ class CustomHelp(commands.Cog):
                     if style in check_style:
                         parsed[arrow]["style"] = style
                     else:
-                        failed.append(("Invalid button style", arrow))
+                        failed.append((("button", "Invalid button style"), arrow))
 
-        async with self.config.settings.arrows() as conf:
+        async with self.config.arrows() as conf:
             for name, modified_values in parsed.items():
                 for arrow in conf:
                     if arrow["name"] == name:
-                        conf[arrow].update(modified_values)
+                        arrow.update(modified_values)
                         break
 
         for page in pagify(
@@ -913,8 +943,8 @@ class CustomHelp(commands.Cog):
             else "The following things failed:\n"
             + "\n".join(
                 [
-                    f"`{reason[0]}`: {reason[1]}  failed in `{category}`"
-                    for reason, category in failed
+                    f"`{reason[0]}` failed in `{arrow}`, `Reason: {reason[1]}`"
+                    for reason, arrow in failed
                 ]
             )
         ):

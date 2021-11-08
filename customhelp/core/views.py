@@ -96,8 +96,8 @@ class BaseInteractionMenu(discord.ui.View):
 class BaseButton(discord.ui.Button):
     view: BaseInteractionMenu
 
-    def __init__(self, emoji, style=discord.ButtonStyle.secondary):
-        super().__init__(emoji=emoji, style=style, row=4)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs, row=4)
 
     def edit_buttons(self) -> bool:
         raise NotImplementedError
@@ -115,7 +115,7 @@ class BaseButton(discord.ui.Button):
 
 class DeleteButton(BaseButton):
     def __init__(self):
-        super().__init__(emoji=ARROWS["cross"])
+        super().__init__(**ARROWS["cross"])
 
     def setup(self):
         pass
@@ -128,7 +128,7 @@ class DeleteButton(BaseButton):
 
 class LeftButton(BaseButton):
     def __init__(self):
-        super().__init__(emoji=ARROWS["left"])
+        super().__init__(**ARROWS["left"])
 
     def setup(self):
         if self.view.curr_page == 0:
@@ -153,7 +153,7 @@ class LeftButton(BaseButton):
 
 class RightButton(BaseButton):
     def __init__(self):
-        super().__init__(emoji=ARROWS["right"])
+        super().__init__(**ARROWS["right"])
 
     def setup(self):
         if self.view.curr_page == self.view.max_page - 1:
@@ -178,7 +178,7 @@ class RightButton(BaseButton):
 
 class DoubleLeftButton(BaseButton):
     def __init__(self):
-        super().__init__(emoji=ARROWS["force_left"])
+        super().__init__(**ARROWS["force_left"])
 
     def setup(self):
         self.disabled = True
@@ -199,7 +199,7 @@ class DoubleLeftButton(BaseButton):
 
 class DoubleRightButton(BaseButton):
     def __init__(self):
-        super().__init__(emoji=ARROWS["force_right"])
+        super().__init__(**ARROWS["force_right"])
 
     def setup(self):
         if self.view.max_page <= 2:

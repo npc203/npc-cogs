@@ -1,4 +1,5 @@
 from typing import Optional
+import discord
 
 from redbot.core import commands
 from dataclasses import dataclass
@@ -23,11 +24,17 @@ class Category:
 class Arrow:
     name: str
     emoji: str
-    text: str
-    style: str
+    label: str
+    style: discord.ButtonStyle
 
     def __eq__(self, item):
         return item == self.name
+
+    def __getitem__(self, item):
+        return getattr(self, item, None)
+
+    def keys(self):
+        return ("emoji", "label", "style")
 
 
 # Helpers
