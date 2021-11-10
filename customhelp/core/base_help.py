@@ -16,7 +16,7 @@ from redbot.core.commands.help import (
 from redbot.core.utils.mod import mass_purge
 from redbot.core.utils.chat_formatting import pagify
 
-from customhelp.core.views import BaseInteractionMenu, SelectHelpBar
+from customhelp.core.views import BaseInteractionMenu, ReactButton, SelectHelpBar
 
 from . import ARROWS, GLOBAL_CATEGORIES
 from .category import Category, get_category
@@ -522,30 +522,47 @@ class BaguetteHelp(commands.RedHelpFormatter):
                     )
 
             else:  # Interaction menus
+                final_menu = BaseInteractionMenu(
+                    pages,
+                    help_settings,
+                    bypass_checks=True,
+                    timeout=self.settings["timeout"],
+                    nav=self.settings["nav"],
+                )
+
                 options = []
                 if add_emojis and emoji_mapping:
-                    # Adding additional category emojis
-                    for cat in emoji_mapping:
-                        if cat.reaction:
+                    # Adding additional category interactions
+                    if self.settings["menutype"] == "select":
+                        for cat in emoji_mapping:
+                            if cat.reaction:
+                                options.append(
+                                    discord.SelectOption(
+                                        label=cat.name, description=cat.desc, emoji=cat.reaction
+                                    )
+                                )
+
+                        if options:
                             options.append(
                                 discord.SelectOption(
-                                    label=cat.name, description=cat.desc, emoji=cat.reaction
+                                    label="Home",
+                                    description="Return to the main page",
+                                    emoji=ARROWS["home"].emoji,
                                 )
                             )
+                            select_bar = SelectHelpBar(options)
+                            final_menu.add_item(select_bar)
+                    else:  # Naturally just buttons
+                        for cat in emoji_mapping:
+                            if cat.reaction:
+                                final_menu.add_item(
+                                    ReactButton(
+                                        emoji=cat.reaction,
+                                        style=getattr(discord.ButtonStyle, cat.style),
+                                        label=cat.label,
+                                    )
+                                )
 
-                final_menu = BaseInteractionMenu(
-                    pages, help_settings, bypass_checks=True, timeout=self.settings["timeout"]
-                )
-                if options:
-                    options.append(
-                        discord.SelectOption(
-                            label="Home",
-                            description="Return to the main page",
-                            emoji=ARROWS["home"].emoji,
-                        )
-                    )
-                    select_bar = SelectHelpBar(options)
-                    final_menu.add_item(select_bar)
             if final_menu:
                 await final_menu.start(ctx, self.settings["replies"])
 

@@ -44,6 +44,8 @@ Config Structure:
                 "long_desc":longer description
                 "cogs" : []
                 "reaction":None
+                "label":""
+                "style":"primary"
             }
      ]
     }
@@ -56,7 +58,7 @@ class CustomHelp(commands.Cog):
     A custom customisable help for fun and profit
     """
 
-    __version__ = "1.0.0"
+    __version__ = "1.0.1"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -81,9 +83,12 @@ class CustomHelp(commands.Cog):
                 "long_desc": None,
                 "reaction": None,
                 "thumbnail": None,
+                "label": "",
+                "style": "primary",
             },
             "settings": {
                 "react": True,
+                "nav": True,
                 "set_formatter": False,
                 "thumbnail": None,
                 "timeout": 120,
@@ -156,6 +161,8 @@ class CustomHelp(commands.Cog):
                 reaction=emoji_converter(self.bot, uncat_config["reaction"]),
                 thumbnail=uncat_config["thumbnail"],
                 cogs=list(uncategorised),
+                label=uncat_config["label"],
+                style=uncat_config["style"],
             )
         )
 
@@ -163,7 +170,7 @@ class CustomHelp(commands.Cog):
         """Adds the themes and loads the formatter"""
 
         # Arrow migration
-        if (await self.config.version()) < "1.0.0":
+        if (await self.config.version()) < "1.0.0" and self.__version__ == "1.0.0":
             new_arrows = []
             async with self.config.settings.arrows() as arrows:
                 for name, emoji in arrows.items():
@@ -172,6 +179,13 @@ class CustomHelp(commands.Cog):
                     )
                 arrows.clear()
             await self.config.arrows.set(new_arrows)
+            await self.config.version.set(self.__version__)
+
+        # Category migration or smth
+        if (await self.config.version()) < "1.0.1" and self.__version__ == "1.0.1":
+            async with self.config.uncategorised() as uncat:
+                uncat["style"] = "primary"
+                uncat["label"] = ""
             await self.config.version.set(self.__version__)
 
         # This is needed to be on top so that Cache gets populated no matter what (supplements chelp create)
@@ -474,7 +488,7 @@ class CustomHelp(commands.Cog):
             i: [(k, v) for f in my_list for k, v in f.items()]
             for i, my_list in parsed_data.items()
         }
-        check = ["name", "desc", "long_desc", "reaction", "thumbnail"]
+        check = ["name", "desc", "long_desc", "reaction", "thumbnail", "label", "style"]
         available_categories = [category.name for category in GLOBAL_CATEGORIES]
         # Remove uncategorised
         available_categories.pop(-1)
@@ -495,6 +509,8 @@ class CustomHelp(commands.Cog):
                 elif item[0] == "reaction":
                     if item[1] not in already_present_emojis:
                         return str(emoji_converter(self.bot, item[1]))
+                elif item[0] == "style":
+                    return item[1] if hasattr(discord.ButtonStyle, item[1]) else None
                 else:
                     return item[1]
 
@@ -814,7 +830,9 @@ class CustomHelp(commands.Cog):
                 label="Select", description="Minimalistic Dropdown Menus", emoji="⏬"
             ),
         ]
-        select_bar = MenuView(ctx.author.id, options, self.config.settings.menutype,self._update_conf)
+        select_bar = MenuView(
+            ctx.author.id, options, self.config.settings.menutype, self._update_conf
+        )
         select_bar.message = await ctx.send(
             "Pick your menu type from the list shown", view=select_bar
         )
@@ -840,6 +858,15 @@ class CustomHelp(commands.Cog):
         await self.config.settings.replies.set(option)
         self._update_conf("settings", "replies", option)
         await ctx.send(f"{'Enabled' if option else 'Disabled'} reply menus")
+
+    @chelp_settings.command()
+    async def nav(self, ctx, option: bool):
+        """Enable/Disable navigation arrows
+        Disabling this removes every trace of arrows and you can't move to the next page
+        People wanted this for some reason lol"""
+        await self.config.settings.nav.set(option)
+        self._update_conf("settings", "nav", option)
+        await ctx.send(f"{'Enabled' if option else 'Disabled'} navigation arrows")
 
     @chelp_settings.command()
     async def timeout(self, ctx, wait: int):

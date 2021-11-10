@@ -15,6 +15,8 @@ class Category:
     reaction: Optional[str] = None
     long_desc: Optional[str] = None
     thumbnail: Optional[str] = None
+    label : str = ""
+    style: str = "primary"
 
     def __eq__(self, item):
         return item == self.name

@@ -50,9 +50,9 @@ class MenuPicker(discord.ui.Select):
         self.view.stop()  # type:ignore
 
 
-# HELP MENU ARROWS
+# HELP MENU Interaction items
 class BaseInteractionMenu(discord.ui.View):
-    def __init__(self, pages, help_settings, bypass_checks, timeout=120):
+    def __init__(self, pages, help_settings, bypass_checks, timeout=120, nav=True):
         self.cache = {}
         self.help_settings = help_settings
         self.bypass_checks = bypass_checks
@@ -63,15 +63,20 @@ class BaseInteractionMenu(discord.ui.View):
         super().__init__(timeout=timeout)
         self.children: List[Union[BaseButton, SelectHelpBar]] = []
 
-        arrows = [DoubleLeftButton, LeftButton, DeleteButton, RightButton, DoubleRightButton]
-        for arrow in arrows:
-            obj = arrow()
-            self.add_item(obj)
-            obj.setup()
+        if nav:
+            arrows = [DoubleLeftButton, LeftButton, DeleteButton, RightButton, DoubleRightButton]
+            for arrow in arrows:
+                obj = arrow()
+                self.add_item(obj)
+                obj.setup()
 
     async def on_timeout(self):
+        new_children = []
         for child in self.children:
-            child.disabled = True
+            if isinstance(child, SelectHelpBar):
+                child.disabled = True
+                new_children.append(child)
+        self.children = new_children
         await self.message.edit(view=self)
 
     async def start(self, ctx: commands.Context, usereply: bool = True):
@@ -102,6 +107,42 @@ class BaseInteractionMenu(discord.ui.View):
 
         if self.max_page > 2:
             self.children[-1].disabled = False  # double right arrow
+
+
+class ReactButton(discord.ui.Button):
+    view: BaseInteractionMenu
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    async def callback(
+        self, interaction: discord.Interaction
+    ):  # Code duplication! same as the callback from select at the bottom
+        view = self.view
+
+        # Cache categories
+        name = self.custom_id.lower()  # type:ignore
+        if not (category_pages := view.cache.get(name, None)):
+            if name == "home":
+                category_pages = await view.ctx.bot._help_formatter.format_bot_help(
+                    view.ctx, view.help_settings, get_pages=True
+                )
+            else:
+                category_obj = get_category(name)
+                view.cache[
+                    name
+                ] = category_pages = await view.ctx.bot._help_formatter.format_category_help(
+                    view.ctx,
+                    category_obj,
+                    view.help_settings,
+                    get_pages=True,
+                    bypass_checks=view.bypass_checks,
+                )
+
+        await interaction.response.defer()
+        if category_pages:
+            view.change_source(category_pages)
+            await view.message.edit(embed=category_pages[view.curr_page], view=view)
 
 
 class BaseButton(discord.ui.Button):
@@ -269,38 +310,3 @@ class SelectHelpBar(discord.ui.Select):
         if category_pages:
             view.change_source(category_pages)
             await view.message.edit(embed=category_pages[view.curr_page], view=view)
-
-
-# class DropdownView(discord.ui.View):
-#    def __init__(self, cats, message: discord.Message = None, **kwargs: Any):
-#        super().__init__(timeout=60)
-#        self.message = message
-#        self.ctx = kwargs.get("ctx", None)
-#        self.config = kwargs.get("config", None)
-
-#        # Adds the dropdown to our view object.
-#        self.add_item(Dropdown(cats=cats, ctx=self.ctx, config=self.config))
-
-#    async def on_timeout(self):
-#        for item in self.children:
-#            item.disabled = True
-#        # self.clear_items()
-#        with contextlib.suppress(discord.NotFound):
-#            await self.message.edit(view=self)
-#        self.stop()
-
-#    async def interaction_check(self, interaction: discord.Interaction):
-#        """Just extends the default reaction_check to use owner_ids"""
-#        if interaction.message.id != self.message.id:
-#            await interaction.response.send_message(
-#                content=_("You are not authorized to interact with this."),
-#                ephemeral=True,
-#            )
-#            return False
-#        if interaction.user.id not in (*self.ctx.bot.owner_ids, self.ctx.author.id):
-#            await interaction.response.send_message(
-#                content=_("This is not your help menu. \U0001f928"),
-#                ephemeral=True,
-#            )
-#            return False
-#        return True
