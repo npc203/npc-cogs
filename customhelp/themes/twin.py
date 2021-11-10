@@ -1,6 +1,14 @@
 from ..abc import ThemesMeta
-from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, Category,
-                              Context, EmbedField, HelpSettings, _, pagify)
+from ..core.base_help import (
+    EMPTY_STRING,
+    GLOBAL_CATEGORIES,
+    Category,
+    Context,
+    EmbedField,
+    HelpSettings,
+    _,
+    pagify,
+)
 
 
 class TwinHelp(ThemesMeta):
@@ -30,7 +38,7 @@ class TwinHelp(ThemesMeta):
                     pages,
                     embed=True,
                     help_settings=help_settings,
-                    add_emojis=((await self.config.settings())["react"]) and True,
+                    add_emojis=self.settings["react"] and True,
                     emoji_mapping=filtered_categories,
                 )
         else:
