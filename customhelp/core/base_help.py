@@ -264,7 +264,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 value = "\n\n".join(splitted[1:])
                 if not value:
                     value = EMPTY_STRING
-                field = EmbedField("Description", name[:250] + "\n" + value[:1024], False)
+                field = EmbedField(name[:250], value[:1024], False)
                 emb["fields"].append(field)
 
                 if alias := get_aliases(command, ctx.invoked_with):
