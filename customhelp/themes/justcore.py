@@ -154,7 +154,7 @@ class JustCore(ThemesMeta):
             if description := command.description:
                 emb["embed"]["title"] = f"{description[:250]}"
 
-            emb["embed"]["description"] = box(signature)
+            emb["embed"]["description"] = box(signature, "yml")
 
             if final_perms := get_perms(command):
                 emb["fields"].append(EmbedField("Permissions", final_perms, False))
