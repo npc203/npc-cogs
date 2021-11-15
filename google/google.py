@@ -26,7 +26,7 @@ class Google(Yandex, commands.Cog):
     A Simple google search with image support as well
     """
 
-    __version__ = "0.0.2"
+    __version__ = "0.0.3"
     __authors__ = ["epic guy", "ow0x", "fixator10"]
 
     def __init__(self, bot: Red) -> None:
