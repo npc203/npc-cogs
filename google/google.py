@@ -423,7 +423,7 @@ class Google(Yandex, commands.Cog):
         for res in soup.findAll("div", class_="g"):
             if name := res.find("div", class_="yuRUbf"):
                 url = name.a["href"]
-                if title := name.find("h3", "LC20lb DKV0Md"):
+                if title := name.find("h3", class_=re.compile("LC20lb")):
                     title = title.text
                 else:
                     title = url
