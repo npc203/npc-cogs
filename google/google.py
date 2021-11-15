@@ -27,6 +27,7 @@ class Google(Yandex, commands.Cog):
     """
 
     __version__ = "0.0.2"
+    __authors__ = ["epic guy", "ow0x", "fixator10"]
 
     def __init__(self, bot: Red) -> None:
         self.bot = bot
@@ -45,7 +46,8 @@ class Google(Yandex, commands.Cog):
     def format_help_for_context(self, ctx: commands.Context) -> str:
         """Thanks Sinbad!"""
         pre_processed = super().format_help_for_context(ctx)
-        return f"{pre_processed}\n\nCog Version: {self.__version__}"
+        authors = "Authors: " + ", ".join(self.__authors__)
+        return f"{pre_processed}\n\n{authors}\nCog Version: {self.__version__}"
 
     @commands.group(invoke_without_command=True)
     @commands.bot_has_permissions(embed_links=True, add_reactions=True)
