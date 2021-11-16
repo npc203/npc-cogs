@@ -26,12 +26,13 @@ class Google(Yandex, commands.Cog):
     A Simple google search with image support as well
     """
 
-    __version__ = "0.0.2"
+    __version__ = "0.0.3"
+    __authors__ = ["epic guy", "ow0x", "fixator10"]
 
     def __init__(self, bot: Red) -> None:
         self.bot = bot
         self.options = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.52 Safari/537.36",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36",
             "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
         }
         self.link_regex = re.compile(
@@ -45,7 +46,8 @@ class Google(Yandex, commands.Cog):
     def format_help_for_context(self, ctx: commands.Context) -> str:
         """Thanks Sinbad!"""
         pre_processed = super().format_help_for_context(ctx)
-        return f"{pre_processed}\n\nCog Version: {self.__version__}"
+        authors = "Authors: " + ", ".join(self.__authors__)
+        return f"{pre_processed}\n\n{authors}\nCog Version: {self.__version__}"
 
     @commands.group(invoke_without_command=True)
     @commands.bot_has_permissions(embed_links=True, add_reactions=True)
@@ -423,7 +425,7 @@ class Google(Yandex, commands.Cog):
         for res in soup.findAll("div", class_="g"):
             if name := res.find("div", class_="yuRUbf"):
                 url = name.a["href"]
-                if title := name.find("h3", "LC20lb DKV0Md"):
+                if title := name.find("h3", class_=re.compile("LC20lb")):
                     title = title.text
                 else:
                     title = url
