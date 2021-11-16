@@ -32,7 +32,7 @@ class Google(Yandex, commands.Cog):
     def __init__(self, bot: Red) -> None:
         self.bot = bot
         self.options = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36",
             "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
         }
         self.link_regex = re.compile(
