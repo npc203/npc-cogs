@@ -54,7 +54,7 @@ class CustomHelp(commands.Cog):
     A custom customisable help for fun and profit
     """
 
-    __version__ = "0.8.1"
+    __version__ = "0.8.2"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -113,11 +113,8 @@ class CustomHelp(commands.Cog):
         """This is to make the emoji arrows objects be in their proper types"""
         arrows = await self.config.settings.arrows()
         for name, emoji in arrows.items():
-            if emj := emoji_converter(self.bot, emoji):
-                ARROWS[name] = emj
-            else:
-                # back-up measure if the something went wrong
-                ARROWS[name] = self.chelp_global["settings"]["arrows"][name]
+            # Just using the IDS to prevent issues with emojis missing when bot loads
+            ARROWS[name] = emoji
 
     async def refresh_cache(self):
         """Get's the config and re-populates the GLOBAL_CATEGORIES"""
@@ -769,7 +766,7 @@ class CustomHelp(commands.Cog):
         for page in pagify(text, page_length=1985, shorten_by=0):
             await ctx.send(box(page, lang="yaml"))
 
-    @chelp.group(name="settings",aliases=["setting"])
+    @chelp.group(name="settings", aliases=["setting"])
     async def settings(self, ctx):
         """Change various help settings"""
 
