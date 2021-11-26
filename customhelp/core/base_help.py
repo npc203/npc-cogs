@@ -15,7 +15,7 @@ from .category import Category, get_category
 from .dpy_menus import ListPages
 from .utils import (close_menu, first_page, get_aliases, get_cooldowns,
                     get_perms, home_page, last_page, next_page, prev_page,
-                    react_page, shorten_line)
+                    react_page, shorten_line,emoji_converter)
 
 HelpTarget = Union[
     commands.Command,
@@ -478,12 +478,12 @@ class BaguetteHelp(commands.RedHelpFormatter):
             }
             final_menu = get_menu()(ListPages(pages))
             for thing in trans:
-                final_menu.add_button(trans[thing](ARROWS[thing]))
+                final_menu.add_button(trans[thing](emoji_converter(ctx.bot,ARROWS[thing])))
 
             if not add_emojis:
                 # Add force left and right reactions when emojis are off, cause why not xD
-                final_menu.add_button(first_page(ARROWS["force_left"]))
-                final_menu.add_button(last_page(ARROWS["force_right"]))
+                final_menu.add_button(first_page(emoji_converter(ctx.bot,ARROWS["force_left"])))
+                final_menu.add_button(last_page(emoji_converter(ctx.bot,ARROWS["force_right"])))
 
             # TODO important!
             if add_emojis and emoji_mapping:
@@ -493,7 +493,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                         final_menu.add_button(
                             await react_page(ctx, cat.reaction, help_settings, bypass_checks=True)
                         )
-                final_menu.add_button(await home_page(ctx, ARROWS["home"], help_settings))
+                final_menu.add_button(await home_page(ctx, emoji_converter(ctx.bot,ARROWS["home"]), help_settings))
             await final_menu.start(ctx)
 
     async def blacklist(self, ctx, name) -> bool:
