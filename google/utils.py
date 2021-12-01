@@ -93,7 +93,7 @@ def get_card(soup, final, kwargs):
                 if remove := desc.find(class_=re.compile("Uo8X3b")):
                     remove.decompose()
 
-                desc = (textwrap.shorten(h2t(str(desc.span)), 1024, placeholder="...") + "\n")
+                desc = textwrap.shorten(h2t(str(desc.span)), 1024, placeholder="...") + "\n"
 
                 if more_info := soup.findAll("div", class_="Z1hOCe"):
                     for thing in more_info:
@@ -199,17 +199,22 @@ def get_card(soup, final, kwargs):
             if sup := word.find("sup"):
                 sup.decompose()
             final_text += "`" + word.text + "`"
+
         if pronounciate := card.find("div", class_="S23sjd"):
             final_text += "   |   " + pronounciate.text
+
         if type_ := card.find("span", class_="YrbPuc"):
             final_text += "   |   " + type_.text + "\n\n"
+
         if definition := card.find("div", class_="LTKOO sY7ric"):
             if remove_flex_row := definition.find(class_="bqVbBf jfFgAc CqMNyc"):
                 remove_flex_row.decompose()
+
             for text in definition.findAll("span"):
                 tmp = h2t(str(text))
                 if tmp.count("\n") < 5:
                     final_text += "`" + tmp.strip("\n").replace("\n", " ") + "`" + "\n"
+
         final.append(s(None, "Definition", final_text))
         return
 

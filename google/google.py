@@ -433,7 +433,7 @@ class Google(Yandex, commands.Cog):
             if desc := res.find("div", class_="IsZvec"):
                 if remove := desc.find("span", class_="f"):
                     remove.decompose()
-                if final_desc := desc.find_all("span"):
+                if final_desc := desc.find_all("div", class_="VwiC3b"):
                     desc = h2t(str(final_desc[-1]))[:500]
                 else:
                     desc = "Nothing found"
@@ -444,5 +444,19 @@ class Google(Yandex, commands.Cog):
         return final, kwargs
 
     def parser_image(self, html):
-        # first 3 are google static logo images
-        return self.link_regex.findall(html)[3:], {}
+        excluded_domains = (
+            "google.com",
+            "gstatic.com",
+        )
+        links = self.link_regex.findall(html)
+        ind = 0
+        count = 0
+        while count <= 10:  # first 10 should be enough for the google icons
+            for remove in excluded_domains:
+                if remove in links[ind]:
+                    links.pop(ind)
+                    break
+            else:
+                ind += 1
+            count += 1
+        return links, {}

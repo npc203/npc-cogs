@@ -39,6 +39,26 @@ class Speak(commands.Cog):
             avatar_url=mention.avatar_url,
             content=sentence,
         )
+        
+    @checks.bot_has_permissions(manage_webhooks=True, manage_messages=True)
+    @commands.command()
+    async def telluser(self, ctx, username: str, avatar: str, *, sentence: str):
+        """Says the given text with the specified name and avatar"""
+        hook = await self.get_hook(ctx)
+        await ctx.message.delete()
+        if avatar.startswith("http"):
+            if 1<len(username)<=80:
+                await hook.send(
+                    username=username,
+                    avatar_url=avatar,
+                    content=sentence,
+                )
+            else:
+                await ctx.send("You must include a username of less than 80 characters.")
+                await ctx.send_help()
+        else:
+            await ctx.send("You must include a URL to define the webhook avatar.")
+            await ctx.send_help()
 
     @checks.bot_has_permissions(manage_webhooks=True, manage_messages=True)
     @commands.group(invoke_without_command=False)

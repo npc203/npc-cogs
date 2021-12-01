@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 import json
 import re
 from collections import Counter, defaultdict
@@ -7,6 +7,7 @@ from itertools import chain
 from os import path
 from pathlib import Path
 from types import MethodType
+from typing import Dict, List
 
 import discord
 import yaml
@@ -18,9 +19,10 @@ from redbot.core.utils.chat_formatting import box, pagify
 from tabulate import tabulate
 
 from . import themes
-from .core import ARROWS, GLOBAL_CATEGORIES, set_menu
+from .core import ARROWS, GLOBAL_CATEGORIES
+from .core.views import MenuView
 from .core.base_help import EMPTY_STRING, BaguetteHelp
-from .core.category import Category, get_category
+from .core.category import Category, Arrow, get_category
 from .core.utils import LINK_REGEX, emoji_converter
 
 _ = Translator("CustomHelp", __file__)
@@ -42,6 +44,8 @@ Config Structure:
                 "long_desc":longer description
                 "cogs" : []
                 "reaction":None
+                "label":""
+                "style":"primary"
             }
      ]
     }
@@ -54,7 +58,7 @@ class CustomHelp(commands.Cog):
     A custom customisable help for fun and profit
     """
 
-    __version__ = "0.8.0"
+    __version__ = "1.0.1"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -70,6 +74,7 @@ class CustomHelp(commands.Cog):
             force_registration=True,  # I'm gonna regret this
         )
         self.chelp_global = {
+            "version": "0.0.0",
             "categories": [],
             "theme": {"cog": None, "category": None, "command": None, "main": None},
             "uncategorised": {
@@ -77,23 +82,29 @@ class CustomHelp(commands.Cog):
                 "desc": None,
                 "long_desc": None,
                 "reaction": None,
+                "thumbnail": None,
+                "label": "",
+                "style": "primary",
             },
             "settings": {
                 "react": True,
+                "nav": True,
                 "set_formatter": False,
                 "thumbnail": None,
                 "timeout": 120,
                 "replies": True,
-                "buttons": False,
-                "arrows": {
-                    "right": "\N{BLACK RIGHTWARDS ARROW}\N{VARIATION SELECTOR-16}",
-                    "left": "\N{LEFTWARDS BLACK ARROW}\N{VARIATION SELECTOR-16}",
-                    "cross": "\N{CROSS MARK}",
-                    "home": "\U0001f3d8\U0000fe0f",
-                    "force_right": "\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\N{VARIATION SELECTOR-16}",
-                    "force_left": "\N{BLACK LEFT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\N{VARIATION SELECTOR-16}",
-                },
+                "menutype": "buttons",  # "emojis","buttons","select"
+                # "arrowtype": "buttons",  # "emojis","buttons" #TODO arrow type later
+                "deletemessage": False,
             },
+            "arrows": [
+                {"name": "force_left", "emoji": "⏮️", "style": "primary", "label": ""},
+                {"name": "left", "emoji": "⬅️", "style": "primary", "label": ""},
+                {"name": "cross", "emoji": "❌", "style": "primary", "label": ""},
+                {"name": "right", "emoji": "➡️", "style": "primary", "label": ""},
+                {"name": "force_right", "emoji": "⏭️", "style": "primary", "label": ""},
+                {"name": "home", "emoji": "🏘️", "style": "primary", "label": ""},
+            ],
             "blacklist": {"nsfw": [], "dev": []},
         }
         self.config.register_global(**self.chelp_global)
@@ -110,13 +121,17 @@ class CustomHelp(commands.Cog):
 
     async def refresh_arrows(self):
         """This is to make the emoji arrows objects be in their proper types"""
-        arrows = await self.config.settings.arrows()
-        for name, emoji in arrows.items():
-            if emj := emoji_converter(self.bot, emoji):
-                ARROWS[name] = emj
+        arrows = await self.config.arrows()
+        ARROWS.clear()
+        for index, details in enumerate(arrows):
+            details["style"] = getattr(discord.ButtonStyle, details["style"])
+            if emj := emoji_converter(self.bot, details.pop("emoji")):
+                ARROWS.append(Arrow(**details, emoji=emj))
             else:
                 # back-up measure if the something went wrong
-                ARROWS[name] = self.chelp_global["settings"]["arrows"][name]
+                ARROWS.append(
+                    Arrow(**details, emoji=self.chelp_global["settings"]["arrows"][index]["emoji"])
+                )
 
     async def refresh_cache(self):
         """Get's the config and re-populates the GLOBAL_CATEGORIES"""
@@ -144,21 +159,45 @@ class CustomHelp(commands.Cog):
                 desc=uncat_config["desc"] or "No category commands",
                 long_desc=uncat_config["long_desc"] or "",
                 reaction=emoji_converter(self.bot, uncat_config["reaction"]),
+                thumbnail=uncat_config["thumbnail"],
                 cogs=list(uncategorised),
+                label=uncat_config["label"],
+                style=uncat_config["style"],
             )
         )
 
     async def _setup(self):
         """Adds the themes and loads the formatter"""
+
+        # Arrow migration
+        if (await self.config.version()) < "1.0.0" and self.__version__ == "1.0.0":
+            new_arrows = []
+            async with self.config.settings.arrows() as arrows:
+                for name, emoji in arrows.items():
+                    new_arrows.append(
+                        {"name": name, "emoji": emoji, "style": "primary", "label": ""}
+                    )
+                arrows.clear()
+            await self.config.arrows.set(new_arrows)
+            await self.config.version.set(self.__version__)
+
+        # Category migration or smth
+        if (await self.config.version()) < "1.0.1" and self.__version__ == "1.0.1":
+            async with self.config.uncategorised() as uncat:
+                uncat["style"] = "primary"
+                uncat["label"] = ""
+            await self.config.version.set(self.__version__)
+
         # This is needed to be on top so that Cache gets populated no matter what (supplements chelp create)
         await self.refresh_cache()
         await self.refresh_arrows()
 
         settings = await self.config.settings()
-        set_menu(replies=settings["replies"], buttons=settings.get("buttons", False))
         if not settings["set_formatter"]:
             return
-        main_theme = BaguetteHelp(self.bot, self.config)
+        main_theme = BaguetteHelp(
+            self.bot, await self.config.settings(), await self.config.blacklist()
+        )
         theme = await self.config.theme()
         if all(theme.values()) is not None:
             for feature in theme:
@@ -212,7 +251,7 @@ class CustomHelp(commands.Cog):
     @chelp.command()
     async def auto(self, ctx):
         """Auto categorise cogs based on it's tags and display them"""
-        data = {}
+        data: Dict[str, List[str]] = {}
         # Thanks trusty pathlib is awesome.
         for k, a in self.bot.cogs.items():
             check = Path(getfile(a.__class__)).parent / "info.json"
@@ -234,7 +273,10 @@ class CustomHelp(commands.Cog):
         groups = defaultdict(set)
         for key, tags in data.items():
             if tags:
-                tag = max(tags, key=popular.get)
+                tag = max(
+                    tags,
+                    key=popular.get,  # type:ignore https://github.com/microsoft/pylance-release/issues/1022
+                )
                 groups[tag].add(key)
 
         final = {"uncategorised": []}
@@ -255,18 +297,18 @@ class CustomHelp(commands.Cog):
         settings = await self.config.settings()
         blocklist = await self.config.blacklist()
         setting_mapping = {
-            "react": "usereactions",
             "set_formatter": "iscustomhelp?",
             "thumbnail": "thumbnail",
-            "timeout": "Timeout(secs)",
+            "menus": "Menu-Type",
             "replies": "Use replies",
             "buttons": "Use buttons",
+            "deletemessage": "Delete user msg",
         }
         other_settings = []
         # url doesnt exist now, that's why the check. sorry guys.
         for i, j in settings.items():
             if i in setting_mapping:
-                other_settings.append(f"`{setting_mapping[i]:<13}`: {j}")
+                other_settings.append(f"`{setting_mapping[i]:<15}`: {j}")
         val = await self.config.theme()
         val = "\n".join([f"`{i:<10}`: " + (j if j else "default") for i, j in val.items()])
         emb = discord.Embed(
@@ -281,11 +323,12 @@ class CustomHelp(commands.Cog):
             inline=False,
         )
 
-        emb.add_field(
-            name="Arrows",
-            value="\n".join(f"`{i:<7}`: {j}" for i, j in ARROWS.items()),
-            inline=False,
-        )
+        # TODO PAGINATE TO DISPLAY
+        # emb.add_field(
+        #     name="Arrows",
+        #     value="\n".join(f"`{i:<7}`: {j}" for i, j in ARROWS.items()),
+        #     inline=False,
+        # )
 
         if blocklist["nsfw"] or blocklist["dev"]:
             emb.add_field(
@@ -300,7 +343,7 @@ class CustomHelp(commands.Cog):
             )
         await ctx.send(embed=emb)
 
-    @chelp.command(name="set")
+    @chelp.command(name="toggle")
     async def set_formatter(self, ctx, setval: bool):
         """Set to toggle custom formatter or the default help formatter\n`[p]chelp set 0` to turn custom off \n`[p]chelp set 1` to turn it on"""
         async with ctx.typing():
@@ -445,15 +488,15 @@ class CustomHelp(commands.Cog):
             i: [(k, v) for f in my_list for k, v in f.items()]
             for i, my_list in parsed_data.items()
         }
-        check = ["name", "desc", "long_desc", "reaction"]
+        check = ["name", "desc", "long_desc", "reaction", "thumbnail", "label", "style"]
         available_categories = [category.name for category in GLOBAL_CATEGORIES]
         # Remove uncategorised
         available_categories.pop(-1)
         # special naming for uncategorized stuff
         uncat_name = GLOBAL_CATEGORIES[-1].name
-        already_present_emojis = list(
-            str(i.reaction) for i in GLOBAL_CATEGORIES if i.reaction
-        ) + list(ARROWS.values())
+        already_present_emojis = [str(i.reaction) for i in GLOBAL_CATEGORIES if i.reaction] + [
+            i.emoji for i in ARROWS
+        ]
         failed = []  # example: [('desc','categoryname')]
 
         def validity_checker(category, item):
@@ -466,6 +509,8 @@ class CustomHelp(commands.Cog):
                 elif item[0] == "reaction":
                     if item[1] not in already_present_emojis:
                         return str(emoji_converter(self.bot, item[1]))
+                elif item[0] == "style":
+                    return item[1] if hasattr(discord.ButtonStyle, item[1]) else None
                 else:
                     return item[1]
 
@@ -586,7 +631,9 @@ class CustomHelp(commands.Cog):
         await ctx.bot.wait_for("reaction_add", check=pred)
         if pred.result is True:
             self.bot.reset_help_formatter()
-            self.bot.set_help_formatter(BaguetteHelp(self.bot, self.config))
+            self.bot.set_help_formatter(
+                BaguetteHelp(self.bot, await self.config.settings(), await self.config.blacklist())
+            )
             await self.config.theme.set(
                 {"cog": None, "category": None, "command": None, "main": None}
             )
@@ -708,10 +755,10 @@ class CustomHelp(commands.Cog):
         await ctx.send(text)
 
     @remove.command(aliases=["cogs"], require_var_positional=True)
-    async def cog(self, ctx, *cog_names: str):
+    async def cog(self, ctx, *cog_raw_names: str):
         """Remove a cog(s) from across categories"""
         # From Core [p]load xD, using set to avoid dupes
-        cog_names: set[str] = set(map(lambda cog: cog.rstrip(","), cog_names))
+        cog_names: set[str] = set(map(lambda cog: cog.rstrip(","), cog_raw_names))
 
         to_config = []  # [(index_of_category,cog_name),()] (maybe use namedtuples here?)
         uncat = []
@@ -767,58 +814,79 @@ class CustomHelp(commands.Cog):
         for page in pagify(text, page_length=1985, shorten_by=0):
             await ctx.send(box(page, lang="yaml"))
 
-    @chelp.group()
-    async def settings(self, ctx):
+    @chelp.group(name="set", aliases=["settings", "setting"])
+    async def chelp_settings(self, ctx):
         """Change various help settings"""
 
-    @settings.command(aliases=["usereaction"])
-    async def usereactions(self, ctx, toggle: bool):
-        """Toggles adding reaction for navigation."""
-        async with self.config.settings() as f:
-            f["react"] = toggle
-        await ctx.tick()
+    @chelp_settings.command()
+    async def menutype(self, ctx):
+        """Toggles between various menus"""
+        options = [
+            discord.SelectOption(
+                label="Emojis", description="Old-Fashion, Highly ratelimited", emoji="😃"
+            ),
+            discord.SelectOption(label="Buttons", description="Cool chonky buttons", emoji="🔘"),
+            discord.SelectOption(
+                label="Select", description="Minimalistic Dropdown Menus", emoji="⏬"
+            ),
+        ]
+        select_bar = MenuView(
+            ctx.author.id, options, self.config.settings.menutype, self._update_conf
+        )
+        select_bar.message = await ctx.send(
+            "Pick your menu type from the list shown", view=select_bar
+        )
 
-    @settings.command(aliases=["setthumbnail"])
+    @chelp_settings.command(aliases=["setthumbnail"])
     async def thumbnail(self, ctx, url: str = None):
-        """Set your thumbnail image here.\n use `[p]chelp settings thumbnail` to reset this"""
+        """Set your main thumbnail image here.\n use `[p]chelp settings thumbnail` to reset this"""
         if url:
             if re.search(LINK_REGEX, url):
-                async with self.config.settings() as f:
-                    f["thumbnail"] = url
+                await self.config.settings.thumbnail.set(url)
+                self._update_conf("settings", "thumbnail", url)
                 await ctx.tick()
             else:
                 await ctx.send("Enter a valid url")
         else:
-            async with self.config.settings() as f:
-                f["thumbnail"] = None
+            await self.config.settings.thumbnail.set(None)
+            self._update_conf("settings", "thumbnail", None)
             await ctx.send("Reset thumbnail")
 
-    @settings.command(aliases=["usereplies", "reply"])
+    @chelp_settings.command(aliases=["usereplies", "reply"])
     async def usereply(self, ctx, option: bool):
         """Enable/Disable replies"""
-        response, success = set_menu(replies=option, buttons=None)
-        if success:
-            await self.config.settings.replies.set(option)
-        await ctx.send(response)
+        await self.config.settings.replies.set(option)
+        self._update_conf("settings", "replies", option)
+        await ctx.send(f"{'Enabled' if option else 'Disabled'} reply menus")
 
-    @settings.command(aliases=["buttons"])
-    async def usebuttons(self, ctx, option: bool):
-        """Enable/disable button menus."""
-        response, success = set_menu(replies=None, buttons=option)
-        if success:
-            await self.config.settings.buttons.set(option)
-        await ctx.send(response)
+    @chelp_settings.command()
+    async def nav(self, ctx, option: bool):
+        """Enable/Disable navigation arrows
+        Disabling this removes every trace of arrows and you can't move to the next page
+        People wanted this for some reason lol"""
+        await self.config.settings.nav.set(option)
+        self._update_conf("settings", "nav", option)
+        await ctx.send(f"{'Enabled' if option else 'Disabled'} navigation arrows")
 
-    @settings.command()
+    @chelp_settings.command()
     async def timeout(self, ctx, wait: int):
         """Set how long the help menu must stay active"""
         if wait > 20:
             await self.config.settings.timeout.set(wait)
+            self._update_conf("settings", "timeout", wait)
             await ctx.send(f"Sucessfully set timeout to {wait}")
         else:
             await ctx.send("Timeout must be atleast 20 seconds")
 
-    @settings.command(aliases=["arrow"])
+    @chelp_settings.command(aliases=["deleteusermessage"])
+    async def deletemessage(self, ctx, toggle: bool):
+        """Delete the user message that started the help menu.
+        Note: This only works if the bot has permissions to delete the user message, otherwise it's supressed"""
+        await self.config.settings.deletemessage.set(toggle)
+        self._update_conf("settings", "deletemessage", toggle)
+        await ctx.send(f"Sucessfully set delete user toggle to {toggle}")
+
+    @chelp_settings.command(aliases=["arrow"])
     async def arrows(self, ctx, *, correct_txt=None):
         """Add custom arrows for fun and profit"""
         if correct_txt:
@@ -828,11 +896,11 @@ class CustomHelp(commands.Cog):
                 "Your next message should be with the specfied format as follows(see docs for more info).\n"
                 "**If you enter an invalid emoji your help will break.**\n"
                 "Example:\n"
-                "left :↖️\n"
-                "right:↗️\n"
-                "cross:❎\n"
-                "home :🏛️\n"
-                "Note: There's also `force_left` and `force_right`"
+                "left :\n"
+                " - emoji: ↖️\n"
+                " - style: success\n"
+                " - label: 'text is cool'\n"
+                "Note: The other arrows are `right`,`cross`, `home`, `force_left` and `force_right`"
             )
             try:
                 msg = await self.bot.wait_for(
@@ -844,42 +912,75 @@ class CustomHelp(commands.Cog):
             except asyncio.TimeoutError:
                 return await ctx.send("Timed out, please try again.")
 
-        already_present_emojis = list(
-            str(i.reaction) for i in GLOBAL_CATEGORIES if i.reaction
-        ) + list((await self.config.settings.arrows()).values())
-
-        async def emj_parser(data):
-            parsed = {}
-            checks = ["left", "right", "cross", "home", "force_right", "force_left"]
-            raw = data.split("\n")
-            for emj in raw:
-                tmp = emj.split(":", 1)
-                tmp = [i.strip() for i in tmp]  # tmp = ["left","full_emoji"]
-                if len(tmp) != 2 or tmp[0] not in checks:
-                    await ctx.send(f"Can't parse \n `{emj}`")
-                    return
-                else:
-                    if tmp[1] not in already_present_emojis:
-                        if emoji_converter(self.bot, tmp[1]):
-                            parsed[tmp[0]] = tmp[1]
-                        else:
-                            await ctx.send(f"Invalid Emoji:{tmp[1]}")
-                            return
-                    else:
-                        await ctx.send(f"Already present Emoji:{tmp[1]}")
-                        return
-            return parsed
-
-        parsed_data = await emj_parser(content)
-        if not parsed_data:
+        if not (yaml_data := await self.parse_yaml(ctx, content)):
             return
-        async with self.config.settings.arrows() as conf:
-            for k, v in parsed_data.items():
-                conf[k] = v
-        await ctx.send(
-            "Successfully added the changes:\n"
-            + "\n".join(f"`{i} `: {j}" for i, j in parsed_data.items())
-        )
+
+        already_present_emojis = list(str(i.reaction) for i in GLOBAL_CATEGORIES if i.reaction) + [
+            i["emoji"] for i in await self.config.arrows()
+        ]
+
+        parsed = {}
+        failed = []  # [(reason for failure,arrow_name)]
+        check = ("emoji", "label", "style")
+        check_name = ("left", "right", "cross", "home", "force_right", "force_left")
+        check_style = ["primary", "secondary", "success", "danger"]
+
+        parsed_data = {}
+        for k, v in yaml_data.items():
+            tmp = {}
+            for val in v:
+                final_key, final_val = val.popitem()
+                tmp[final_key] = final_val
+            parsed_data[k] = tmp
+
+        for arrow, details in parsed_data.items():
+            if arrow not in check_name:
+                failed.append(("Invalid arrow name", arrow))
+            else:
+                parsed[arrow] = details
+
+                # Junk
+                remove_key = []
+                for key in details:
+                    if key not in check:
+                        failed.append(((key, "Invalid key"), arrow))
+                        remove_key.append(key)
+                for key in remove_key:
+                    details.pop(key)
+
+                # Emoji verify
+                if emoji := details.pop("emoji", None):
+                    if emoji in already_present_emojis:
+                        failed.append((("emoji", "Emoji already present as arrow"), arrow))
+                    elif converted := emoji_converter(self.bot, emoji):
+                        parsed[arrow]["emoji"] = converted
+
+                # ButtonStyle verify
+                if style := details.pop("style", None):
+                    if style in check_style:
+                        parsed[arrow]["style"] = style
+                    else:
+                        failed.append((("button", "Invalid button style"), arrow))
+
+        async with self.config.arrows() as conf:
+            for name, modified_values in parsed.items():
+                for arrow in conf:
+                    if arrow["name"] == name:
+                        arrow.update(modified_values)
+                        break
+
+        for page in pagify(
+            "Successfully added the edits"
+            if not failed
+            else "The following things failed:\n"
+            + "\n".join(
+                [
+                    f"`{reason[0]}` failed in `{arrow}`, `Reason: {reason[1]}`"
+                    for reason, arrow in failed
+                ]
+            )
+        ):
+            await ctx.send(page)
         await self.refresh_arrows()
 
     @chelp.group()
@@ -898,6 +999,7 @@ class CustomHelp(commands.Cog):
                 async with self.config.blacklist.nsfw() as conf:
                     if category not in conf:
                         conf.append(category)
+                        self._update_conf("blacklist", "nsfw", conf)
                         await ctx.send(f"Sucessfully added {category} to nsfw category")
                     else:
                         await ctx.send(f"{category} is already present in nsfw blocklist")
@@ -914,6 +1016,7 @@ class CustomHelp(commands.Cog):
             async with self.config.blacklist.nsfw() as conf:
                 if category in conf:
                     conf.remove(category)
+                    self._update_conf("blacklist", "nsfw", conf)
                     await ctx.send(f"Sucessfully removed {category} from nsfw category")
                 else:
                     await ctx.send(f"{category} is not present in nsfw blocklist")
@@ -936,6 +1039,7 @@ class CustomHelp(commands.Cog):
                 async with self.config.blacklist.dev() as conf:
                     if category not in conf:
                         conf.append(category)
+                        self._update_conf("blacklist", "dev", conf)
                         await ctx.send(f"Sucessfully added {category} to dev list")
                     else:
                         await ctx.send(f"{category} is already present in dev list")
@@ -952,6 +1056,7 @@ class CustomHelp(commands.Cog):
             async with self.config.blacklist.dev() as conf:
                 if category in conf:
                     conf.remove(category)
+                    self._update_conf("blacklist", "dev", conf)
                     await ctx.send(f"Sucessfully removed {category} from dev category")
                 else:
                     await ctx.send(f"{category} is not present in dev list")
@@ -1055,6 +1160,16 @@ class CustomHelp(commands.Cog):
                 await ctx.send(embed=em)
         else:
             await ctx.send("Command not found")
+
+    def _update_conf(self, var, key, value):
+        """Sample:
+        var = settings
+        key = thumbnail
+        value= https://some_url.com"""
+
+        # Only change if it's customhelp formatter
+        if isinstance(self.bot._help_formatter, BaguetteHelp):
+            getattr(self.bot._help_formatter, var)[key] = value
 
     async def parse_yaml(self, ctx, content):
         """Parse the yaml with basic structure checks"""

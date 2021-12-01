@@ -6,16 +6,34 @@ from typing import List, Union, cast
 import discord
 from redbot.core import commands
 from redbot.core.commands.context import Context
-from redbot.core.commands.help import (HelpSettings, NoCommand, NoSubCommand,
-                                       _, dpy_commands, mass_purge)
+from redbot.core.commands.help import (
+    HelpSettings,
+    NoCommand,
+    NoSubCommand,
+    _,
+    dpy_commands,
+)
+from redbot.core.utils.mod import mass_purge
 from redbot.core.utils.chat_formatting import pagify
 
-from . import ARROWS, GLOBAL_CATEGORIES, get_menu
+from customhelp.core.views import BaseInteractionMenu, ReactButton, SelectHelpBar
+
+from . import ARROWS, GLOBAL_CATEGORIES
 from .category import Category, get_category
-from .dpy_menus import ListPages
-from .utils import (close_menu, first_page, get_aliases, get_cooldowns,
-                    get_perms, home_page, last_page, next_page, prev_page,
-                    react_page, shorten_line)
+from .dpy_menus import ListPages, BaseMenu
+from .utils import (
+    close_menu,
+    first_page,
+    get_aliases,
+    get_cooldowns,
+    get_perms,
+    home_page,
+    last_page,
+    next_page,
+    prev_page,
+    react_page,
+    shorten_line,
+)
 
 HelpTarget = Union[
     commands.Command,
@@ -34,9 +52,10 @@ EMPTY_STRING = "\N{ZERO WIDTH SPACE}"
 class BaguetteHelp(commands.RedHelpFormatter):
     """In the memory of Jack the virgin"""
 
-    def __init__(self, bot, config):
+    def __init__(self, bot, settings, blacklist):
         self.bot = bot
-        self.config = config
+        self.settings = settings
+        self.blacklist_names = blacklist
 
     @staticmethod
     async def parse_command(ctx, help_for: str) -> HelpTarget:
@@ -168,6 +187,8 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
         if await ctx.embed_requested():
             emb = await self.embed_template(help_settings, ctx)
+            emb["thumbnail"] = obj.thumbnail
+
             if description := obj.long_desc or "":
                 emb["embed"]["description"] = f"{description[:250]}"
 
@@ -319,7 +340,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                     pages,
                     embed=True,
                     help_settings=help_settings,
-                    add_emojis=((await self.config.settings())["react"]) and True,
+                    add_emojis=self.settings["react"] and True,
                     emoji_mapping=filtered_categories,
                 )
         else:
@@ -352,12 +373,12 @@ class BaguetteHelp(commands.RedHelpFormatter):
     ):
         """Returns Embed pages (Really copy paste from core)"""
         pages = []
-        thumbnail_url = await self.config.settings.thumbnail()
+        thumbnail_url = embed_dict.get("thumbnail", None) or self.settings["thumbnail"]
         page_char_limit = help_settings.page_char_limit
         page_char_limit = min(page_char_limit, 5500)
         author_info = {
             "name": _("{ctx.me.display_name} Help Menu").format(ctx=ctx),
-            "icon_url": ctx.me.avatar.with_static_format("png").url,
+            "icon_url": ctx.me.avatar.url,
         }
         offset = len(author_info["name"]) + 20
         foot_text = embed_dict["footer"]["text"]
@@ -413,7 +434,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
         embed: bool = True,
         help_settings: HelpSettings = None,
         add_emojis: bool = False,
-        emoji_mapping: list = None,
+        emoji_mapping: List[Category] = None,
     ):
         """
         Sends pages based on settings.
@@ -421,6 +442,9 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
         # save on config calls
         channel_permissions = ctx.channel.permissions_for(ctx.me)
+
+        if channel_permissions.manage_messages and self.settings["deletemessage"]:
+            await ctx.message.delete()
 
         if not (channel_permissions.add_reactions and help_settings.use_menus):
 
@@ -467,36 +491,85 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
                 asyncio.create_task(_delete_delay_help(destination, messages, delete_delay))
         else:
-            # m = await (ctx.send(embed=pages[0]) if embed else ctx.send(pages[0]))
             trans = {
                 "left": prev_page,
                 "cross": close_menu,
                 "right": next_page,
             }
-            final_menu = get_menu()(ListPages(pages))
-            for thing in trans:
-                final_menu.add_button(trans[thing](ARROWS[thing]))
 
-            if not add_emojis:
-                # Add force left and right reactions when emojis are off, cause why not xD
-                final_menu.add_button(first_page(ARROWS["force_left"]))
-                final_menu.add_button(last_page(ARROWS["force_right"]))
+            final_menu = None
+            if self.settings["menutype"] == "emojis":  # Emoji menus
+                final_menu = BaseMenu(ListPages(pages))
+                for thing in trans:
+                    final_menu.add_button(trans[thing](ARROWS[thing].emoji))
 
-            # TODO important!
-            if add_emojis and emoji_mapping:
-                # Adding additional category emojis
-                for cat in emoji_mapping:
-                    if cat.reaction:
-                        final_menu.add_button(
-                            await react_page(ctx, cat.reaction, help_settings, bypass_checks=True)
-                        )
-                final_menu.add_button(await home_page(ctx, ARROWS["home"], help_settings))
-            await final_menu.start(ctx)
+                if not add_emojis:
+                    # Add force left and right reactions when emojis are off, cause why not xD
+                    final_menu.add_button(first_page(ARROWS["force_left"].emoji))
+                    final_menu.add_button(last_page(ARROWS["force_right"].emoji))
+
+                if add_emojis and emoji_mapping:
+                    # Adding additional category emojis
+                    for cat in emoji_mapping:
+                        if cat.reaction:
+                            final_menu.add_button(
+                                await react_page(
+                                    ctx, cat.reaction, help_settings, bypass_checks=True
+                                )
+                            )
+                    final_menu.add_button(
+                        await home_page(ctx, ARROWS["home"].emoji, help_settings)
+                    )
+
+            else:  # Interaction menus
+                final_menu = BaseInteractionMenu(
+                    pages,
+                    help_settings,
+                    bypass_checks=True,
+                    timeout=self.settings["timeout"],
+                    nav=self.settings["nav"],
+                )
+
+                options = []
+                if add_emojis and emoji_mapping:
+                    # Adding additional category interactions
+                    if self.settings["menutype"] == "select":
+                        for cat in emoji_mapping:
+                            if cat.reaction:
+                                options.append(
+                                    discord.SelectOption(
+                                        label=cat.name, description=cat.desc, emoji=cat.reaction
+                                    )
+                                )
+
+                        if options:
+                            options.append(
+                                discord.SelectOption(
+                                    label="Home",
+                                    description="Return to the main page",
+                                    emoji=ARROWS["home"].emoji,
+                                )
+                            )
+                            select_bar = SelectHelpBar(options)
+                            final_menu.add_item(select_bar)
+                    else:  # Naturally just buttons
+                        for cat in emoji_mapping:
+                            if cat.reaction:
+                                final_menu.add_item(
+                                    ReactButton(
+                                        emoji=cat.reaction,
+                                        style=getattr(discord.ButtonStyle, cat.style),
+                                        label=cat.label,
+                                    )
+                                )
+
+            if final_menu:
+                await final_menu.start(ctx, self.settings["replies"])
 
     async def blacklist(self, ctx, name) -> bool:
         """Some blacklist checks utils
         Returns true if needed to be shown"""
-        blocklist = await self.config.blacklist()
+        blocklist = self.blacklist_names
         a = (
             ctx.channel.is_nsfw() if hasattr(ctx.channel, "is_nsfw") else True
         ) or name not in blocklist["nsfw"]
@@ -506,7 +579,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
     async def filter_categories(self, ctx, categories: list) -> list:
         """Applies blacklist to all the categories, Filters based on the current context"""
-        blocklist = await self.config.blacklist()
+        blocklist = self.blacklist_names
         is_owner = await self.bot.is_owner(ctx.author)
         final = []
         for name in categories:

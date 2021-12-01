@@ -14,7 +14,7 @@ class Yandex:
     async def yandex(self, ctx):
         """Yandex related search commands"""
 
-    @yandex.command(aliases=["rev"])
+    @yandex.command(name="reverse", aliases=["rev"])
     async def yandex_reverse(self, ctx, *, url: str = None):
         """Attach or paste the url of an image to reverse search, or reply to a message which has the image/embed with the image"""
 
@@ -26,6 +26,27 @@ class Yandex:
         encoded = {
             "rpt": "imageview",
             "url": query,
+            "format": "json",
+            "request": {
+                "blocks": [
+                    {"block": "extra-content", "params": {}, "version": 2},
+                    {"block": "i-global__params:ajax", "params": {}, "version": 2},
+                    {"block": "suggest2-history", "params": {}, "version": 2},
+                    {"block": "cbir-intent__image-link", "params": {}, "version": 2},
+                    {"block": "content_type_search-by-image", "params": {}, "version": 2},
+                    {"block": "serp-controller", "params": {}, "version": 2},
+                    {"block": "cookies_ajax", "params": {}, "version": 2},
+                    {"block": "advanced-search-block", "params": {}, "version": 2},
+                ],
+                "metadata": {
+                    "bundles": {"lb": "n?O/G?b*G$"},
+                    "assets": {
+                        "las": "justifier-height=1;thumb-underlay=1;justifier-setheight=1;fitimages-height=1;justifier-fitincuts=1;react-with-dom=1;720.0=1;616.0=1;6022a8.0=1;0e3c2c.0=1;464.0=1;da4144.0=1"
+                    },
+                    "version": "0x32f8444edac",
+                    "extraContent": {"names": ["i-react-ajax-adapter"]},
+                },
+            },
         }
 
         async with ctx.typing():
@@ -34,6 +55,7 @@ class Yandex:
                 headers=self.options,
             ) as resp:
                 text = await resp.read()
+                await ctx.send(text)
                 redir_url = resp.url
             prep = functools.partial(self.yandex_reverse_search, text)
             result = await self.bot.loop.run_in_executor(None, prep)
