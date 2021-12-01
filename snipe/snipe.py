@@ -107,7 +107,7 @@ class Snipe(commands.Cog):
             try:
                 msg = self.deletecache[ctx.channel.id][-index]
                 emb = discord.Embed(description=msg.content, color=await ctx.embed_color())
-                emb.set_author(name=msg.author, icon_url=msg.author.avatar_url)
+                emb.set_author(name=msg.author, icon_url=msg.author.avatar.url)
                 await ctx.send(embed=emb)
             except IndexError:
                 await ctx.send("Out of range")
@@ -184,7 +184,7 @@ class Snipe(commands.Cog):
             try:
                 msg = self.editcache[ctx.channel.id][-index]
                 tmplate_emb = discord.Embed(color=await ctx.embed_color())
-                tmplate_emb.set_author(name=msg.author, icon_url=msg.author.avatar_url)
+                tmplate_emb.set_author(name=msg.author, icon_url=msg.author.avatar.url)
                 menu = VertNavEmbMenus(VerticalNavSource(tmplate_emb, msg))
 
                 async def stop_pages(self, payload) -> None:
@@ -307,7 +307,7 @@ class Snipe(commands.Cog):
 class MsgSource(menus.ListPageSource):
     async def format_page(self, menu, entry):
         emb = discord.Embed(description=entry.content)
-        emb.set_author(name=entry.author, icon_url=entry.author.avatar_url)
+        emb.set_author(name=entry.author, icon_url=entry.author.avatar.url)
         emb.set_footer(text=f"Page {menu.current_page+1}/{self._max_pages}")
         return emb
 
