@@ -27,6 +27,7 @@ To add cogs from this repo to your instance, do these steps:
 | Todo       | Alpha  | <details><summary>A todo cog</summary>A simple todo cog to remember your tasks</details>                                                                                                                                |
 | TypeRacer  | Alpha  | <details><summary>Typing speed test</summary>Test your typing skills with this cog</details>                                                                                                                            |
 | Weeb       | Alpha  | <details><summary>Bunch of Otaku emoticons</summary>Expwess youw weebness using the bunch of wandom weeb emoticons UwU</details>                                                                                        |
+| Snipe      | Beta   | <details><summary>Multi Snipe for fun and non-profit</summary>Bulk sniping to stab back those anti-sniping smart ass users</details>                                                                                    |
 | Snake      | WIP    | <details><summary>A simple Snake Game</summary>This is a classical snake game, uses dpy menus. Be fully aware of this cog spamming the channel ratelimit buckets</details>                                              |
 
 ## Credits
