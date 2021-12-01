@@ -240,7 +240,7 @@ class Snipe(commands.Cog):
 
     @snipeset.group(name="ignore")
     async def snipeset_ignore(self, ctx):
-        pass
+        """Ignore channel or server from sniping"""
 
     @snipeset_ignore.command(name="channel")
     async def snipeset_ignore_channel(self, ctx, channel: discord.TextChannel, toggle: bool):
