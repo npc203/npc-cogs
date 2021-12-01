@@ -4,8 +4,8 @@ from random import randint, sample
 
 from fuzzywuzzy import fuzz
 from redbot.core import commands
-from tabulate import tabulate
 from redbot.core.utils.mod import is_mod_or_superior
+from tabulate import tabulate
 
 # can't use bundled_data_path cause outside class
 path = Path(__file__).absolute().parent / "data"

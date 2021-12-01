@@ -1,0 +1,20 @@
+{
+    "name": "Snipe",
+    "short": "Multi Snipe for fun and non-profit",
+    "description": "Bulk sniping to stab back those anti-sniping smart ass users",
+    "end_user_data_statement": "This cog does not persistently store any data or metadata about users.",
+    "install_msg": "Have fun, this cog isn't extensively tested, so if you find any bugs, please report them to me in the cog server",
+    "author": [
+        "epic guy"
+    ],
+    "required_cogs": {},
+    "requirements": [],
+    "tags": [
+        "fun",
+        "utility"
+    ],
+    "min_bot_version": "3.3.10",
+    "hidden": false,
+    "disabled": false,
+    "type": "COG"
+}
