@@ -42,7 +42,7 @@ class Bible(commands.Cog):
         size = len(raw)
         for i, group in enumerate(raw, 1):
             emb = discord.Embed(title="Search Results for " + title, colour=emb_color)
-            emb.set_footer(text=f"Powered by Biblegateway.com | Page {i}/{size}")
+            emb.set_footer(text=f"NIV | Powered by Biblegateway.com | Page {i}/{size}")
             for field in group:
                 emb.add_field(**field._asdict())
             pages.append(emb)
@@ -68,7 +68,7 @@ class Bible(commands.Cog):
         for i, page in enumerate(raw, 1):
             emb = discord.Embed(title=title, description=page, colour=emb_color)
             emb.url = full_chap
-            emb.set_footer(text=f"Powered by Biblegateway.com | Page {i}/{size}")
+            emb.set_footer(text=f"NIV | Powered by Biblegateway.com | Page {i}/{size}")
             pages.append(emb)
         return pages
 
