@@ -1,6 +1,6 @@
 from collections import defaultdict, deque
 from sys import getsizeof
-from typing import List, Mapping
+from typing import List, Mapping, Optional
 
 import discord
 from redbot.core import commands
@@ -8,6 +8,8 @@ from redbot.core.bot import Red
 from redbot.core.config import Config
 from redbot.core.utils import chat_formatting as cf
 from redbot.vendored.discord.ext import menus
+import time
+import calendar
 
 
 # https://stackoverflow.com/questions/1094841/get-human-readable-version-of-file-size
@@ -31,13 +33,15 @@ def recursive_getsizeof(obj: object) -> int:
 
 
 class MiniMsg:
-    __slots__ = ("channel", "author", "content", "embed")
+    __slots__ = ("channel", "author", "content", "embed", "created_at", "deleted_at")
 
     def __init__(self, msg: discord.Message):
         self.channel = msg.channel
         self.author = msg.author
         self.content = msg.content
         self.embed = msg.embeds[0] if msg.embeds else None
+        self.deleted_at = int(time.time())
+        self.created_at = int(calendar.timegm(msg.created_at.utctimetuple()))
         # self.attachment = msg.attachments[0] if msg.attachments else None
 
 
@@ -86,7 +90,11 @@ class Snipe(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_edit(self, old_msg, new_msg):
-        if old_msg.id not in self.notrack:
+        if (
+            old_msg.guild is not None
+            and old_msg.content != new_msg.content
+            and old_msg.id not in self.notrack
+        ):
             conf_data = await self.config.guild(old_msg.guild).all()
             if (
                 not conf_data["ignore_guild"]
@@ -101,16 +109,30 @@ class Snipe(commands.Cog):
 
         you can ignore a channel/server using [p]snipeset ignore
         """
-        if self.deletecache[ctx.channel.id]:
-            if index is None:
-                index = 1
+        msg: Optional[MiniMsg] = None
+
+        if index is None:
+            # Getting last message
+            for msg_obj in reversed(self.deletecache[ctx.channel.id]):
+                if msg_obj.content:
+                    msg = msg_obj
+                    break
+        else:
             try:
                 msg = self.deletecache[ctx.channel.id][-index]
-                emb = discord.Embed(description=msg.content, color=await ctx.embed_color())
-                emb.set_author(name=msg.author, icon_url=msg.author.avatar_url)
-                await ctx.send(embed=emb)
             except IndexError:
-                await ctx.send("Out of range")
+                return await ctx.send("Out of range")
+
+        if msg:
+            menu = menus.MenuPages(
+                source=MsgSource(
+                    template_emb=discord.Embed(color=await ctx.embed_color()),
+                    entries=[msg],
+                    per_page=1,
+                ),
+                delete_message_after=True,
+            )
+            await menu.start(ctx)
         else:
             return await ctx.send("Nothing to snipe")
 
@@ -127,10 +149,16 @@ class Snipe(commands.Cog):
             ]
             if user_msgs:
                 menu = menus.MenuPages(
-                    source=MsgSource(user_msgs, per_page=1), delete_message_after=True
+                    source=MsgSource(
+                        template_emb=discord.Embed(color=await ctx.embed_color()),
+                        entries=user_msgs,
+                        per_page=1,
+                    ),
+                    delete_message_after=True,
                 )
                 await menu.start(ctx)
-                self.notrack.add(menu.message.id)
+                if len(user_msgs) > 1:
+                    self.notrack.add(menu.message.id)
             else:
                 await ctx.send("No sniped messages found for the user " + str(user))
         else:
@@ -151,7 +179,8 @@ class Snipe(commands.Cog):
                 delete_message_after=True,
             )
             await menu.start(ctx)
-            self.notrack.add(menu.message.id)
+            if len(embs_obj) > 1:
+                self.notrack.add(menu.message.id)
         else:
             await ctx.send("No embeds to snipe")
 
@@ -163,7 +192,10 @@ class Snipe(commands.Cog):
         if self.deletecache[ctx.channel.id]:
             menu = menus.MenuPages(
                 source=MsgSource(
-                    [msg for msg in reversed(self.deletecache[ctx.channel.id]) if msg.content],
+                    template_emb=discord.Embed(color=await ctx.embed_color()),
+                    entries=[
+                        msg for msg in reversed(self.deletecache[ctx.channel.id]) if msg.content
+                    ],
                     per_page=1,
                 ),
                 delete_message_after=True,
@@ -298,6 +330,11 @@ class Snipe(commands.Cog):
                 sum(len(i) for i in self.editcache.values()),
             ),
         )
+        emb.add_field(
+            name="No track msgs (Dev stuff don't mind)",
+            value=f"IDs: {len(self.notrack)}\nSize: {sizeof_fmt(getsizeof(self.notrack))}",
+            inline=False,
+        )
         await ctx.send(embed=emb)
 
     async def red_delete_data_for_user(self, *, requester, user_id: int) -> None:
@@ -305,10 +342,22 @@ class Snipe(commands.Cog):
 
 
 class MsgSource(menus.ListPageSource):
-    async def format_page(self, menu, entry):
-        emb = discord.Embed(description=entry.content)
-        emb.set_author(name=entry.author, icon_url=entry.author.avatar_url)
-        emb.set_footer(text=f"Page {menu.current_page+1}/{self._max_pages}")
+    def __init__(self, template_emb, **kwargs):
+        self.template_emb: discord.Embed = template_emb
+        super().__init__(**kwargs)
+
+    async def format_page(self, menu, msg):
+        emb = self.template_emb.copy()
+        emb.title = f"Message Contents (Sent at <t:{msg.created_at}:f>)"
+        emb.description = msg.content
+        emb.set_author(name=f"{msg.author} ({msg.author.id})", icon_url=msg.author.avatar_url)
+        emb.add_field(name="Channel", value=f"<#{menu.ctx.channel.id}>")
+        emb.add_field(name="Deleted At", value=f"<t:{msg.deleted_at}:F>")
+        emb.set_footer(
+            text=f"Sniped at {menu.ctx.guild} | Page {menu.current_page+1}/{self._max_pages}",
+            icon_url=menu.ctx.guild.icon_url,
+        )
+
         return emb
 
 
