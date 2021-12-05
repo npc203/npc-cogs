@@ -20,7 +20,8 @@ GET_DIR = {
     None: "Click on a reaction to start",
 }
 
-
+# The locks part to sync was inspired by some stackoverflow post which I forgot by now
+# Will add the credit if I find it again
 class BoardMenu(menus.Menu):
     def __init__(self, player_name, **kwargs):
         super().__init__(**kwargs)
@@ -46,7 +47,7 @@ class BoardMenu(menus.Menu):
     async def loop(self):
         await self.is_started.wait()
         while True:
-            await asyncio.sleep(1)
+            await asyncio.sleep(1.2)
             if not self.game.move(self.cur_dir):
                 await self.message.edit(embed=self.edit_board(end=True))
                 break
