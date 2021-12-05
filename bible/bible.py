@@ -2,7 +2,7 @@ import re
 
 import aiohttp
 import discord
-from bs4 import BeautifulSoup
+import bs4
 from html2text import html2text as h2t
 from redbot.core import commands
 from redbot.core.bot import Red
@@ -58,9 +58,11 @@ class Bible(commands.Cog):
             sup.decompose()
 
         # Remove other hidden junk
-        for div_class in ("footnotes", "crossrefs"):
-            if ele := text.find("div", class_=div_class):
-                ele.decompose()
+        for div_class in ("footnotes", "crossrefs", "passage-other-trans", "full-chap-link"):
+            if elements := text.find_all(class_=div_class):
+                for ele in elements:
+                    if isinstance(ele, bs4.Tag):
+                        ele.decompose()
 
         # Change headers to markdown
         for h3 in text.find_all("h3"):
@@ -111,7 +113,7 @@ class Bible(commands.Cog):
                 async with session.get(
                     self.BASE_URL + url + query + f"&version={version}"
                 ) as resp:
-                    soup = BeautifulSoup(await resp.text(), "html.parser")
+                    soup = bs4.BeautifulSoup(await resp.text(), "html.parser")
 
                 # Reference search
                 if text := soup.find("div", {"class": "passage-text"}):
@@ -124,6 +126,7 @@ class Bible(commands.Cog):
                         version,
                         emb_color=await ctx.embed_color(),
                     )
+
                 # Word Search
                 elif text := soup.find("div", {"class": "search-result-list"}):
                     pages = self.parse_search(
