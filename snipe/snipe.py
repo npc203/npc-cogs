@@ -78,11 +78,10 @@ class Snipe(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
-        if message.id not in self.notrack:
+        if message.guild is not None and message.id not in self.notrack:
             conf_data = await self.config.guild(message.guild).all()
             if (
-                message.guild is not None
-                and not conf_data["ignore_guild"]
+                not conf_data["ignore_guild"]
                 and message.channel.id not in conf_data["ignored_channels"]
             ):
                 self.deletecache[message.channel.id].append(MiniMsg(message))
