@@ -1,9 +1,9 @@
 {
     "name": "Snake",
-    "short": "A simple Snake Game",
-    "description": "Ratelimit hell based snake game",
+    "short": "A simple Snake Game on discord",
+    "description": "Ratelimit hell based classic snake game on discord",
     "end_user_data_statement": "This cog does not persistently store any data or metadata about users.",
-    "install_msg": "This is a classical snake game, uses dpy menus. Be fully aware of this cog spamming the channel ratelimit buckets",
+    "install_msg": "This is a classical snake game, uses dpy menus. Be fully aware of this cog spamming the channel ratelimit buckets.\n Meant for fun, not for scale",
     "author": [
         "epic guy"
     ],
@@ -14,7 +14,7 @@
         "fun"
     ],
     "min_bot_version": "3.3.10",
-    "hidden": true,
+    "hidden": false,
     "disabled": false,
     "type": "COG"
 }
