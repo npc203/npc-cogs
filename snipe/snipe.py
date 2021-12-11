@@ -1,15 +1,14 @@
+import calendar
+import time
 from collections import defaultdict, deque
 from sys import getsizeof
 from typing import List, Mapping, Optional
 
 import discord
-from redbot.core import commands
+from redbot.core import Config, commands
 from redbot.core.bot import Red
-from redbot.core.config import Config
 from redbot.core.utils import chat_formatting as cf
 from redbot.vendored.discord.ext import menus
-import time
-import calendar
 
 
 # https://stackoverflow.com/questions/1094841/get-human-readable-version-of-file-size
@@ -64,6 +63,14 @@ class Snipe(commands.Cog):
     Multi Snipe for fun and non-profit
     """
 
+    __author__ = "npc203 (epic guy#0715)"
+    __version__ = "0.6.9"
+
+    def format_help_for_context(self, ctx: commands.Context) -> str:
+        """Thanks Sinbad!"""
+        pre_processed = super().format_help_for_context(ctx)
+        return f"{pre_processed}\n\nAuthor: {self.__author__}\nCog version: {self.__version__}"
+
     def __init__(self, bot: Red) -> None:
         self.bot = bot
         self.notrack = set()
@@ -102,15 +109,36 @@ class Snipe(commands.Cog):
             ):
                 self.editcache[new_msg.channel.id].append(EditMsg(old_msg, new_msg))
 
+    @staticmethod
+    async def pre_check_perms(ctx: commands.Context, channel: discord.TextChannel):
+        user_perms = channel.permissions_for(ctx.author)
+        if user_perms.read_messages and user_perms.read_message_history:
+            return True
+        else:
+            await ctx.reply(
+                f"{ctx.author.name}, you don't have read access to {channel.mention}",
+                mention_author = False,
+            )
+            return False
+
+    @commands.guild_only()
     @commands.group(invoke_without_command=True)
-    async def snipe(self, ctx: commands.Context, channel: Optional[discord.TextChannel]=None, index: Optional[int]=None):
+    @commands.cooldown(1, 5, commands.BucketType.member)
+    async def snipe(
+        self,
+        ctx: commands.Context,
+        channel: discord.TextChannel = None,
+        index: int = None,
+    ):
         """
-        Snipe a channel for fun and profit
+        Snipe a channel's last deleted message for fun and profit.
 
         you can ignore a channel/server using [p]snipeset ignore
         """
-        if channel is None: channel = ctx.channel
-        if channel not in ctx.guild.text_channels: return await ctx.send("This channel is not in this server. Sorry.")
+        channel = channel or ctx.channel
+        pre_check = await self.pre_check_perms(ctx, channel)
+        if not pre_check:
+            return
         msg: Optional[MiniMsg] = None
 
         if index is None:
@@ -124,7 +152,6 @@ class Snipe(commands.Cog):
                 msg = self.deletecache[channel.id][-index]
             except IndexError:
                 return await ctx.send("Out of range")
-
         if msg:
             menu = menus.MenuPages(
                 source=MsgSource(
@@ -139,12 +166,19 @@ class Snipe(commands.Cog):
             return await ctx.send("Nothing to snipe")
 
     @snipe.command(name="user")
-    async def snipe_user(self, ctx: commands.Context, user: discord.User, channel: Optional[discord.TextChannel]=None):
+    async def snipe_user(
+        self,
+        ctx: commands.Context,
+        user: discord.Member,
+        channel: discord.TextChannel = None,
+    ):
         """
-        Snipe a user's past messages in the current channel
+        Snipe a user's past deleted messages from a text channel.
         """
-        if channel is None: channel = ctx.channel
-        if channel not in ctx.guild.text_channels: return await ctx.send("This channel is not in this server. Sorry.")
+        channel = channel or ctx.channel
+        pre_check = await self.pre_check_perms(ctx, channel)
+        if not pre_check:
+            return
         if self.deletecache[channel.id]:
             user_msgs = [
                 msg
@@ -164,21 +198,21 @@ class Snipe(commands.Cog):
                 if len(user_msgs) > 1:
                     self.notrack.add(menu.message.id)
             else:
-                await ctx.send("No sniped messages found for the user " + str(user))
+                await ctx.send("No snipe'd messages found for the user " + str(user))
         else:
             await ctx.send("Nothing to snipe")
 
     @snipe.command(name="embed")
-    async def snipe_embed(self, ctx, channel: Optional[discord.TextChannel]=None):
+    async def snipe_embed(self, ctx: commands.Context, channel: discord.TextChannel = None):
         """
-        Snipe past embeds in the channel
+        Snipe past embeds in the channel.
         """
-        if channel is None: channel = ctx.channel
-        if channel not in ctx.guild.text_channels: return await ctx.send("This channel is not in this server. Sorry.")
+        channel = channel or ctx.channel
+        pre_check = await self.pre_check_perms(ctx, channel)
+        if not pre_check:
+            return
         if embs_obj := [
-            (msg.author, msg.embed)
-            for msg in reversed(self.deletecache[channel.id])
-            if msg.embed
+            (msg.author, msg.embed) for msg in reversed(self.deletecache[channel.id]) if msg.embed
         ]:
             menu = menus.MenuPages(
                 source=EmbSource(embs_obj, per_page=1),
@@ -191,19 +225,19 @@ class Snipe(commands.Cog):
             await ctx.send("No embeds to snipe")
 
     @snipe.command(name="bulk")
-    async def snipe_bulk(self, ctx, channel: Optional[discord.TextChannel]=None):
+    async def snipe_bulk(self, ctx: commands.Context, channel: discord.TextChannel = None):
         """
-        List all snipes in the past
+        List all recorded snipes in the past for said text channel.
         """
-        if channel is None: channel = ctx.channel
-        if channel not in ctx.guild.text_channels: return await ctx.send("This channel is not in this server. Sorry.")
+        channel = channel or ctx.channel
+        pre_check = await self.pre_check_perms(ctx, channel)
+        if not pre_check:
+            return
         if self.deletecache[channel.id]:
             menu = menus.MenuPages(
                 source=MsgSource(
                     template_emb=discord.Embed(color=await ctx.embed_color()),
-                    entries=[
-                        msg for msg in reversed(self.deletecache[channel.id]) if msg.content
-                    ],
+                    entries=[msg for msg in reversed(self.deletecache[channel.id]) if msg.content],
                     per_page=1,
                 ),
                 delete_message_after=True,
@@ -213,13 +247,22 @@ class Snipe(commands.Cog):
         else:
             await ctx.send("Nothing to snipe")
 
+    @commands.guild_only()
     @commands.group(invoke_without_command=True)
-    async def esnipe(self, ctx: commands.Context, channel: Optional[discord.TextChannel]=None, index: Optional[int]=None):
+    @commands.cooldown(1, 5, commands.BucketType.member)
+    async def esnipe(
+        self,
+        ctx: commands.Context,
+        channel: discord.TextChannel = None,
+        index: int = None,
+    ):
         """
-        EditSnipe a channel for fun and profit
+        EditSnipe a channel's last edited message for fun and profit.
         """
-        if channel is None: channel = ctx.channel
-        if channel not in ctx.guild.text_channels: return await ctx.send("This channel is not in this server. Sorry.")
+        channel = channel or ctx.channel
+        pre_check = await self.pre_check_perms(ctx, channel)
+        if not pre_check:
+            return
         if self.editcache[channel.id]:
             if index is None:
                 index = 1
@@ -241,12 +284,19 @@ class Snipe(commands.Cog):
             return await ctx.send("Nothing to snipe")
 
     @esnipe.command(name="user")
-    async def esnipe_user(self, ctx: commands.Context, user: discord.User, channel: Optional[discord.TextChannel]=None):
+    async def esnipe_user(
+        self,
+        ctx: commands.Context,
+        user: discord.Member,
+        channel: discord.TextChannel = None,
+    ):
         """
-        Edit Snipe a user's messages from the current channel
+        Edit Snipe a user's edited messages from the said channel.
         """
-        if channel is None: channel = ctx.channel
-        if channel not in ctx.guild.text_channels: return await ctx.send("This channel is not in this server. Sorry.")
+        channel = channel or ctx.channel
+        pre_check = await self.pre_check_perms(ctx, channel)
+        if not pre_check:
+            return
         if self.editcache[channel.id]:
             user_msgs = [
                 msg
@@ -263,12 +313,14 @@ class Snipe(commands.Cog):
             await ctx.send("Nothing to snipe")
 
     @esnipe.command(name="bulk")
-    async def esnipe_bulk(self, ctx, channel: Optional[discord.TextChannel]=None):
+    async def esnipe_bulk(self, ctx: commands.Context, channel: discord.TextChannel = None):
         """
-        List all edit snipes in the past
+        List all recorded edit snipes in the past for said text channel.
         """
-        if channel is None: channel = ctx.channel
-        if channel not in ctx.guild.text_channels: return await ctx.send("This channel is not in this server. Sorry.")
+        channel = channel or ctx.channel
+        pre_check = await self.pre_check_perms(ctx, channel)
+        if not pre_check:
+            return
         if self.editcache[channel.id]:
             menu = HorizontalEditMenus(
                 source=[msg for msg in reversed(self.editcache[channel.id]) if msg.content],
@@ -279,8 +331,9 @@ class Snipe(commands.Cog):
         else:
             await ctx.send("Nothing to snipe")
 
-    @commands.admin()
     @commands.group()
+    @commands.guild_only()
+    @commands.admin_or_permissions(administrator=True)
     async def snipeset(self, ctx):
         """Configuration settings for snipe"""
 
@@ -289,7 +342,9 @@ class Snipe(commands.Cog):
         """Ignore channel or server from sniping"""
 
     @snipeset_ignore.command(name="channel")
-    async def snipeset_ignore_channel(self, ctx, channel: discord.TextChannel, toggle: bool):
+    async def snipeset_ignore_channel(
+        self, ctx: commands.Context, channel: discord.TextChannel, toggle: bool
+    ):
         """Ignore/Unignore a channel for sniping"""
         async with self.config.guild_from_id(ctx.guild.id).ignored_channels() as ignored_channels:
             if toggle:
@@ -302,17 +357,16 @@ class Snipe(commands.Cog):
                     ignored_channels.remove(channel.id)
                 else:
                     return await ctx.send("Channel already unignored")
-
         await ctx.send("Channel " + ("added to" if toggle else "removed from") + " ignore list")
 
     @snipeset_ignore.command(name="server")
-    async def snipeset_ignore_server(self, ctx, server: discord.Guild, toggle: bool):
-        """Ignore/Unignore a server for sniping"""
-        await self.config.guild_from_id(server.id).ignore_guild.set(toggle)
+    async def snipeset_ignore_server(self, ctx: commands.Context, toggle: bool):
+        """Ignore/Unignore this server for sniping"""
+        await self.config.guild_from_id(ctx.guild.id).ignore_guild.set(toggle)
         await ctx.send("Server " + ("added to" if toggle else "removed from") + " ignore list")
 
     @snipeset.command()
-    async def show(self, ctx):
+    async def show(self, ctx: commands.Context):
         """Show ignoring channels for the server"""
         data = await self.config.guild_from_id(ctx.guild.id).all()
         emb = discord.Embed(title="Snipe Settings", color=await ctx.embed_color())
@@ -329,7 +383,7 @@ class Snipe(commands.Cog):
 
     @commands.is_owner()
     @snipeset.command()
-    async def stats(self, ctx):
+    async def stats(self, ctx: commands.Context):
         """Show stats about snipe usage"""
         del_size = recursive_getsizeof(self.deletecache)
         edit_size = recursive_getsizeof(self.editcache)
@@ -362,11 +416,11 @@ class MsgSource(menus.ListPageSource):
 
     async def format_page(self, menu, msg):
         emb = self.template_emb.copy()
-        emb.title = f"Message Contents (Sent at <t:{msg.created_at}:f>)"
+        emb.title = f"Message Contents (Sent <t:{msg.created_at}:R>)"
         emb.description = msg.content
         emb.set_author(name=f"{msg.author} ({msg.author.id})", icon_url=msg.author.avatar_url)
         emb.add_field(name="Channel", value=f"<#{msg.channel.id}>")
-        emb.add_field(name="Deleted At", value=f"<t:{msg.deleted_at}:F>")
+        emb.add_field(name="Deleted At", value=f"<t:{msg.deleted_at}:R>")
         emb.set_footer(
             text=f"Sniped at {menu.ctx.guild} | Page {menu.current_page+1}/{self._max_pages}",
             icon_url=menu.ctx.guild.icon_url,
@@ -440,7 +494,6 @@ class HorizontalEditMenus(menus.Menu):
             page_number = self.max_pages - 1
         elif page_number >= self.max_pages:
             page_number = 0
-
         self.curr_page = page_number
         emb = self.get_page(page_number)
         return await self.message.edit(embed=emb)
