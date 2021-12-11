@@ -253,8 +253,8 @@ class Snipe(commands.Cog):
     async def esnipe(
         self,
         ctx: commands.Context,
-        channel: Optional[discord.TextChannel] = None,
-        index: Optional[int] = None,
+        channel: discord.TextChannel = None,
+        index: int = None,
     ):
         """
         EditSnipe a channel's last edited message for fun and profit.
