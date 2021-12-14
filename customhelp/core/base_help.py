@@ -560,6 +560,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                                         emoji=cat.reaction,
                                         style=getattr(discord.ButtonStyle, cat.style),
                                         label=cat.label,
+                                        custom_id=cat.name,
                                     )
                                 )
 

@@ -121,7 +121,7 @@ class ReactButton(discord.ui.Button):
         view = self.view
 
         # Cache categories
-        name = self.custom_id.lower()  # type:ignore
+        name = self.custom_id  # type:ignore
         if not (category_pages := view.cache.get(name, None)):
             if name == "home":
                 category_pages = await view.ctx.bot._help_formatter.format_bot_help(
@@ -288,7 +288,7 @@ class SelectHelpBar(discord.ui.Select):
         view = self.view
 
         # Cache categories
-        name = self.values[0].lower()
+        name = self.values[0]
         if not (category_pages := view.cache.get(name, None)):
             if name == "home":
                 category_pages = await view.ctx.bot._help_formatter.format_bot_help(
