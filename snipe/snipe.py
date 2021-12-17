@@ -216,7 +216,7 @@ class Snipe(commands.Cog):
             try:
                 msg = self.editcache[ctx.channel.id][-index]
                 tmplate_emb = discord.Embed(color=await ctx.embed_color())
-                tmplate_emb.set_author(name=msg.author, icon_url=msg.author.avatar.url)
+                tmplate_emb.set_author(name=msg.author, icon_url=msg.author.display_avatar.url)
                 menu = VertNavEmbMenus(VerticalNavSource(tmplate_emb, msg))
 
                 async def stop_pages(self, payload) -> None:
@@ -350,7 +350,7 @@ class MsgSource(menus.ListPageSource):
         emb = self.template_emb.copy()
         emb.title = f"Message Contents (Sent at <t:{msg.created_at}:f>)"
         emb.description = msg.content
-        emb.set_author(name=f"{msg.author} ({msg.author.id})", icon_url=msg.author.avatar.url)
+        emb.set_author(name=f"{msg.author} ({msg.author.id})", icon_url=msg.author.display_avatar.url)
         emb.add_field(name="Channel", value=f"<#{menu.ctx.channel.id}>")
         emb.add_field(name="Deleted At", value=f"<t:{msg.deleted_at}:F>")
         emb.set_footer(
