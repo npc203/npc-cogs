@@ -290,7 +290,7 @@ class SelectHelpBar(discord.ui.Select):
         # Cache categories
         name = self.values[0]
         if not (category_pages := view.cache.get(name, None)):
-            if name == "home":
+            if name == "Home":
                 category_pages = await view.ctx.bot._help_formatter.format_bot_help(
                     view.ctx, view.help_settings, get_pages=True
                 )
