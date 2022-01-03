@@ -1,0 +1,17 @@
+name: isort
+
+on: [push, pull_request]
+
+jobs:
+  mypy:
+    name: Style Check with Isort
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.4.0
+      - uses: actions/setup-python@v2.3.1
+        with:
+          python-version: "3.8"
+      - run: "python -m pip install isort"
+        name: Install isort
+      - run: "python -m isort --check-only --diff --profile black -l 99 ."
+        name: Style checking with isort
