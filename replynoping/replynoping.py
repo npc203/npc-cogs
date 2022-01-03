@@ -23,9 +23,8 @@ class ReplyNoPing(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_without_command(self, message: discord.Message):
-
-        # Don't bother dms
-        if not message.guild:
+        # Don't bother dms or bots
+        if not message.guild or message.author.bot:
             return
 
         # Phen from AC https://discord.com/channels/133049272517001216/718148684629540905/825041973919744010
@@ -75,11 +74,12 @@ class ReplyNoPing(commands.Cog):
     @commands.group(invoke_without_command=True)
     async def replynoping(self, ctx, toggle: bool):
         """
-        Track the people who reply but turned off their ping for this channel
+        Track the people who reply but turned off their ping for this channel.
+        bots are ignored by default
         """
         await self.config.member_from_ids(ctx.guild.id, ctx.author.id).send_dms.set(toggle)
         await ctx.send(
-            f"You will {'now' if toggle else 'NOT'} be dm'ed when someone replies to your message without pinging you."
+            f"You will {'now' if toggle else 'NOT'} be dm'ed when someone replies to your message without pinging you, for this guild"
         )
 
     @commands.is_owner()
