@@ -19,7 +19,6 @@ class ReplyNoPing(commands.Cog):
             force_registration=True,
         )
         self.fake_obj = namedtuple("FakeMessage", "guild")
-        # self.mentions = ("<@{}>", "<@!{}>")
         self.config.register_member(send_dms=False)
 
     @commands.Cog.listener()
@@ -77,17 +76,16 @@ class ReplyNoPing(commands.Cog):
     async def replynoping(self, ctx, toggle: bool):
         """
         Track the people who reply but turned off their ping for this channel
-
-        Use `[p]replyping global` to list replies in all channels
         """
         await self.config.member_from_ids(ctx.guild.id, ctx.author.id).send_dms.set(toggle)
         await ctx.send(
-            f"You will {'now' if toggle else 'NOT'} be pinged when someone replies to your message without pinging you."
+            f"You will {'now' if toggle else 'NOT'} be dm'ed when someone replies to your message without pinging you."
         )
 
     @commands.is_owner()
     @replynoping.command(name="stats")
     async def replying_stats(self, ctx):
+        """See how many people enabled this command"""
         total = sum(
             sum(1 for i in conf.values() if i["send_dms"])
             for conf in (await self.config.all_members()).values()
