@@ -4,6 +4,7 @@ from redbot.core.bot import Red
 from redbot.core.config import Config
 import datetime
 from collections import namedtuple
+import asyncio
 
 
 class ReplyNoPing(commands.Cog):
@@ -44,7 +45,7 @@ class ReplyNoPing(commands.Cog):
 
             # Valid reply
             if ref_message:
-                if any(member.id == message.author.id for member in message.mentions):
+                if any(member.id == ref_message.author.id for member in message.mentions):
                     # User pinged them
                     return
                 else:
@@ -52,30 +53,40 @@ class ReplyNoPing(commands.Cog):
                         if await self.config.member_from_ids(
                             message.guild.id, ref_message.author.id
                         ).send_dms():
-                            emb = discord.Embed(
-                                title=f"Reply from {message.author}",
-                                color=await self.bot.get_embed_color(
-                                    self.fake_obj(message.guild)  # type:ignore
-                                ),
-                            )
-                            emb.description = message.content
-                            emb.add_field(
-                                name="Your message", value=ref_message.content[:1024], inline=False
-                            )
-
-                            emb.add_field(
-                                name="Reply message Link",
-                                value=f"[Click Here]({message.jump_url})",
-                            )
-                            emb.timestamp = datetime.datetime.utcnow()
-                            await ref_message.author.send(embed=emb)
+                            # wait for 15 seconds before sending dm, so as to not annoy when chatting
+                            try:
+                                await self.bot.wait_for(
+                                    "message",
+                                    timeout=15,
+                                    check=lambda msg: msg.author.id == ref_message.author.id
+                                    and msg.channel.id == message.channel.id,
+                                )
+                            except asyncio.TimeoutError:
+                                emb = discord.Embed(
+                                    title=f"Reply from {message.author}",
+                                    color=await self.bot.get_embed_color(
+                                        self.fake_obj(message.guild)  # type:ignore
+                                    ),
+                                )
+                                emb.description = message.content
+                                emb.add_field(
+                                    name="Your message",
+                                    value=ref_message.content[:1024],
+                                    inline=False,
+                                )
+                                emb.add_field(
+                                    name="Reply message Link",
+                                    value=f"[Click Here]({message.jump_url})",
+                                )
+                                emb.timestamp = datetime.datetime.utcnow()
+                                await ref_message.author.send(embed=emb)
 
     @commands.guild_only()  # type:ignore
     @commands.group(invoke_without_command=True)
     async def replynoping(self, ctx, toggle: bool):
         """
         Track the people who reply but turned off their ping for this channel.
-        bots are ignored by default
+        bots are ignored by default. It also checks for 15 seconds on inactivity before dm'ing
         """
         await self.config.member_from_ids(ctx.guild.id, ctx.author.id).send_dms.set(toggle)
         await ctx.send(
