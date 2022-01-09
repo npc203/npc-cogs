@@ -7,7 +7,7 @@ from collections import namedtuple
 import asyncio
 
 
-class ReplyNoPing(commands.Cog):
+class NoReplyPing(commands.Cog):
     """
     Track the people who reply but turned off their ping
     """
@@ -82,8 +82,8 @@ class ReplyNoPing(commands.Cog):
                                 await ref_message.author.send(embed=emb)
 
     @commands.guild_only()  # type:ignore
-    @commands.group(invoke_without_command=True)
-    async def replynoping(self, ctx, toggle: bool):
+    @commands.group(invoke_without_command=True, aliases=["nrp"])
+    async def noreplyping(self, ctx, toggle: bool):
         """
         Track the people who reply but turned off their ping for this channel.
         bots are ignored by default. It also checks for 15 seconds on inactivity before dm'ing
@@ -94,14 +94,14 @@ class ReplyNoPing(commands.Cog):
         )
 
     @commands.is_owner()
-    @replynoping.command(name="stats")
+    @noreplyping.command(name="stats")
     async def replying_stats(self, ctx):
         """See how many people enabled this command"""
         total = sum(
             sum(1 for i in conf.values() if i["send_dms"])
             for conf in (await self.config.all_members()).values()
         )
-        await ctx.send(f"A total of {total:,} member(s) have opted for replynoping")
+        await ctx.send(f"A total of {total:,} member(s) have opted for noreplyping")
 
     async def red_delete_data_for_user(self, *, requester, user_id: int) -> None:
         for g_id, guild in (await self.config.all_members()).items():
