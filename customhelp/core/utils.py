@@ -183,7 +183,7 @@ def close_menu(emoji):
 
 
 def empty_button(emoji):
-    async def action(x, y):
-        pass
+    async def action(self, payload):
+        await payload.send("There are no more page to scroll", hidden=True)
 
     return menus.Button(emoji, action)
