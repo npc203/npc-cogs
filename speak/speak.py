@@ -77,13 +77,19 @@ class Speak(commands.Cog):
         """says depressing stuff about you"""
         await self.print_it(ctx, choice(self.sadme_list))
 
-    async def print_it(self, ctx, stuff: str):
+    async def print_it(self, ctx, stuff: str, retried=False):
         hook = await self.get_hook(ctx)
-        await hook.send(
-            username=ctx.message.author.display_name,
-            avatar_url=ctx.message.author.avatar_url,
-            content=stuff,
-        )
+        try:
+            await hook.send(
+                username=ctx.message.author.display_name,
+                avatar_url=ctx.message.author.avatar_url,
+                content=stuff,
+            )
+        except discord.NotFound:  # Yup user deleted the hook, invalidate cache, retry
+            if retried:  # This is an edge case, just a hack to prevent infinite loops
+                return await ctx.send("I can't find the webhook, sorry.")
+            self.cache.pop(ctx.channel.id)
+            await self.print_it(ctx, stuff, True)
 
     async def get_hook(self, ctx):
         try:
@@ -99,7 +105,7 @@ class Speak(commands.Cog):
                     )
             else:
                 hook = self.cache[ctx.channel.id]
-        except discord.errors.NotFound:  # Probably user deleted the hook
+        except discord.NotFound:  # Probably user deleted the hook
             hook = await ctx.channel.create_webhook(name="red_bot_hook_" + str(ctx.channel.id))
 
         return hook
