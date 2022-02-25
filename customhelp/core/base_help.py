@@ -2,13 +2,20 @@ import asyncio
 from collections import namedtuple
 from itertools import chain
 from typing import List, Union, cast
+from packaging import version
 
 import discord
+from redbot import __version__
 from redbot.core import commands
 from redbot.core.commands.context import Context
 from redbot.core.commands.help import (HelpSettings, NoCommand, NoSubCommand,
                                        _, dpy_commands, mass_purge)
-from redbot.core.utils.chat_formatting import pagify
+from redbot.core.utils.chat_formatting import (
+   pagify, 
+   box,
+   humanize_list,
+   humanize_number
+)
 
 from . import ARROWS, GLOBAL_CATEGORIES, get_menu
 from .category import Category, get_category
@@ -241,8 +248,42 @@ class BaguetteHelp(commands.RedHelpFormatter):
         description = command.description or ""
 
         signature = _(
-            "`Syntax: {ctx.clean_prefix}{command.qualified_name} {command.signature}`"
+            "Syntax: {ctx.clean_prefix}{command.qualified_name} {command.signature}"
         ).format(ctx=ctx, command=command)
+        
+        if version.parse(__version__) >= version.parse("3.4.6"):
+            aliases = command.aliases
+            if help_settings.show_aliases and aliases:
+                alias_fmt = _("Aliases") if len(command.aliases) > 1 else _("Alias")
+                aliases = sorted(aliases, key=len)
+
+                a_counter = 0
+                valid_alias_list = []
+                for alias in aliases:
+                    if (a_counter := a_counter + len(alias)) < 500:
+                        valid_alias_list.append(alias)
+                    else:
+                        break
+
+                a_diff = len(aliases) - len(valid_alias_list)
+                aliases_list = [
+                    f"{ctx.clean_prefix}{command.parent.qualified_name + ' ' if command.parent else ''}{alias}"
+                    for alias in valid_alias_list
+                ]
+                if len(valid_alias_list) < 10:
+                    aliases_content = humanize_list(aliases_list)
+                else:
+                    aliases_formatted_list = ", ".join(aliases_list)
+                    if a_diff > 1:
+                        aliases_content = _("{aliases} and {number} more aliases.").format(
+                            aliases=aliases_formatted_list, number=humanize_number(a_diff)
+                        )
+                    else:
+                        aliases_content = _("{aliases} and one more alias.").format(
+                            aliases=aliases_formatted_list
+                        )
+                signature += f"\n{alias_fmt}: {aliases_content}"
+        
         subcommands = None
 
         if hasattr(command, "all_commands"):
@@ -255,7 +296,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
             if description:
                 emb["embed"]["title"] = f"{description[:250]}"
 
-            emb["embed"]["description"] = signature
+            emb["embed"]["description"] = box(signature, "yml")
 
             command_help = command.format_help_for_context(ctx)
             if command_help:
