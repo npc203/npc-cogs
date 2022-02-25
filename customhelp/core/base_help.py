@@ -308,9 +308,6 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 field = EmbedField(name[:250], value[:1024], False)
                 emb["fields"].append(field)
 
-                if alias := get_aliases(command, ctx.invoked_with):
-                    emb["fields"].append(EmbedField("Aliases", ",".join(alias), False))
-
                 if final_perms := get_perms(command):
                     emb["fields"].append(EmbedField("Permissions", final_perms, False))
 
