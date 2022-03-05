@@ -117,7 +117,7 @@ class Snipe(commands.Cog):
         else:
             await ctx.reply(
                 f"{ctx.author.name}, you don't have read access to {channel.mention}",
-                mention_author = False,
+                mention_author=False,
             )
             return False
 
@@ -131,8 +131,12 @@ class Snipe(commands.Cog):
         index: int = None,
     ):
         """
-        Snipe a channel's last deleted message for fun and profit.
-        you can ignore a channel/server using [p]snipeset ignore
+                Snipe a channel's last deleted message for fun and profit.
+        <<<<<<< HEAD
+        =======
+
+        >>>>>>> 51593fb0307892933a9da8c08356300598790a0a
+                you can ignore a channel/server using [p]snipeset ignore
         """
         channel = channel or ctx.channel
         pre_check = await self.pre_check_perms(ctx, channel)
@@ -417,7 +421,9 @@ class MsgSource(menus.ListPageSource):
         emb = self.template_emb.copy()
         emb.title = f"Message Contents (Sent <t:{msg.created_at}:R>)"
         emb.description = msg.content
-        emb.set_author(name=f"{msg.author} ({msg.author.id})", icon_url=msg.author.display_avatar.url)
+        emb.set_author(
+            name=f"{msg.author} ({msg.author.id})", icon_url=msg.author.display_avatar.url
+        )
         emb.add_field(name="Channel", value=f"<#{msg.channel.id}>")
         emb.add_field(name="Deleted At", value=f"<t:{msg.deleted_at}:R>")
         emb.set_footer(

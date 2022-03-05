@@ -1,0 +1,19 @@
+{
+    "name": "NoReplyPing",
+    "short": "Track the people who reply but turned off their ping",
+    "description": "Cog's meant to jump to message where you are replied with a ping off so that you might not have noticed ",
+    "end_user_data_statement": "This cog stores uids for a toggle to notify people of reply ping or not",
+    "install_msg": "Small utility to help people find things they need aha. It does wait for 15 seconds before dm'ing so as to not annoy inbetween chats",
+    "author": [
+        "epic guy"
+    ],
+    "required_cogs": {},
+    "requirements": [],
+    "tags": [
+        "utility"
+    ],
+    "min_bot_version": "3.3.10",
+    "hidden": false,
+    "disabled": false,
+    "type": "COG"
+}
