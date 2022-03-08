@@ -15,7 +15,7 @@ class Category:
     reaction: Optional[str] = None
     long_desc: Optional[str] = None
     thumbnail: Optional[str] = None
-    label : str = ""
+    label: str = ""
     style: str = "primary"
 
     def __eq__(self, item):
@@ -38,9 +38,15 @@ class Arrow:
     def keys(self):
         return ("emoji", "label", "style")
 
+    def items(self):
+        return {key: getattr(self, key) for key in self.keys()}
+
 
 # Helpers
-def get_category(category: str) -> Optional[Category]:
+def get_category(category: Optional[str]) -> Optional[Category]:
+    if not category:
+        return
+
     for x in GLOBAL_CATEGORIES:
         if x.name == category:
             return x

@@ -20,7 +20,7 @@ from tabulate import tabulate
 
 from . import themes
 from .core import ARROWS, GLOBAL_CATEGORIES
-from .core.views import MenuView
+from .core.views import ComponentType, MenuPicker, MenuView
 from .core.base_help import EMPTY_STRING, BaguetteHelp
 from .core.category import Category, Arrow, get_category
 from .core.utils import LINK_REGEX, emoji_converter
@@ -93,8 +93,8 @@ class CustomHelp(commands.Cog):
                 "thumbnail": None,
                 "timeout": 120,
                 "replies": True,
-                "menutype": "buttons",  # "emojis","buttons","select"
-                # "arrowtype": "buttons",  # "emojis","buttons" #TODO arrow type later
+                "menutype": "buttons",  # "emojis","buttons","select","hidden"
+                "arrowtype": "buttons",  # "emojis","buttons","select","hidden"
                 "deletemessage": False,
             },
             "arrows": [
@@ -819,8 +819,8 @@ class CustomHelp(commands.Cog):
         """Change various help settings"""
 
     @chelp_settings.command()
-    async def menutype(self, ctx):
-        """Toggles between various menus"""
+    async def type(self, ctx):
+        """Toggles between various menus and arrow types"""
         options = [
             discord.SelectOption(
                 label="Emojis", description="Old-Fashion, Highly ratelimited", emoji="😃"
@@ -829,12 +829,14 @@ class CustomHelp(commands.Cog):
             discord.SelectOption(
                 label="Select", description="Minimalistic Dropdown Menus", emoji="⏬"
             ),
+            discord.SelectOption(label="Hidden", description="No components are shown", emoji="🥷"),
         ]
-        select_bar = MenuView(
-            ctx.author.id, options, self.config.settings.menutype, self._update_conf
-        )
-        select_bar.message = await ctx.send(
-            "Pick your menu type from the list shown", view=select_bar
+        select_bar_view = MenuView(ctx.author.id, self.config.settings, self._update_conf)
+        select_bar_view.add_item(MenuPicker(ComponentType.MENU, options))
+        select_bar_view.add_item(MenuPicker(ComponentType.ARROW, options))
+
+        select_bar_view.message = await ctx.send(
+            "Pick your options from the list shown", view=select_bar_view
         )
 
     @chelp_settings.command(aliases=["setthumbnail"])

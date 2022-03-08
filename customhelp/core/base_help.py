@@ -1,7 +1,7 @@
 import asyncio
 from collections import namedtuple
 from itertools import chain
-from typing import List, Union, cast
+from typing import Any, List, Union, cast
 
 import discord
 from redbot.core import commands
@@ -20,18 +20,21 @@ from customhelp.core.views import BaseInteractionMenu, ReactButton, SelectHelpBa
 
 from . import ARROWS, GLOBAL_CATEGORIES
 from .category import Category, get_category
-from .dpy_menus import ListPages, BaseMenu
-from .utils import (
-    close_menu,
-    first_page,
-    get_aliases,
-    get_cooldowns,
-    get_perms,
+from .dpy_menus import (
+    ListPages,
+    BaseMenu,
     home_page,
     last_page,
     next_page,
     prev_page,
     react_page,
+    close_menu,
+    first_page,
+)
+from .utils import (
+    get_aliases,
+    get_cooldowns,
+    get_perms,
     shorten_line,
 )
 
@@ -340,7 +343,6 @@ class BaguetteHelp(commands.RedHelpFormatter):
                     pages,
                     embed=True,
                     help_settings=help_settings,
-                    add_emojis=self.settings["react"] and True,
                     emoji_mapping=filtered_categories,
                 )
         else:
@@ -432,9 +434,9 @@ class BaguetteHelp(commands.RedHelpFormatter):
         ctx: Context,
         pages: List[Union[str, discord.Embed]],
         embed: bool = True,
-        help_settings: HelpSettings = None,
-        add_emojis: bool = False,
-        emoji_mapping: List[Category] = None,
+        *,
+        help_settings: HelpSettings,
+        emoji_mapping: List[Category],
     ):
         """
         Sends pages based on settings.
@@ -491,81 +493,8 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
                 asyncio.create_task(_delete_delay_help(destination, messages, delete_delay))
         else:
-            trans = {
-                "left": prev_page,
-                "cross": close_menu,
-                "right": next_page,
-            }
-
-            final_menu = None
-            if self.settings["menutype"] == "emojis":  # Emoji menus
-                final_menu = BaseMenu(ListPages(pages))
-                for thing in trans:
-                    final_menu.add_button(trans[thing](ARROWS[thing].emoji))
-
-                if not add_emojis:
-                    # Add force left and right reactions when emojis are off, cause why not xD
-                    final_menu.add_button(first_page(ARROWS["force_left"].emoji))
-                    final_menu.add_button(last_page(ARROWS["force_right"].emoji))
-
-                if add_emojis and emoji_mapping:
-                    # Adding additional category emojis
-                    for cat in emoji_mapping:
-                        if cat.reaction:
-                            final_menu.add_button(
-                                await react_page(
-                                    ctx, cat.reaction, help_settings, bypass_checks=True
-                                )
-                            )
-                    final_menu.add_button(
-                        await home_page(ctx, ARROWS["home"].emoji, help_settings)
-                    )
-
-            else:  # Interaction menus
-                final_menu = BaseInteractionMenu(
-                    pages,
-                    help_settings,
-                    bypass_checks=True,
-                    timeout=self.settings["timeout"],
-                    nav=self.settings["nav"],
-                )
-
-                options = []
-                if add_emojis and emoji_mapping:
-                    # Adding additional category interactions
-                    if self.settings["menutype"] == "select":
-                        for cat in emoji_mapping:
-                            if cat.reaction:
-                                options.append(
-                                    discord.SelectOption(
-                                        label=cat.name, description=cat.desc, emoji=cat.reaction
-                                    )
-                                )
-
-                        if options:
-                            options.append(
-                                discord.SelectOption(
-                                    label="Home",
-                                    description="Return to the main page",
-                                    emoji=ARROWS["home"].emoji,
-                                )
-                            )
-                            select_bar = SelectHelpBar(options)
-                            final_menu.add_item(select_bar)
-                    else:  # Naturally just buttons
-                        for cat in emoji_mapping:
-                            if cat.reaction:
-                                final_menu.add_item(
-                                    ReactButton(
-                                        emoji=cat.reaction,
-                                        style=getattr(discord.ButtonStyle, cat.style),
-                                        label=cat.label,
-                                        custom_id=cat.name,
-                                    )
-                                )
-
-            if final_menu:
-                await final_menu.start(ctx, self.settings["replies"])
+            menu = HybridMenus(self.settings, help_settings, emoji_mapping, pages)
+            await menu.start(ctx)
 
     async def blacklist(self, ctx, name) -> bool:
         """Some blacklist checks utils
@@ -591,3 +520,129 @@ class BaguetteHelp(commands.RedHelpFormatter):
             ) and (is_owner or name not in blocklist["dev"]):
                 final.append(name)
         return final
+
+
+class HybridMenus:
+    def __init__(self, settings, helpsettings, emoji_mapping, pages):
+        self.arrow_emoji_button = {
+            "left": prev_page,
+            "cross": close_menu,
+            "right": next_page,
+        }
+        self.settings = settings
+        self.emoji_mapping = emoji_mapping
+        self.help_settings = helpsettings
+        self.menus: List[Any] = [None, None]  # dpy menus, views
+        self.pages = pages
+
+    async def start(self, ctx):
+        await self.create_menutype(ctx)
+        await self.create_arrowtype(ctx)
+        if self.menus[0]:
+            message = await self.menus[0].start(ctx, self.settings["replies"])
+            if self.menus[1]:
+                await self.menus[1].start(ctx, use_reply=self.settings["replies"], message=message)
+        elif self.menus[1]:
+            await self.menus[1].start(ctx, use_reply=self.settings["replies"])
+
+    def _get_kwargs_from_page(self, value):
+        kwargs: dict[str, Any] = {"allowed_mentions": discord.AllowedMentions(replied_user=False)}
+        if isinstance(value, dict):
+            kwargs.update(value)
+        elif isinstance(value, str):
+            kwargs["content"] = value
+        elif isinstance(value, discord.Embed):
+            kwargs["embed"] = value
+        return kwargs
+
+    async def create_menutype(self, ctx):
+        """MenuType component"""
+        # TODO use match-case on 3.10
+        if self.settings["menutype"] == "emojis":
+            dpy_menu = BaseMenu(ListPages(self.pages), hmenu=self)
+            # Category buttons
+            for cat in self.emoji_mapping:
+                if cat.reaction:
+                    dpy_menu.add_button(
+                        await react_page(ctx, cat.reaction, self.help_settings, bypass_checks=True)
+                    )
+            # Home Button
+            dpy_menu.add_button(await home_page(ctx, ARROWS["home"].emoji, self.help_settings))
+            self.menus[0] = dpy_menu
+        elif self.settings["menutype"] != "hidden":
+            view_menu = BaseInteractionMenu(
+                self.pages,
+                self.help_settings,
+                bypass_checks=True,
+                timeout=self.settings["timeout"],
+                hmenu=self,
+            )
+            if self.settings["menutype"] == "buttons":
+                # Category buttons
+                for cat in self.emoji_mapping:
+                    if cat.reaction:
+                        view_menu.add_item(
+                            ReactButton(
+                                emoji=cat.reaction,
+                                style=getattr(discord.ButtonStyle, cat.style),
+                                label=cat.label,
+                                custom_id=cat.name,
+                            )
+                        )
+                # Home Button
+                # TODO
+            else:  # Select
+                options = []
+                # Category buttons
+                for cat in self.emoji_mapping:
+                    if cat.reaction:
+                        options.append(
+                            discord.SelectOption(
+                                label=cat.name, description=cat.desc, emoji=cat.reaction
+                            )
+                        )
+                # Home button
+                options.append(
+                    discord.SelectOption(
+                        label="Home",
+                        description="Return to the main page",
+                        emoji=ARROWS["home"].emoji,
+                    )
+                )
+                select_bar = SelectHelpBar(options)
+                view_menu.add_item(select_bar)
+
+            self.menus[1] = view_menu
+
+    async def create_arrowtype(self, ctx):
+        """ArrowType component"""
+        if self.settings["arrowtype"] == "emojis":
+            if not self.menus[0]:
+                dpy_menu = BaseMenu(ListPages(self.pages), hmenu=self)
+                self.menus[0] = dpy_menu
+            else:
+                dpy_menu = self.menus[0]
+
+            for arrow_str, button in self.arrow_emoji_button.items():
+                dpy_menu.add_button(button(ARROWS[arrow_str].emoji))
+
+        else:
+            for arrow in ARROWS:
+                button_func = discord.ui.button(**arrow.items())
+
+                async def button_callback(self: BaseInteractionMenu, button, interaction):
+                    self.view.hmenu.stop()
+
+                item = button_func(button_callback)
+                self.children.append(item)
+
+    def change_source(self, new_source):
+        if dpy_menu := self.menus[0]:
+            dpy_menu.change_source(ListPages(new_source))
+        if view_menu := self.menus[1]:
+            view_menu.change_source(new_source)
+
+    def stop(self):
+        for menu in self.menus:
+            if menu:
+                menu.stop()
