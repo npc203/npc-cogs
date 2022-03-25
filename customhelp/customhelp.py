@@ -1,4 +1,5 @@
-﻿import asyncio
+﻿# pyright: reportGeneralTypeIssues=false
+import asyncio
 import json
 import re
 from collections import Counter, defaultdict
@@ -7,7 +8,7 @@ from itertools import chain
 from os import path
 from pathlib import Path
 from types import MethodType
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import discord
 import yaml
@@ -463,7 +464,13 @@ class CustomHelp(commands.Cog):
                 "Your next message should be a yaml with the specfied format as in the docs\n"
                 "Example:\n"
                 "category1:\n"
-                " - name: newname(use this ONLY for renaming)\n - reaction: \U0001f604\n - desc: short description\n - long_desc: long description (Optional,only displayed in dank theme)"
+                " - name: newname(use this ONLY for renaming)\n"
+                " - reaction: \U0001f604\n"
+                " - desc: short description\n"
+                " - long_desc: long description (Optional,only displayed in dank theme)\n"
+                " - thumbnail: url to thumbnail for the category\n"
+                " - label: Label for category (For category and buttons)\n"
+                " - style: ButtonStyle for category button\n"
             )
             try:
                 msg = await self.bot.wait_for(
@@ -840,7 +847,7 @@ class CustomHelp(commands.Cog):
         )
 
     @chelp_settings.command(aliases=["setthumbnail"])
-    async def thumbnail(self, ctx, url: str = None):
+    async def thumbnail(self, ctx, url: Optional[str] = None):
         """Set your main thumbnail image here.\n use `[p]chelp settings thumbnail` to reset this"""
         if url:
             if re.search(LINK_REGEX, url):
@@ -1085,7 +1092,7 @@ class CustomHelp(commands.Cog):
         await ctx.send(box(final))
 
     @chelp.command()
-    async def reorder(self, ctx, *, categories: str = None):
+    async def reorder(self, ctx, *, categories: Optional[str] = None):
         """This can be used to reorder the categories.
 
         The categories you type are pushed forward while the rest are pushed back.

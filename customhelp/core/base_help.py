@@ -20,8 +20,9 @@ from customhelp.core.views import BaseInteractionMenu, ReactButton, SelectHelpBa
 
 from . import ARROWS, GLOBAL_CATEGORIES
 from .category import Category, get_category
+
+import logging
 from .dpy_menus import (
-    ListPages,
     BaseMenu,
     home_page,
     last_page,
@@ -37,6 +38,8 @@ from .utils import (
     get_perms,
     shorten_line,
 )
+
+LOG = logging.getLogger("red.customhelp.core.base_help")
 
 HelpTarget = Union[
     commands.Command,
@@ -154,7 +157,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
         if isinstance(help_for, str):
             try:
-                help_for = await self.parse_command(ctx, help_for)
+                help_for = await self.parse_command(ctx, help_for)  # type:ignore
             except NoCommand:
                 await self.command_not_found(ctx, help_for, help_settings=help_settings)
                 return
@@ -171,7 +174,6 @@ class BaguetteHelp(commands.RedHelpFormatter):
         elif isinstance(help_for, Category):
             await self.format_category_help(ctx, help_for, help_settings=help_settings)
         else:
-            help_for: commands.Command
             await self.format_command_help(ctx, help_for, help_settings=help_settings)
 
     async def format_category_help(
@@ -206,7 +208,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 all_cog_text += cog_text
             all_cog_text = "\n".join(sorted(all_cog_text.split("\n")))
             title = obj.name.capitalize()
-            for i, page in enumerate(pagify(all_cog_text, page_length=500, shorten_by=0)):
+            for page in pagify(all_cog_text, page_length=500, shorten_by=0):
                 field = EmbedField(title, page, False)
                 emb["fields"].append(field)
                 title = EMPTY_STRING
@@ -434,9 +436,9 @@ class BaguetteHelp(commands.RedHelpFormatter):
         ctx: Context,
         pages: List[Union[str, discord.Embed]],
         embed: bool = True,
+        emoji_mapping: List[Category] = [],
         *,
         help_settings: HelpSettings,
-        emoji_mapping: List[Category],
     ):
         """
         Sends pages based on settings.
@@ -456,11 +458,12 @@ class BaguetteHelp(commands.RedHelpFormatter):
             delete_delay = help_settings.delete_delay
             messages: List[discord.Message] = []
             for page in pages:
+                # TODO use the embed:bool on the function argument cause isinstance is costly
+                page_kwarg_dict = (
+                    {"embed": page} if isinstance(page, discord.Embed) else {"content": page}
+                )
                 try:
-                    if embed:
-                        msg = await destination.send(embed=page)
-                    else:
-                        msg = await destination.send(page)
+                    msg = await destination.send(**page_kwarg_dict)
                 except discord.Forbidden:
                     return await ctx.send(
                         _(
@@ -484,7 +487,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 # We need to wrap this in a task to not block after-sending-help interactions.
                 # The channel has to be TextChannel as we can't bulk-delete from DMs
                 async def _delete_delay_help(
-                    channel: discord.TextChannel,
+                    channel,
                     messages: List[discord.Message],
                     delay: int,
                 ):
@@ -525,19 +528,63 @@ class BaguetteHelp(commands.RedHelpFormatter):
 class HybridMenus:
     def __init__(self, settings, helpsettings, emoji_mapping, pages):
         self.arrow_emoji_button = {
+            "force_left": first_page,
             "left": prev_page,
             "cross": close_menu,
             "right": next_page,
+            "force_right": last_page,
         }
+
         self.settings = settings
         self.emoji_mapping = emoji_mapping
         self.help_settings = helpsettings
         self.menus: List[Any] = [None, None]  # dpy menus, views
-        self.pages = pages
+
+        # Source specific
+        self.curr_page = 0
+        self.pages: List[Union[str, discord.Embed]] = pages
+        self.page_cache = {}
+
+    async def get_pages(self, ctx: commands.Context, category_name: str):
+        """Generates the pages and stores in a local cache"""
+        if not isinstance(ctx.bot._help_formatter, BaguetteHelp):
+            self.stop()
+            LOG.warning("Formatter changed when customhelp menu was running")
+            return
+
+        # Cache categories
+        if not (category_pages := self.page_cache.get(category_name, None)):
+            if category_name == "home":
+                category_pages = await ctx.bot._help_formatter.format_bot_help(
+                    ctx, self.help_settings, get_pages=True
+                )
+            else:
+                category_obj = get_category(category_name)
+                if not category_obj:
+                    return
+                category_pages = await ctx.bot._help_formatter.format_category_help(
+                    ctx,
+                    category_obj,
+                    self.help_settings,
+                    get_pages=True,
+                    bypass_checks=True,
+                )
+            self.page_cache[category_name] = category_pages
+
+        return category_pages
+
+    async def category_react_action(self, ctx: commands.Context, category_name: str):
+        if category_pages := await self.get_pages(ctx, category_name):
+            self.change_source(category_pages)
+            await ctx.message.edit(embed=category_pages[self.curr_page], view=self.menus[0])
+
+    def change_source(self, new_source):
+        self.pages = new_source
 
     async def start(self, ctx):
         await self.create_menutype(ctx)
         await self.create_arrowtype(ctx)
+        # Start dpy2 menus (and then views if they exist) else start just the views
         if self.menus[0]:
             message = await self.menus[0].start(ctx, self.settings["replies"])
             if self.menus[1]:
@@ -557,26 +604,25 @@ class HybridMenus:
 
     async def create_menutype(self, ctx):
         """MenuType component"""
+
+        # We are not at the homepage
+        if self.emoji_mapping is None:
+            return
+
         # TODO use match-case on 3.10
         if self.settings["menutype"] == "emojis":
-            dpy_menu = BaseMenu(ListPages(self.pages), hmenu=self)
+            dpy_menu = BaseMenu(hmenu=self)
             # Category buttons
             for cat in self.emoji_mapping:
                 if cat.reaction:
                     dpy_menu.add_button(
-                        await react_page(ctx, cat.reaction, self.help_settings, bypass_checks=True)
+                        await react_page(ctx, cat, self.help_settings, bypass_checks=True)
                     )
             # Home Button
             dpy_menu.add_button(await home_page(ctx, ARROWS["home"].emoji, self.help_settings))
             self.menus[0] = dpy_menu
         elif self.settings["menutype"] != "hidden":
-            view_menu = BaseInteractionMenu(
-                self.pages,
-                self.help_settings,
-                bypass_checks=True,
-                timeout=self.settings["timeout"],
-                hmenu=self,
-            )
+            view_menu = BaseInteractionMenu(hmenu=self)
             if self.settings["menutype"] == "buttons":
                 # Category buttons
                 for cat in self.emoji_mapping:
@@ -598,7 +644,9 @@ class HybridMenus:
                     if cat.reaction:
                         options.append(
                             discord.SelectOption(
-                                label=cat.name, description=cat.desc, emoji=cat.reaction
+                                label=cat.name,
+                                description=cat.desc,
+                                emoji=cat.reaction,
                             )
                         )
                 # Home button
@@ -618,7 +666,7 @@ class HybridMenus:
         """ArrowType component"""
         if self.settings["arrowtype"] == "emojis":
             if not self.menus[0]:
-                dpy_menu = BaseMenu(ListPages(self.pages), hmenu=self)
+                dpy_menu = BaseMenu(hmenu=self)
                 self.menus[0] = dpy_menu
             else:
                 dpy_menu = self.menus[0]
@@ -635,12 +683,6 @@ class HybridMenus:
 
                 item = button_func(button_callback)
                 self.children.append(item)
-
-    def change_source(self, new_source):
-        if dpy_menu := self.menus[0]:
-            dpy_menu.change_source(ListPages(new_source))
-        if view_menu := self.menus[1]:
-            view_menu.change_source(new_source)
 
     def stop(self):
         for menu in self.menus:

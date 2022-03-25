@@ -2,6 +2,7 @@ import discord
 from typing import List, Optional, TYPE_CHECKING
 
 import customhelp.core.base_help as base_help
+import logging
 
 from .category import get_category
 from . import ARROWS
@@ -10,6 +11,8 @@ import enum
 
 if TYPE_CHECKING:
     from customhelp.core.base_help import BaguetteHelp
+
+LOG = logging.getLogger("red.customhelp.core.views")
 
 
 class ComponentType(enum.IntEnum):
@@ -77,29 +80,16 @@ class MenuPicker(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         self.view.values[self.menutype] = self.values[0]
+        await interaction.response.defer()
 
 
 # HELP MENU Interaction items
 class BaseInteractionMenu(discord.ui.View):
-    def __init__(
-        self,
-        pages,
-        help_settings,
-        bypass_checks,
-        timeout=120,
-        *,
-        hmenu,
-    ):
-        self.cache = {}
-        self.help_settings = help_settings
-        self.bypass_checks = bypass_checks
-        self.pages = pages
-        self.curr_page = 0
-        self.max_page = len(pages)
+    def __init__(self, *, hmenu: base_help.HybridMenus):
         self.children: List = []
         self.hmenu: base_help.HybridMenus = hmenu
 
-        super().__init__(timeout=timeout)
+        super().__init__(timeout=hmenu.settings["timeout"])
 
     def update_buttons(self):
         pass
@@ -126,7 +116,10 @@ class BaseInteractionMenu(discord.ui.View):
             pass
 
     async def start(
-        self, ctx: commands.Context, message: discord.Message = None, use_reply: bool = True
+        self,
+        ctx: commands.Context,
+        message: Optional[discord.Message] = None,
+        use_reply: bool = True,
     ):
         if message is None:
             if use_reply:
@@ -140,11 +133,11 @@ class BaseInteractionMenu(discord.ui.View):
         else:
             self.message = message
         self.ctx = ctx
-        self.valid_ids = list(ctx.bot.owner_ids)
+        self.valid_ids = list(ctx.bot.owner_ids)  # type: ignore
         self.valid_ids.append(ctx.author.id)
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        if interaction.user.id in self.valid_ids:  # type:ignore
+        if interaction.user.id in self.valid_ids:
             return True
         else:
             await interaction.response.send_message(
@@ -163,39 +156,11 @@ class ReactButton(discord.ui.Button):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.custom_id: str
 
     async def callback(self, interaction: discord.Interaction):
-        view = self.view
-
-        if not isinstance(view.ctx.bot._help_formatter, BaguetteHelp):
-            self.view.hmenu.stop()
-            return
-
-        # Cache categories
-        name = self.custom_id  # type:ignore
-        if not (category_pages := view.cache.get(name, None)):
-            if name == "home":
-                category_pages = await view.ctx.bot._help_formatter.format_bot_help(
-                    view.ctx, view.help_settings, get_pages=True
-                )
-            else:
-                category_obj = get_category(name)
-                if not category_obj:
-                    return
-                view.cache[
-                    name
-                ] = category_pages = await view.ctx.bot._help_formatter.format_category_help(
-                    view.ctx,
-                    category_obj,
-                    view.help_settings,
-                    get_pages=True,
-                    bypass_checks=view.bypass_checks,
-                )
-
         await interaction.response.defer()
-        if category_pages:
-            view.change_source(category_pages)
-            await view.message.edit(embed=category_pages[view.curr_page], view=view)
+        await self.view.hmenu.category_react_action(self.view.ctx, self.custom_id)
 
 
 # Selection Bar
@@ -211,5 +176,6 @@ class SelectHelpBar(discord.ui.Select):
             row=0,
         )
 
-    async def callback(self, interaction):  # TODO
-        pass
+    async def callback(self, interaction):
+        await interaction.response.defer()
+        await self.view.hmenu.category_react_action(self.view.ctx, self.values[0])
