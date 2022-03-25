@@ -1,14 +1,15 @@
 import asyncio
+import logging
+
 import discord
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.config import Config
 from redbot.core.utils import menus
 from redbot.core.utils.chat_formatting import pagify
-import logging
 
-from .utils import parse_yaml, emoji_converter, quick_emoji_converter
 from .menu_new import MenuMixin
+from .utils import emoji_converter, parse_yaml, quick_emoji_converter
 
 log = logging.getLogger("red.npc-cogs.menubuttons")
 

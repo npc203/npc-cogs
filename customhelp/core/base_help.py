@@ -1,43 +1,31 @@
 import asyncio
+import logging
 from collections import namedtuple
 from itertools import chain
-from typing import Any, List, Union, cast
+from typing import Any, Dict, List, Union, cast, Optional
 
 import discord
 from redbot.core import commands
 from redbot.core.commands.context import Context
-from redbot.core.commands.help import (
-    HelpSettings,
-    NoCommand,
-    NoSubCommand,
-    _,
-    dpy_commands,
-)
-from redbot.core.utils.mod import mass_purge
+from redbot.core.commands.help import HelpSettings, NoCommand, NoSubCommand, _, dpy_commands
 from redbot.core.utils.chat_formatting import pagify
+from redbot.core.utils.mod import mass_purge
 
 from customhelp.core.views import BaseInteractionMenu, ReactButton, SelectHelpBar
 
 from . import ARROWS, GLOBAL_CATEGORIES
 from .category import Category, get_category
-
-import logging
 from .dpy_menus import (
     BaseMenu,
+    close_menu,
+    first_page,
     home_page,
     last_page,
     next_page,
     prev_page,
     react_page,
-    close_menu,
-    first_page,
 )
-from .utils import (
-    get_aliases,
-    get_cooldowns,
-    get_perms,
-    shorten_line,
-)
+from .utils import get_aliases, get_cooldowns, get_perms, shorten_line
 
 LOG = logging.getLogger("red.customhelp.core.base_help")
 
@@ -55,6 +43,7 @@ EMPTY_STRING = "\N{ZERO WIDTH SPACE}"
 
 
 # Note to anyone reading this, This is the default formatter deffo, just slightly edited.
+# page_mapping = { category_obj: generated_category_format_page}
 class BaguetteHelp(commands.RedHelpFormatter):
     """In the memory of Jack the virgin"""
 
@@ -139,7 +128,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
     async def send_help(
         self,
         ctx: Context,
-        help_for: HelpTarget = None,
+        help_for: Optional[HelpTarget] = None,
         *,
         from_help_command: bool = False,
     ):
@@ -326,14 +315,25 @@ class BaguetteHelp(commands.RedHelpFormatter):
         if await ctx.embed_requested():
             emb = await self.embed_template(help_settings, ctx, ctx.bot.description)
             filtered_categories = await self.filter_categories(ctx, GLOBAL_CATEGORIES)
-            for i in pagify(
-                "\n".join(
-                    f"{str(cat.reaction) if cat.reaction else ''} `{ctx.clean_prefix}help {cat.name:<10}:`**{cat.desc}**\n"
-                    for cat in filtered_categories
-                    if cat.cogs
-                ),
-                page_length=1018,
-            ):
+
+            page_raw_str_data = []
+            page_mapping = {}
+            for cat in filtered_categories:
+                if cat.cogs:
+                    # Make sure we're not getting the pages (eg: when home button is clicked) else gen category pages
+                    if not get_pages:
+                        if cat_page := await self.format_category_help(
+                            ctx, cat, help_settings=help_settings, get_pages=True
+                        ):
+                            page_mapping[cat] = cat_page
+                        else:
+                            continue
+
+                    page_raw_str_data.append(
+                        f"{str(cat.reaction) if cat.reaction else ''} `{ctx.clean_prefix}help {cat.name:<10}:`**{cat.desc}**\n"
+                    )
+
+            for i in pagify("\n".join(page_raw_str_data), page_length=1018):
                 emb["fields"].append(EmbedField("Categories:", i, False))
 
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
@@ -345,7 +345,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
                     pages,
                     embed=True,
                     help_settings=help_settings,
-                    emoji_mapping=filtered_categories,
+                    page_mapping=page_mapping,
                 )
         else:
             await ctx.send(_("You need to enable embeds to use the help menu"))
@@ -436,7 +436,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
         ctx: Context,
         pages: List[Union[str, discord.Embed]],
         embed: bool = True,
-        emoji_mapping: List[Category] = [],
+        page_mapping: Dict[Category, List] = {},
         *,
         help_settings: HelpSettings,
     ):
@@ -496,7 +496,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
                 asyncio.create_task(_delete_delay_help(destination, messages, delete_delay))
         else:
-            menu = HybridMenus(self.settings, help_settings, emoji_mapping, pages)
+            menu = HybridMenus(self.settings, help_settings, page_mapping, pages)
             await menu.start(ctx)
 
     async def blacklist(self, ctx, name) -> bool:
@@ -526,7 +526,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
 
 class HybridMenus:
-    def __init__(self, settings, helpsettings, emoji_mapping, pages):
+    def __init__(self, settings, helpsettings, page_mapping, pages):
         self.arrow_emoji_button = {
             "force_left": first_page,
             "left": prev_page,
@@ -536,40 +536,27 @@ class HybridMenus:
         }
 
         self.settings = settings
-        self.emoji_mapping = emoji_mapping
         self.help_settings = helpsettings
         self.menus: List[Any] = [None, None]  # dpy menus, views
 
         # Source specific
         self.curr_page = 0
         self.pages: List[Union[str, discord.Embed]] = pages
-        self.page_cache = {}
+        self.category_page_mapping = page_mapping
 
     async def get_pages(self, ctx: commands.Context, category_name: str):
-        """Generates the pages and stores in a local cache"""
         if not isinstance(ctx.bot._help_formatter, BaguetteHelp):
             self.stop()
             LOG.warning("Formatter changed when customhelp menu was running")
             return
 
         # Cache categories
-        if not (category_pages := self.page_cache.get(category_name, None)):
+        if not (category_pages := self.category_page_mapping.get(category_name)):
             if category_name == "home":
                 category_pages = await ctx.bot._help_formatter.format_bot_help(
                     ctx, self.help_settings, get_pages=True
                 )
-            else:
-                category_obj = get_category(category_name)
-                if not category_obj:
-                    return
-                category_pages = await ctx.bot._help_formatter.format_category_help(
-                    ctx,
-                    category_obj,
-                    self.help_settings,
-                    get_pages=True,
-                    bypass_checks=True,
-                )
-            self.page_cache[category_name] = category_pages
+            self.category_page_mapping[category_name] = category_pages
 
         return category_pages
 
@@ -606,14 +593,14 @@ class HybridMenus:
         """MenuType component"""
 
         # We are not at the homepage
-        if self.emoji_mapping is None:
+        if self.page_mapping is None:
             return
 
         # TODO use match-case on 3.10
         if self.settings["menutype"] == "emojis":
             dpy_menu = BaseMenu(hmenu=self)
             # Category buttons
-            for cat in self.emoji_mapping:
+            for cat in self.page_mapping:
                 if cat.reaction:
                     dpy_menu.add_button(
                         await react_page(ctx, cat, self.help_settings, bypass_checks=True)
@@ -625,7 +612,7 @@ class HybridMenus:
             view_menu = BaseInteractionMenu(hmenu=self)
             if self.settings["menutype"] == "buttons":
                 # Category buttons
-                for cat in self.emoji_mapping:
+                for cat in self.page_mapping:
                     if cat.reaction:
                         view_menu.add_item(
                             ReactButton(
@@ -640,7 +627,7 @@ class HybridMenus:
             else:  # Select
                 options = []
                 # Category buttons
-                for cat in self.emoji_mapping:
+                for cat in self.page_mapping:
                     if cat.reaction:
                         options.append(
                             discord.SelectOption(

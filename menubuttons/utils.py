@@ -1,7 +1,8 @@
+from dataclasses import dataclass
+
+import discord
 import yaml
 from redbot.core.utils.chat_formatting import box
-from dataclasses import dataclass
-import discord
 
 
 @dataclass

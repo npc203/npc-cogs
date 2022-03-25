@@ -1,8 +1,8 @@
-from typing import Optional
-import discord
-
-from redbot.core import commands
 from dataclasses import dataclass
+from typing import Optional
+
+import discord
+from redbot.core import commands
 
 from . import GLOBAL_CATEGORIES
 
@@ -20,6 +20,9 @@ class Category:
 
     def __eq__(self, item):
         return item == self.name
+
+    def __hash__(self) -> int:
+        return hash(self.name)
 
 
 @dataclass(frozen=True)

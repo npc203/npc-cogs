@@ -1,7 +1,18 @@
 from ..abc import ThemesMeta
-from ..core.base_help import (GLOBAL_CATEGORIES, Category, Context,
-                              HelpSettings, _, cast, chain, commands,
-                              get_aliases, get_cooldowns, get_perms, pagify)
+from ..core.base_help import (
+    GLOBAL_CATEGORIES,
+    Category,
+    Context,
+    HelpSettings,
+    _,
+    cast,
+    chain,
+    commands,
+    get_aliases,
+    get_cooldowns,
+    get_perms,
+    pagify,
+)
 
 
 class MinimalHelp(ThemesMeta):

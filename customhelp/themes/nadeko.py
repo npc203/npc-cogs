@@ -1,8 +1,16 @@
 from redbot.core.utils.chat_formatting import box
 
 from ..abc import ThemesMeta
-from ..core.base_help import (EMPTY_STRING, GLOBAL_CATEGORIES, Category,
-                              Context, EmbedField, HelpSettings, _, pagify)
+from ..core.base_help import (
+    EMPTY_STRING,
+    GLOBAL_CATEGORIES,
+    Category,
+    Context,
+    EmbedField,
+    HelpSettings,
+    _,
+    pagify,
+)
 
 
 class NadekoHelp(ThemesMeta):

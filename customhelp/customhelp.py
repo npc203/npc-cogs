@@ -21,10 +21,10 @@ from tabulate import tabulate
 
 from . import themes
 from .core import ARROWS, GLOBAL_CATEGORIES
-from .core.views import ComponentType, MenuPicker, MenuView
 from .core.base_help import EMPTY_STRING, BaguetteHelp
-from .core.category import Category, Arrow, get_category
+from .core.category import Arrow, Category, get_category
 from .core.utils import LINK_REGEX, emoji_converter
+from .core.views import ComponentType, MenuPicker, MenuView
 
 _ = Translator("CustomHelp", __file__)
 

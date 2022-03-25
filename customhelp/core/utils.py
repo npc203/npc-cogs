@@ -3,9 +3,7 @@
 
 from typing import Optional
 
-
 from redbot.core.utils.chat_formatting import humanize_timedelta
-
 
 # From dpy server >.<
 EMOJI_REGEX = r"<(?P<animated>a?):(?P<name>[a-zA-Z0-9_]{2,32}):(?P<id>[0-9]{18,22})>"

@@ -1,8 +1,8 @@
 import re
 
 import aiohttp
-import discord
 import bs4
+import discord
 from html2text import html2text as h2t
 from redbot.core import commands
 from redbot.core.bot import Red

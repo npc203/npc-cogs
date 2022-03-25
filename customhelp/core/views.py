@@ -1,13 +1,14 @@
+import enum
+import logging
+from typing import TYPE_CHECKING, List, Optional
+
 import discord
-from typing import List, Optional, TYPE_CHECKING
+from redbot.core import commands
 
 import customhelp.core.base_help as base_help
-import logging
 
-from .category import get_category
 from . import ARROWS
-from redbot.core import commands
-import enum
+from .category import get_category
 
 if TYPE_CHECKING:
     from customhelp.core.base_help import BaguetteHelp
