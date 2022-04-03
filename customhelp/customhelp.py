@@ -109,8 +109,8 @@ class CustomHelp(commands.Cog):
         }
         self.config.register_global(**self.chelp_global)
 
-    def cog_unload(self):
-        self.bot.reset_help_formatter()
+    async def cog_unload(self):
+        await self.bot.reset_help_formatter()
 
     def format_help_for_context(self, ctx: commands.Context) -> str:
         """
