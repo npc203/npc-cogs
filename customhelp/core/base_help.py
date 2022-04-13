@@ -133,9 +133,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
         from_help_command: bool = False,
     ):
         """
-        This delegates to other functions.
-
-        For most cases, you should use this and only this directly.
+        Parses the help thing requested fora
         """
 
         help_settings = await HelpSettings.from_context(ctx)
@@ -545,12 +543,6 @@ class HybridMenus:
         self.category_page_mapping = page_mapping
 
     async def get_pages(self, ctx: commands.Context, category_name: str):
-        if not isinstance(ctx.bot._help_formatter, BaguetteHelp):
-            self.stop()
-            LOG.warning("Formatter changed when customhelp menu was running")
-            return
-
-        # Cache categories
         if not (category_pages := self.category_page_mapping.get(category_name)):
             if category_name == "home":
                 category_pages = await ctx.bot._help_formatter.format_bot_help(
@@ -569,7 +561,7 @@ class HybridMenus:
         self.pages = new_source
 
     async def start(self, ctx):
-        await self.create_menutype(ctx)
+        await self.create_menutype()
         await self.create_arrowtype(ctx)
         # Start dpy2 menus (and then views if they exist) else start just the views
         if self.menus[0]:
@@ -589,31 +581,29 @@ class HybridMenus:
             kwargs["embed"] = value
         return kwargs
 
-    async def create_menutype(self, ctx):
+    async def create_menutype(self):
         """MenuType component"""
 
         # We are not at the homepage
-        if self.page_mapping is None:
+        if self.category_page_mapping is None:
             return
 
         # TODO use match-case on 3.10
         if self.settings["menutype"] == "emojis":
             dpy_menu = BaseMenu(hmenu=self)
             # Category buttons
-            for cat in self.page_mapping:
+            for cat, pages in self.category_page_mapping.items():
                 if cat.reaction:
-                    dpy_menu.add_button(
-                        await react_page(ctx, cat, self.help_settings, bypass_checks=True)
-                    )
+                    dpy_menu.add_button(await react_page(cat.emoji, pages))
             # Home Button
-            dpy_menu.add_button(await home_page(ctx, ARROWS["home"].emoji, self.help_settings))
+            dpy_menu.add_button(await home_page(ARROWS["home"].emoji, self.help_settings))  # TODO
             self.menus[0] = dpy_menu
         elif self.settings["menutype"] != "hidden":
             view_menu = BaseInteractionMenu(hmenu=self)
             if self.settings["menutype"] == "buttons":
                 # Category buttons
-                for cat in self.page_mapping:
-                    if cat.reaction:
+                for cat, pages in self.category_page_mapping.items():
+                    if cat.reaction or cat.label:
                         view_menu.add_item(
                             ReactButton(
                                 emoji=cat.reaction,
@@ -627,8 +617,8 @@ class HybridMenus:
             else:  # Select
                 options = []
                 # Category buttons
-                for cat in self.page_mapping:
-                    if cat.reaction:
+                for cat in self.category_page_mapping:
+                    if cat.reaction or cat.label:
                         options.append(
                             discord.SelectOption(
                                 label=cat.name,

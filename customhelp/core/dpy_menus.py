@@ -61,45 +61,33 @@ def _skip_double_triangle_buttons(self):
     return max_pages <= 2
 
 
-async def react_page(ctx, category_obj, help_settings, bypass_checks=False):
-    pages = await ctx.bot._help_formatter.format_category_help(
-        ctx, category_obj, help_settings, get_pages=True, bypass_checks=bypass_checks
-    )
-    if pages:
-
-        async def action(menu, payload):
-            await menu.change_source(payload)
-            if len(pages) == 1:
-                # If any one button is present, disable it's functionality cause its a 1 page menu.
-                if ARROWS["left"].name in map(str, menu._buttons.keys()):
-                    menu.add_button(empty_button(ARROWS["left"]))
-                    menu.add_button(empty_button(ARROWS["right"]))
-            else:
-                asyncio.create_task(
-                    menu.add_button(prev_page(ARROWS["left"]), react=True, interaction=payload)
-                )
-                asyncio.create_task(
-                    menu.add_button(next_page(ARROWS["right"]), react=True, interaction=payload)
-                )
-
-        return menus.Button(category_obj.reaction, action)
-    else:
-        return empty_button(category_obj.reaction)
-
-
-async def home_page(ctx, emoji, help_settings):
-    pages = await ctx.bot._help_formatter.format_bot_help(ctx, help_settings, get_pages=True)
-    if pages:
-
-        async def action(menu, payload):
-            await menu.change_source(ListPages(pages), payload)
-            if len(pages) == 1 and ARROWS["left"].name in map(str, menu._buttons.keys()):
+async def react_page(category_obj, pages):
+    async def action(menu, payload):
+        await menu.change_source(payload)
+        if len(pages) == 1:
+            # If any one button is present, disable it's functionality cause its a 1 page menu.
+            if ARROWS["left"].name in map(str, menu._buttons.keys()):
                 menu.add_button(empty_button(ARROWS["left"]))
                 menu.add_button(empty_button(ARROWS["right"]))
+        else:
+            asyncio.create_task(
+                menu.add_button(prev_page(ARROWS["left"]), react=True, interaction=payload)
+            )
+            asyncio.create_task(
+                menu.add_button(next_page(ARROWS["right"]), react=True, interaction=payload)
+            )
 
-        return menus.Button(emoji, action)
-    else:
-        return empty_button(emoji)
+    return menus.Button(category_obj.reaction, action)
+
+
+async def home_page(emoji, help_settings):
+    async def action(menu, payload):
+        await menu.change_source(ListPages(pages), payload)
+        if len(pages) == 1 and ARROWS["left"].name in map(str, menu._buttons.keys()):
+            menu.add_button(empty_button(ARROWS["left"]))
+            menu.add_button(empty_button(ARROWS["right"]))
+
+    return menus.Button(emoji, action)
 
 
 def first_page(emoji):
