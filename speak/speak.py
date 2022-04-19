@@ -12,19 +12,13 @@ class Speak(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.cache = {}
-        with open(
-            data_manager.bundled_data_path(self) / "insult.txt", encoding="utf8"
-        ) as fp:
+        with open(data_manager.bundled_data_path(self) / "insult.txt", encoding="utf8") as fp:
             self.insult_list = fp.read().splitlines()
-        with open(
-            data_manager.bundled_data_path(self) / "sadme.txt", encoding="utf8"
-        ) as fp:
+        with open(data_manager.bundled_data_path(self) / "sadme.txt", encoding="utf8") as fp:
             self.sadme_list = fp.read().splitlines()
 
     @commands.command()
-    async def tell(
-        self, ctx, channel: typing.Optional[discord.TextChannel], *, sentence: str
-    ):
+    async def tell(self, ctx, channel: typing.Optional[discord.TextChannel], *, sentence: str):
         """Tells the given text as the yourself but with a bot tag"""
         if channel is None:
             channel = ctx.channel
@@ -137,9 +131,7 @@ class Speak(commands.Cog):
                     content=sentence,
                 )
             else:
-                await ctx.send(
-                    "You must include a username of less than 80 characters."
-                )
+                await ctx.send("You must include a username of less than 80 characters.")
                 await ctx.send_help()
         else:
             await ctx.send("You must include a URL to define the webhook avatar.")
@@ -179,9 +171,7 @@ class Speak(commands.Cog):
                         self.cache[channel.id] = hook
                         break
                 else:
-                    hook = await channel.create_webhook(
-                        name="red_bot_hook_" + str(channel.id)
-                    )
+                    hook = await channel.create_webhook(name="red_bot_hook_" + str(channel.id))
             else:
                 hook = self.cache[channel.id]
         except discord.errors.NotFound:  # Probably user deleted the hook
