@@ -53,11 +53,11 @@ class NoReplyPing(commands.Cog):
                         if await self.config.member_from_ids(
                             message.guild.id, ref_message.author.id
                         ).send_dms():
-                            # wait for 15 seconds before sending dm, so as to not annoy when chatting
+                            # wait for 60 seconds before sending dm, so as to not annoy when chatting
                             try:
                                 await self.bot.wait_for(
                                     "message",
-                                    timeout=15,
+                                    timeout=60,
                                     check=lambda msg: msg.author.id == ref_message.author.id
                                     and msg.channel.id == message.channel.id,
                                 )

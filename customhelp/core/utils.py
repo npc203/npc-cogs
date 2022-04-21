@@ -183,7 +183,7 @@ def close_menu(emoji):
 
 
 def empty_button(emoji):
-    async def action(x, y):
-        pass
+    async def action(self, payload):
+        pass  # yeah this won't do anything apparently
 
     return menus.Button(emoji, action)
