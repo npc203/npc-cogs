@@ -117,7 +117,7 @@ class Snipe(commands.Cog):
         else:
             await ctx.reply(
                 f"{ctx.author.name}, you don't have read access to {channel.mention}",
-                mention_author = False,
+                mention_author=False,
             )
             return False
 
