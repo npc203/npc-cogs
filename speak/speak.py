@@ -1,3 +1,4 @@
+import typing
 from random import choice
 
 import discord
@@ -16,24 +17,71 @@ class Speak(commands.Cog):
         with open(data_manager.bundled_data_path(self) / "sadme.txt", encoding="utf8") as fp:
             self.sadme_list = fp.read().splitlines()
 
-    @checks.bot_has_permissions(manage_webhooks=True, manage_messages=True)
     @commands.command()
-    async def tell(self, ctx, *, sentence: str):
+    async def tell(self, ctx, channel: typing.Optional[discord.TextChannel], *, sentence: str):
         """Tells the given text as the yourself but with a bot tag"""
-        hook = await self.get_hook(ctx)
-        await ctx.message.delete()
+        if channel is None:
+            channel = ctx.channel
+        permissions_bot = channel.permissions_for(ctx.guild.me)
+        permissions_author = channel.permissions_for(ctx.author)
+        if (
+            not permissions_bot.manage_webhooks
+            or channel == ctx.channel
+            and not permissions_bot.manage_messages
+        ):
+            await ctx.send(
+                f"The bot does not have enough permissions to send a webhook in {channel.mention}."
+            )
+            return
+        if (
+            not permissions_author.send_messages
+            and not permissions_author.read_messages
+            and not permissions_author.read_message_history
+        ):
+            await ctx.send(f"You do not have enough permissions in {channel.mention}.")
+            return
+        hook = await self.get_hook(channel)
+        if channel == ctx.channel:
+            await ctx.message.delete()
         await hook.send(
             username=ctx.author.display_name,
             avatar_url=ctx.author.avatar_url,
             content=sentence,
         )
 
-    @checks.bot_has_permissions(manage_webhooks=True, manage_messages=True)
     @commands.command()
-    async def tellas(self, ctx, mention: discord.Member, *, sentence: str):
+    async def tellas(
+        self,
+        ctx,
+        channel: typing.Optional[discord.TextChannel],
+        mention: discord.Member,
+        *,
+        sentence: str,
+    ):
         """Tells the given text as the mentioned users"""
-        hook = await self.get_hook(ctx)
-        await ctx.message.delete()
+        if channel is None:
+            channel = ctx.channel
+        permissions_bot = channel.permissions_for(ctx.guild.me)
+        permissions_author = channel.permissions_for(ctx.author)
+        if (
+            not permissions_bot.manage_webhooks
+            or channel == ctx.channel
+            and not permissions_bot.manage_messages
+        ):
+            await ctx.send(
+                f"The bot does not have enough permissions to send a webhook in {channel.mention}."
+            )
+            return
+        if (
+            not permissions_author.send_messages
+            and not permissions_author.read_messages
+            and not permissions_author.read_message_history
+        ):
+            await ctx.send(f"You do not have enough permissions in {channel.mention}.")
+            return
+        hook = await self.get_hook(channel)
+        if channel == ctx.channel:
+            await ctx.message.delete()
         await hook.send(
             username=mention.display_name,
             avatar_url=mention.avatar_url,
@@ -42,10 +90,39 @@ class Speak(commands.Cog):
 
     @checks.bot_has_permissions(manage_webhooks=True, manage_messages=True)
     @commands.command()
-    async def telluser(self, ctx, username: str, avatar: str, *, sentence: str):
+    async def telluser(
+        self,
+        ctx,
+        channel: typing.Optional[discord.TextChannel],
+        username: str,
+        avatar: str,
+        *,
+        sentence: str,
+    ):
         """Says the given text with the specified name and avatar"""
-        hook = await self.get_hook(ctx)
-        await ctx.message.delete()
+        if channel is None:
+            channel = ctx.channel
+        permissions_bot = channel.permissions_for(ctx.guild.me)
+        permissions_author = channel.permissions_for(ctx.author)
+        if (
+            not permissions_bot.manage_webhooks
+            or channel == ctx.channel
+            and not permissions_bot.manage_messages
+        ):
+            await ctx.send(
+                f"The bot does not have enough permissions to send a webhook in {channel.mention}."
+            )
+            return
+        if (
+            not permissions_author.send_messages
+            and not permissions_author.read_messages
+            and not permissions_author.read_message_history
+        ):
+            await ctx.send(f"You do not have enough permissions in {channel.mention}.")
+            return
+        hook = await self.get_hook(channel)
+        if channel == ctx.channel:
+            await ctx.message.delete()
         if avatar.startswith("http"):
             if 1 < len(username) <= 80:
                 await hook.send(
@@ -91,23 +168,20 @@ class Speak(commands.Cog):
             self.cache.pop(ctx.channel.id)
             await self.print_it(ctx, stuff, True)
 
-    async def get_hook(self, ctx):
+    async def get_hook(self, channel: discord.TextChannel):
         try:
-            if ctx.channel.id not in self.cache:
-                for i in await ctx.channel.webhooks():
+            if channel.id not in self.cache:
+                for i in await channel.webhooks():
                     if i.user.id == self.bot.user.id:
                         hook = i
-                        self.cache[ctx.channel.id] = hook
+                        self.cache[channel.id] = hook
                         break
                 else:
-                    hook = await ctx.channel.create_webhook(
-                        name="red_bot_hook_" + str(ctx.channel.id)
-                    )
+                    hook = await channel.create_webhook(name="red_bot_hook_" + str(channel.id))
             else:
                 hook = self.cache[ctx.channel.id]
         except discord.NotFound:  # Probably user deleted the hook
             hook = await ctx.channel.create_webhook(name="red_bot_hook_" + str(ctx.channel.id))
-
         return hook
 
     async def red_get_data_for_user(self, *, user_id: int):

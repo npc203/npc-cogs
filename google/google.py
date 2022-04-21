@@ -26,13 +26,13 @@ class Google(Yandex, commands.Cog):
     A Simple google search with image support as well
     """
 
-    __version__ = "0.0.3"
+    __version__ = "0.0.4"
     __authors__ = ["epic guy", "ow0x", "fixator10"]
 
     def __init__(self, bot: Red) -> None:
         self.bot = bot
         self.options = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36",
             "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
         }
         self.link_regex = re.compile(
@@ -422,7 +422,7 @@ class Google(Yandex, commands.Cog):
         if cards:
             get_card(soup, final, kwargs)
 
-        for res in soup.findAll("div", class_="g"):
+        for res in soup.findAll("div", class_="g tF2Cxc"):
             if name := res.find("div", class_="yuRUbf"):
                 url = name.a["href"]
                 if title := name.find("h3", class_=re.compile("LC20lb")):
@@ -432,10 +432,10 @@ class Google(Yandex, commands.Cog):
             else:
                 url = None
                 title = None
-            if desc := res.find("div", class_="IsZvec"):
+            if desc := res.find("div", class_="NJo7tc Z26q7c uUuwM"):
                 if remove := desc.find("span", class_="f"):
                     remove.decompose()
-                if final_desc := desc.find_all("div", class_="VwiC3b"):
+                if final_desc := desc.find_all("div", class_=re.compile(r"VwiC3b")):
                     desc = h2t(str(final_desc[-1]))[:500]
                 else:
                     desc = "Nothing found"
