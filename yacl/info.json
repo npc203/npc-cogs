@@ -1,0 +1,22 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Cog-Creators/Red-DiscordBot/V3/develop/schema/red_cog.schema.json",
+    "name": "Yacl",
+    "short": "Yet another cool logger",
+    "description": "A cog that logs a lot of information for bunch of juicy stats and analytics",
+    "end_user_data_statement": "Based on how it's setup, this cog tracks end user details across time",
+    "install_msg": "This cog is not meant for big bots likely",
+    "author": [
+        "epic guy"
+    ],
+    "required_cogs": {},
+    "requirements": [],
+    "tags": [
+        "utility",
+        "fun",
+        "analytics"
+    ],
+    "min_bot_version": "3.3.10",
+    "hidden": false,
+    "disabled": false,
+    "type": "COG"
+}
