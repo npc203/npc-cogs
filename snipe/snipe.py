@@ -131,12 +131,8 @@ class Snipe(commands.Cog):
         index: int = None,
     ):
         """
-                Snipe a channel's last deleted message for fun and profit.
-        <<<<<<< HEAD
-        =======
-
-        >>>>>>> 51593fb0307892933a9da8c08356300598790a0a
-                you can ignore a channel/server using [p]snipeset ignore
+        Snipe a channel's last deleted message for fun and profit.
+        you can ignore a channel/server using [p]snipeset ignore
         """
         channel = channel or ctx.channel
         pre_check = await self.pre_check_perms(ctx, channel)

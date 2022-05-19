@@ -2,10 +2,11 @@ import asyncio
 import logging
 from collections import namedtuple
 from itertools import chain
-from typing import Any, Dict, List, Union, cast, Optional
+from typing import Any, Dict, List, Tuple, Union, cast, Optional
 
 import discord
 from redbot.core import commands
+from redbot.core.commands.commands import Command
 from redbot.core.commands.context import Context
 from redbot.core.commands.help import HelpSettings, NoCommand, NoSubCommand, _, dpy_commands
 from redbot.core.utils.chat_formatting import pagify
@@ -209,7 +210,9 @@ class BaguetteHelp(commands.RedHelpFormatter):
             await ctx.send(_("You need to enable embeds to use the help menu"))
 
     async def format_cog_help(self, ctx: Context, obj: commands.Cog, help_settings: HelpSettings):
-        coms = await self.get_cog_help_mapping(ctx, obj, help_settings=help_settings)
+        coms: Dict[str, Command] = await self.get_cog_help_mapping(
+            ctx, obj, help_settings=help_settings
+        )  # type:ignore
         if not (coms or help_settings.verify_exists):
             return
 
@@ -440,6 +443,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
     ):
         """
         Sends pages based on settings.
+        If page_mapping is non-empty, then it's the main help menu and we need to add the home button
         """
 
         # save on config calls
@@ -524,7 +528,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
 
 
 class HybridMenus:
-    def __init__(self, settings, helpsettings, page_mapping, pages):
+    def __init__(self, settings, helpsettings, page_mapping: Dict[Category, List], pages):
         self.arrow_emoji_button = {
             "force_left": first_page,
             "left": prev_page,
@@ -652,14 +656,15 @@ class HybridMenus:
                 dpy_menu.add_button(button(ARROWS[arrow_str].emoji))
 
         else:
+            view_menu = self.menus[1]
             for arrow in ARROWS:
                 button_func = discord.ui.button(**arrow.items())
 
                 async def button_callback(self: BaseInteractionMenu, button, interaction):
-                    self.view.hmenu.stop()
+                    view_menu.hmenu.stop()
 
                 item = button_func(button_callback)
-                self.children.append(item)
+                view_menu.children.append(item)
 
     def stop(self):
         for menu in self.menus:

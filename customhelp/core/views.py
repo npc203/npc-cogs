@@ -86,7 +86,7 @@ class MenuPicker(discord.ui.Select):
 
 # HELP MENU Interaction items
 class BaseInteractionMenu(discord.ui.View):
-    def __init__(self, *, hmenu: base_help.HybridMenus):
+    def __init__(self, *, hmenu):
         self.children: List = []
         self.hmenu: base_help.HybridMenus = hmenu
 
@@ -125,11 +125,13 @@ class BaseInteractionMenu(discord.ui.View):
         if message is None:
             if use_reply:
                 self.message = await ctx.reply(
-                    **self._get_kwargs_from_page(self.pages[0]), view=self, mention_author=False
+                    **self._get_kwargs_from_page(self.hmenu.pages[0]),
+                    view=self,
+                    mention_author=False,
                 )
             else:
                 self.message = await ctx.send(
-                    **self._get_kwargs_from_page(self.pages[0]), view=self
+                    **self._get_kwargs_from_page(self.hmenu.pages[0]), view=self
                 )
         else:
             self.message = message
@@ -145,11 +147,6 @@ class BaseInteractionMenu(discord.ui.View):
                 "You cannot use this help menu.", ephemeral=True
             )
             return False
-
-    def change_source(self, new_source):
-        self.pages = new_source
-        self.curr_page = 0
-        self.max_page = len(new_source)
 
 
 class ReactButton(discord.ui.Button):
