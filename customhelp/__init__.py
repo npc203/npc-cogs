@@ -12,5 +12,5 @@ with open(Path(__file__).parent / "info.json") as fp:
 async def setup(bot: Red) -> None:
     cog = CustomHelp(bot)
     await bot.add_cog(cog)
-    # is this too costly? should I use a task rather?
+    # TODO USE DPY2 async cog loader
     await cog._setup()

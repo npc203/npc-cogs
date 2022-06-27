@@ -27,8 +27,8 @@ class BaseMenu(menus.Menu):
         self.bot: Red
 
     async def send_initial_message(self, ctx, channel):
-        page = await self._source.get_page(0)
-        kwargs = await self._get_kwargs_from_page(page)
+        page = self.hmenu.pages[0]
+        kwargs = self.hmenu._get_kwargs_from_page(page)
         if self.use_reply:
             kwargs["reference"] = ctx.message.to_reference(
                 fail_if_not_exists=False
@@ -62,83 +62,25 @@ def _skip_double_triangle_buttons(self):
 
 
 async def react_page(category_obj, pages):
-    async def action(menu, payload):
-        await menu.change_source(payload)
-        if len(pages) == 1:
-            # If any one button is present, disable it's functionality cause its a 1 page menu.
-            if ARROWS["left"].name in map(str, menu._buttons.keys()):
-                menu.add_button(empty_button(ARROWS["left"]))
-                menu.add_button(empty_button(ARROWS["right"]))
-        else:
-            asyncio.create_task(
-                menu.add_button(prev_page(ARROWS["left"]), react=True, interaction=payload)
-            )
-            asyncio.create_task(
-                menu.add_button(next_page(ARROWS["right"]), react=True, interaction=payload)
-            )
+    async def action(menu: BaseMenu, payload):
+        await menu.hmenu.category_react_action(menu.ctx, menu.message, category_obj.name)
 
     return menus.Button(category_obj.reaction, action)
 
 
+async def arrow_react(arrow_obj):
+    async def action(menu: BaseMenu, payload):
+        await menu.hmenu.arrow_emoji_button[arrow_obj.name]()
+
+    return menus.Button(arrow_obj.emoji, action)
+
+
+# TODO fix this lol
 async def home_page(emoji, help_settings):
     async def action(menu, payload):
-        await menu.change_source(ListPages(pages), payload)
+        menu.hmenu.change_source(pages)
         if len(pages) == 1 and ARROWS["left"].name in map(str, menu._buttons.keys()):
             menu.add_button(empty_button(ARROWS["left"]))
             menu.add_button(empty_button(ARROWS["right"]))
-
-    return menus.Button(emoji, action)
-
-
-def first_page(emoji):
-    async def go_to_first_page(self, payload):
-        """go to the first page"""
-        await self.show_page(0)
-
-    return menus.Button(emoji, go_to_first_page, position=menus.First())
-
-
-def last_page(emoji):
-    async def go_to_last_page(self, payload):
-        """go to the last page"""
-        await self.show_page(self._source.get_max_pages() - 1)
-
-    return menus.Button(emoji, go_to_last_page)
-
-
-def prev_page(emoji):
-    async def go_to_previous_page(self, payload):
-        """go to the previous page"""
-        await self.show_checked_page(self.current_page - 1)
-
-    return menus.Button(
-        emoji,
-        go_to_previous_page,
-    )
-
-
-def next_page(emoji):
-    async def go_to_next_page(self, payload):
-        """go to the next page"""
-        await self.show_checked_page(self.current_page + 1)
-
-    return menus.Button(
-        emoji,
-        go_to_next_page,
-    )
-
-
-def close_menu(emoji):
-    async def stop_pages(self, payload: discord.RawReactionActionEvent) -> None:
-        """stops the pagination session."""
-        self.hmenu.stop()
-        await self.message.delete()
-
-    return menus.Button(emoji, stop_pages)
-
-
-def empty_button(emoji):
-    async def action(self, payload):
-        pass  # yeah this won't do anything apparently
 
     return menus.Button(emoji, action)

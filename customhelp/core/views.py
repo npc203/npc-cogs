@@ -41,7 +41,7 @@ class MenuView(discord.ui.View):
             return False
 
     @discord.ui.button(label="Accept", emoji="✅", style=discord.ButtonStyle.success, row=2)
-    async def accept(self, button, interaction):
+    async def accept(self, interaction, button):
         if self.values.count(None) == len(self.values):
             return await self.message.edit(content="No value selected.")
 
@@ -58,7 +58,7 @@ class MenuView(discord.ui.View):
         self.stop()
 
     @discord.ui.button(label="Cancel", emoji="❌", style=discord.ButtonStyle.danger, row=2)
-    async def cancel(self, button, interaction):
+    async def cancel(self, interaction, button):
         await self.message.edit(content="Selection cancelled.", view=None)
         self.stop()
 
@@ -107,7 +107,7 @@ class BaseInteractionMenu(discord.ui.View):
     async def on_timeout(self):
         children = []
         for child in self.children:
-            if isinstance(child, SelectHelpBar):
+            if isinstance(child, discord.ui.Select):
                 child.disabled = True
                 children.append(child)
         self.children = children
@@ -120,10 +120,9 @@ class BaseInteractionMenu(discord.ui.View):
         self,
         ctx: commands.Context,
         message: Optional[discord.Message] = None,
-        use_reply: bool = True,
     ):
         if message is None:
-            if use_reply:
+            if self.hmenu.settings["replies"]:
                 self.message = await ctx.reply(
                     **self._get_kwargs_from_page(self.hmenu.pages[0]),
                     view=self,
@@ -162,7 +161,7 @@ class ReactButton(discord.ui.Button):
 
 
 # Selection Bar
-class SelectHelpBar(discord.ui.Select):
+class SelectMenuHelpBar(discord.ui.Select):
     view: BaseInteractionMenu
 
     def __init__(self, categories: List[discord.SelectOption]):
@@ -176,4 +175,23 @@ class SelectHelpBar(discord.ui.Select):
 
     async def callback(self, interaction):
         await interaction.response.defer()
-        await self.view.hmenu.category_react_action(self.view.ctx, self.values[0])
+        await self.view.hmenu.category_react_action(
+            self.view.ctx, self.view.message, self.values[0]
+        )
+
+
+class SelectArrowHelpBar(discord.ui.Select):
+    view: BaseInteractionMenu
+
+    def __init__(self, arrows: List[discord.SelectOption]):
+        super().__init__(
+            placeholder="Select an arrow...",
+            min_values=1,
+            max_values=1,
+            options=arrows,
+        )
+
+    async def callback(self, interaction):
+        await interaction.response.defer()
+        if self.values:
+            await self.view.hmenu.arrow_emoji_button[self.values[0]]()

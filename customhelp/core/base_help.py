@@ -2,7 +2,7 @@ import asyncio
 import logging
 from collections import namedtuple
 from itertools import chain
-from typing import Any, Dict, List, Tuple, Union, cast, Optional
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import discord
 from redbot.core import commands
@@ -12,20 +12,16 @@ from redbot.core.commands.help import HelpSettings, NoCommand, NoSubCommand, _, 
 from redbot.core.utils.chat_formatting import pagify
 from redbot.core.utils.mod import mass_purge
 
-from customhelp.core.views import BaseInteractionMenu, ReactButton, SelectHelpBar
+from customhelp.core.views import (
+    BaseInteractionMenu,
+    ReactButton,
+    SelectArrowHelpBar,
+    SelectMenuHelpBar,
+)
 
 from . import ARROWS, GLOBAL_CATEGORIES
 from .category import Category, get_category
-from .dpy_menus import (
-    BaseMenu,
-    close_menu,
-    first_page,
-    home_page,
-    last_page,
-    next_page,
-    prev_page,
-    react_page,
-)
+from .dpy_menus import BaseMenu, arrow_react, home_page, react_page
 from .utils import get_aliases, get_cooldowns, get_perms, shorten_line
 
 LOG = logging.getLogger("red.customhelp.core.base_help")
@@ -112,7 +108,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
         sorted_iterable = []
         sorted_cogs = sorted(category.cogs)
         isuncategory = False
-        if category.name == GLOBAL_CATEGORIES[-1].name:
+        if category.name == GLOBAL_CATEGORIES.uncategorised.name:
             isuncategory = True
             sorted_cogs.append(None)  # TODO Need to add commands with no category here as well >_>
         for cogname in sorted_cogs:
@@ -530,11 +526,11 @@ class BaguetteHelp(commands.RedHelpFormatter):
 class HybridMenus:
     def __init__(self, settings, helpsettings, page_mapping: Dict[Category, List], pages):
         self.arrow_emoji_button = {
-            "force_left": first_page,
-            "left": prev_page,
-            "cross": close_menu,
-            "right": next_page,
-            "force_right": last_page,
+            "force_left": self.first_page,
+            "left": self.prev_page,
+            "cross": self.close_menu,
+            "right": self.next_page,
+            "force_right": self.last_page,
         }
 
         self.settings = settings
@@ -556,24 +552,25 @@ class HybridMenus:
 
         return category_pages
 
-    async def category_react_action(self, ctx: commands.Context, category_name: str):
-        if category_pages := await self.get_pages(ctx, category_name):
-            self.change_source(category_pages)
-            await ctx.message.edit(embed=category_pages[self.curr_page], view=self.menus[0])
-
     def change_source(self, new_source):
         self.pages = new_source
+
+    async def show_current_page(self, **kwargs):
+        data = self._get_kwargs_from_page(self.pages[self.curr_page])
+        await self.bot_message.edit(**data, **kwargs)
 
     async def start(self, ctx):
         await self.create_menutype()
         await self.create_arrowtype(ctx)
         # Start dpy2 menus (and then views if they exist) else start just the views
         if self.menus[0]:
-            message = await self.menus[0].start(ctx, self.settings["replies"])
+            message = await self.menus[0].start(ctx)
             if self.menus[1]:
-                await self.menus[1].start(ctx, use_reply=self.settings["replies"], message=message)
+                await self.menus[1].start(ctx, message=message)
+            self.bot_message = message
         elif self.menus[1]:
-            await self.menus[1].start(ctx, use_reply=self.settings["replies"])
+            await self.menus[1].start(ctx)
+            self.bot_message = self.menus[1].message
 
     def _get_kwargs_from_page(self, value):
         kwargs: dict[str, Any] = {"allowed_mentions": discord.AllowedMentions(replied_user=False)}
@@ -598,7 +595,8 @@ class HybridMenus:
             # Category buttons
             for cat, pages in self.category_page_mapping.items():
                 if cat.reaction:
-                    dpy_menu.add_button(await react_page(cat.emoji, pages))
+                    print(cat.name, cat.reaction)
+                    dpy_menu.add_button(await react_page(cat, pages))
             # Home Button
             dpy_menu.add_button(await home_page(ARROWS["home"].emoji, self.help_settings))  # TODO
             self.menus[0] = dpy_menu
@@ -638,7 +636,7 @@ class HybridMenus:
                         emoji=ARROWS["home"].emoji,
                     )
                 )
-                select_bar = SelectHelpBar(options)
+                select_bar = SelectMenuHelpBar(options)
                 view_menu.add_item(select_bar)
 
             self.menus[1] = view_menu
@@ -652,21 +650,78 @@ class HybridMenus:
             else:
                 dpy_menu = self.menus[0]
 
-            for arrow_str, button in self.arrow_emoji_button.items():
-                dpy_menu.add_button(button(ARROWS[arrow_str].emoji))
-
-        else:
-            view_menu = self.menus[1]
             for arrow in ARROWS:
-                button_func = discord.ui.button(**arrow.items())
+                dpy_menu.add_button(await arrow_react(arrow))
 
-                async def button_callback(self: BaseInteractionMenu, button, interaction):
-                    view_menu.hmenu.stop()
+        elif self.settings["arrowtype"] != "hidden":
+            if not self.menus[1]:
+                self.menus[1] = BaseInteractionMenu(hmenu=self)
+            view_menu = self.menus[1]
 
-                item = button_func(button_callback)
-                view_menu.children.append(item)
+            if self.settings["arrowtype"] == "buttons":
+                for arrow in ARROWS:
+                    # TODO remove subclass later (dont need a state for each button)
+                    class Button(discord.ui.Button):
+                        view: BaseInteractionMenu
+
+                        def __init__(self, name, **kwargs):
+                            self.name = name
+                            super().__init__(**kwargs)
+
+                        async def callback(self, interaction):
+                            await self.view.hmenu.arrow_emoji_button[self.name]()
+
+                    button = Button(arrow.name, **arrow.items())
+                    view_menu.add_item(button)
+            else:  # Select
+                options = []
+                for arrow in ARROWS:
+                    options.append(
+                        discord.SelectOption(
+                            label=arrow.name,
+                            emoji=arrow.emoji,
+                        )
+                    )
+                select_bar = SelectArrowHelpBar(options)
+                view_menu.add_item(select_bar)
 
     def stop(self):
         for menu in self.menus:
             if menu:
                 menu.stop()
+
+    ### MENU ACTIONS ###
+    async def category_react_action(self, user_ctx: commands.Context, message, category_name: str):
+        if category_pages := await self.get_pages(user_ctx, category_name):
+            self.change_source(category_pages)
+            await self.show_current_page()
+
+    async def home_page(self):
+        # TODO
+        pass
+
+    async def first_page(self):
+        self.curr_page = 0
+        await self.show_current_page()
+
+    async def last_page(self):
+        self.curr_page = len(self.pages) - 1
+        await self.show_current_page()
+
+    async def next_page(self):
+        if self.curr_page < len(self.pages) - 1:
+            self.curr_page += 1
+            await self.show_current_page()
+        else:
+            await self.first_page()
+
+    async def prev_page(self):
+        if self.curr_page > 0:
+            self.curr_page -= 1
+            await self.show_current_page()
+        else:
+            await self.last_page()
+
+    async def close_menu(self):
+        self.stop()
+        await self.bot_message.delete()

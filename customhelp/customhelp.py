@@ -87,6 +87,7 @@ class CustomHelp(commands.Cog):
                 "label": "",
                 "style": "primary",
             },
+            "UNCAT_INDEX": -1,
             "settings": {
                 "react": True,
                 "nav": True,
@@ -137,15 +138,18 @@ class CustomHelp(commands.Cog):
     async def refresh_cache(self):
         """Get's the config and re-populates the GLOBAL_CATEGORIES"""
         # Blocking?
-        # await self.config.clear_all()
         my_categories = await self.config.categories()
-        # GLOBAL_CATEGORIES[:] = [Category(**i) for i in my_categories]
-        # Correct the emoji types
-        GLOBAL_CATEGORIES[:] = []
-        for cat in my_categories:
-            cat_obj = Category(**cat)
+        GLOBAL_CATEGORIES.clear()
+        for cat_data in my_categories:
+            cat_obj = Category(**cat_data)
+            # Correct the emoji types
             cat_obj.reaction = emoji_converter(self.bot, cat_obj.reaction)
             GLOBAL_CATEGORIES.append(cat_obj)
+
+        # Set uncategorised index
+        uncat_index = await self.config.UNCAT_INDEX()
+        if uncat_index == -1:
+            GLOBAL_CATEGORIES.UNCAT_INDEX = len(GLOBAL_CATEGORIES)
 
         # make the uncategorised cogs
         all_loaded_cogs = set(self.bot.cogs.keys())
@@ -154,11 +158,11 @@ class CustomHelp(commands.Cog):
         )
 
         uncat_config = await self.config.uncategorised()
-        GLOBAL_CATEGORIES.append(
+        GLOBAL_CATEGORIES.add_uncategorised(
             Category(
                 name=uncat_config["name"] or "uncategorised",
                 desc=uncat_config["desc"] or "No category commands",
-                long_desc=uncat_config["long_desc"] or "",
+                long_desc=uncat_config["long_desc"] or " ",
                 reaction=emoji_converter(self.bot, uncat_config["reaction"]),
                 thumbnail=uncat_config["thumbnail"],
                 cogs=list(uncategorised),
@@ -182,7 +186,7 @@ class CustomHelp(commands.Cog):
             await self.config.arrows.set(new_arrows)
             await self.config.version.set(self.__version__)
 
-        # Category migration or smth
+        # Category migration V1
         if (await self.config.version()) < "1.0.1" and self.__version__ == "1.0.1":
             async with self.config.uncategorised() as uncat:
                 uncat["style"] = "primary"
@@ -222,7 +226,7 @@ class CustomHelp(commands.Cog):
                 if cog_name in cat.cogs:
                     break
             else:
-                GLOBAL_CATEGORIES[-1].cogs.append(cog_name)
+                GLOBAL_CATEGORIES.uncategorised.cogs.append(cog_name)
 
     @commands.is_owner()
     @commands.group()
@@ -395,12 +399,17 @@ class CustomHelp(commands.Cog):
 
         available_categories = [category.name for category in GLOBAL_CATEGORIES]
         # Remove uncategorised
-        available_categories.pop(-1)
-        uncat_name = GLOBAL_CATEGORIES[-1].name
+        available_categories.pop(GLOBAL_CATEGORIES.UNCAT_INDEX)
+        uncat_name = GLOBAL_CATEGORIES.uncategorised.name
         # Not using cache (GLOBAL_CATEGORIES[-1].cogs) cause cog unloads aren't tracked
         all_cogs = set(self.bot.cogs.keys())
         uncategorised = all_cogs - set(
-            chain(*(category.cogs for category in GLOBAL_CATEGORIES[:-1]))
+            chain(
+                *(
+                    GLOBAL_CATEGORIES.index(category_name).cogs
+                    for category_name in available_categories
+                )
+            )
         )
         failed_cogs = []
         success_cogs = []
@@ -498,9 +507,9 @@ class CustomHelp(commands.Cog):
         check = ["name", "desc", "long_desc", "reaction", "thumbnail", "label", "style"]
         available_categories = [category.name for category in GLOBAL_CATEGORIES]
         # Remove uncategorised
-        available_categories.pop(-1)
+        available_categories.pop(GLOBAL_CATEGORIES.UNCAT_INDEX)
         # special naming for uncategorized stuff
-        uncat_name = GLOBAL_CATEGORIES[-1].name
+        uncat_name = GLOBAL_CATEGORIES.uncategorised.name
         already_present_emojis = [str(i.reaction) for i in GLOBAL_CATEGORIES if i.reaction] + [
             i.emoji for i in ARROWS
         ]
@@ -583,7 +592,7 @@ class CustomHelp(commands.Cog):
             for cog in sorted(category["cogs"]):
                 joined += "  - {}\n".format(cog)
         joined += "\n+ {}: (This is where the uncategorised cogs go in)\n".format(
-            GLOBAL_CATEGORIES[-1].name
+            GLOBAL_CATEGORIES.uncategorised.name
         )
         for name in sorted(uncategorised):
             joined += "  - {}\n".format(name)
@@ -731,7 +740,7 @@ class CustomHelp(commands.Cog):
         to_config = []
         invalid = []
         all_cat = [i.name for i in GLOBAL_CATEGORIES]
-        all_cat.pop(-1)
+        all_cat.pop(GLOBAL_CATEGORIES.UNCAT_INDEX)
         text = ""
         for category in category_names:
             for ind in range(len(all_cat)):
@@ -740,16 +749,22 @@ class CustomHelp(commands.Cog):
                     break
             else:
                 # uncategorised
-                if category == GLOBAL_CATEGORIES[-1].name:
+                if category == GLOBAL_CATEGORIES.uncategorised.name:
                     text += _(
                         "You can't remove {} cause it is where the uncategorised cogs go into\n\n"
                     ).format(category)
                 else:
                     invalid.append(category)
 
+        change_uncat_index = 0
         async with self.config.categories() as conf_cat:
             for index in to_config:
+                if index < GLOBAL_CATEGORIES.UNCAT_INDEX:
+                    change_uncat_index -= 1
                 conf_cat.pop(index)
+
+        if change_uncat_index != 0:
+            await self.config.UNCAT_INDEX.set(GLOBAL_CATEGORIES.UNCAT_INDEX + change_uncat_index)
 
         text += (
             _("Sucessfully removed: ") + (", ".join(map(lambda x: all_cat[x], to_config)) + "\n")
@@ -782,7 +797,7 @@ class CustomHelp(commands.Cog):
                 index = get_category_util(cog_name)
                 # cog is present in a category
                 if index is not None:
-                    if GLOBAL_CATEGORIES[index] == GLOBAL_CATEGORIES[-1]:
+                    if GLOBAL_CATEGORIES[index] == GLOBAL_CATEGORIES.uncategorised:
                         uncat.append(cog_name)
                     else:
                         to_config.append((index, cog_name))
@@ -1095,8 +1110,7 @@ class CustomHelp(commands.Cog):
     async def reorder(self, ctx, *, categories: Optional[str] = None):
         """This can be used to reorder the categories.
 
-        The categories you type are pushed forward while the rest are pushed back.
-        Note: Due to technical stuff, the uncategorised category is always at the last"""
+        The categories you type are pushed forward while the rest are pushed back."""
         if categories:
             content = categories
         else:
@@ -1119,14 +1133,14 @@ class CustomHelp(commands.Cog):
         content = map(str.strip, content.split())
         to_config = []
         failed = []
-        for thing in content:
-            if thing != GLOBAL_CATEGORIES[-1]:
-                try:
-                    to_config.append(GLOBAL_CATEGORIES.index(thing))
-                except ValueError:
-                    failed.append(thing)
+        for index, cat_name in enumerate(content):
+            if cat_name == GLOBAL_CATEGORIES.uncategorised.name:
+                await self.config.UNCAT_INDEX.set(index)
             else:
-                failed.append(thing)
+                try:
+                    to_config.append(GLOBAL_CATEGORIES.index(cat_name))
+                except ValueError:
+                    failed.append(cat_name)
 
         async with self.config.categories() as cat_conf:
             new_order = [cat_conf[i] for i in to_config]
@@ -1140,11 +1154,7 @@ class CustomHelp(commands.Cog):
         await self.refresh_cache()
         await ctx.send(
             "Sucessfully reordered the categories\n"
-            + (
-                "Invalid categories: (uncategorised is invalid as well)\n" + "\n".join(failed)
-                if failed
-                else ""
-            )
+            + ("Invalid categories:\n" + "\n".join(failed) if failed else "")
         )
 
     @commands.command(aliases=["findcat"])
@@ -1164,7 +1174,7 @@ class CustomHelp(commands.Cog):
                 else:
                     await ctx.send("Impossible! report this to the cog owner pls")
             else:
-                em.add_field(name="Category:", value=GLOBAL_CATEGORIES[-1].name, inline=False)
+                em.add_field(name="Category:", value=GLOBAL_CATEGORIES.category.name, inline=False)
                 em.add_field(name="Cog:", value="None", inline=False)
                 await ctx.send(embed=em)
         else:
