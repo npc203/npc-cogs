@@ -82,9 +82,7 @@ class MenuPicker(discord.ui.Select):
 # HELP MENU Interaction items
 class BaseInteractionMenu(discord.ui.View):
     def __init__(self, *, hmenu):
-        self.children: List = []
         self.hmenu: base_help.HybridMenus = hmenu
-
         super().__init__(timeout=hmenu.settings["timeout"])
 
     def update_buttons(self):
