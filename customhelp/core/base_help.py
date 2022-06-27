@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from collections import namedtuple
+from collections import Iterable, namedtuple
 from itertools import chain
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
@@ -22,7 +22,13 @@ from customhelp.core.views import (
 from . import ARROWS, GLOBAL_CATEGORIES
 from .category import Category, get_category
 from .dpy_menus import BaseMenu, arrow_react, home_react, react_page
-from .utils import get_aliases, get_cooldowns, get_perms, shorten_line
+from .utils import (
+    get_aliases,
+    get_cooldowns,
+    get_perms,
+    shorten_line,
+    get_category_page_mapper_chunk,
+)
 
 LOG = logging.getLogger("red.customhelp.core.base_help")
 
@@ -317,14 +323,10 @@ class BaguetteHelp(commands.RedHelpFormatter):
             page_mapping = {}
             for cat in filtered_categories:
                 if cat.cogs:
-                    # Make sure we're not getting the pages (eg: when home button is clicked) else gen category pages
-                    if not get_pages:
-                        if cat_page := await self.format_category_help(
-                            ctx, cat, help_settings=help_settings, get_pages=True
-                        ):
-                            page_mapping[cat] = cat_page
-                        else:
-                            continue
+                    if not await get_category_page_mapper_chunk(
+                        self, get_pages, ctx, cat, help_settings, page_mapping
+                    ):
+                        continue
 
                     page_raw_str_data.append(
                         f"{str(cat.reaction) if cat.reaction else ''} `{ctx.clean_prefix}help {cat.name:<10}:`**{cat.desc}**\n"
@@ -379,7 +381,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
         page_char_limit = min(page_char_limit, 5500)
         author_info = {
             "name": _("{ctx.me.display_name} Help Menu").format(ctx=ctx),
-            "icon_url": ctx.me.avatar.url,
+            "icon_url": ctx.me.display_avatar.url,
         }
         offset = len(author_info["name"]) + 20
         foot_text = embed_dict["footer"]["text"]
@@ -508,7 +510,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
         b = await self.bot.is_owner(ctx.author) or name not in blocklist["dev"]
         return a and b
 
-    async def filter_categories(self, ctx, categories: list) -> list:
+    async def filter_categories(self, ctx, categories: Iterable) -> list:
         """Applies blacklist to all the categories, Filters based on the current context"""
         blocklist = self.blacklist_names
         is_owner = await self.bot.is_owner(ctx.author)

@@ -247,4 +247,5 @@ Command Changes
 - ``chelp set`` is used as an alias for ``chelp settings``
 - ``chelp set`` now has a new subcommand ``nav`` to toggle the navigation arrows
 - ``chelp show`` shows more info now
+- ``chelp set type`` for setting the menu and arrow type
 - chelp create and edit now have more arguments for button/dropdown customisability

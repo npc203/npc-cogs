@@ -76,3 +76,17 @@ def get_aliases(command, original):
             alias.remove(original)
             alias.append(command.name)
         return alias
+
+
+async def get_category_page_mapper_chunk(
+    formatter, get_pages, ctx, cat, help_settings, page_mapping
+):
+    # Make sure we're not getting the pages (eg: when home button is clicked) else gen category pages
+    if not get_pages:
+        if cat_page := await formatter.format_category_help(
+            ctx, cat, help_settings=help_settings, get_pages=True
+        ):
+            page_mapping[cat] = cat_page
+        else:
+            return False
+    return True
