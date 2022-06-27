@@ -89,7 +89,6 @@ class CustomHelp(commands.Cog):
             },
             "UNCAT_INDEX": -1,
             "settings": {
-                "react": True,
                 "nav": True,
                 "set_formatter": False,
                 "thumbnail": None,
@@ -306,7 +305,10 @@ class CustomHelp(commands.Cog):
             "thumbnail": "thumbnail",
             "menus": "Menu-Type",
             "replies": "Use replies",
-            "buttons": "Use buttons",
+            "react": "React",
+            "menutype": "MenuType",
+            "arrowtype": "ArrowType",
+            "timeout": "Timeout",
             "deletemessage": "Delete user msg",
         }
         other_settings = []
@@ -479,7 +481,7 @@ class CustomHelp(commands.Cog):
                 " - long_desc: long description (Optional,only displayed in dank theme)\n"
                 " - thumbnail: url to thumbnail for the category\n"
                 " - label: Label for category (For category and buttons)\n"
-                " - style: ButtonStyle for category button\n"
+                " - style: ButtonStyle for category button\n (primary, secondary, success, danger)"
             )
             try:
                 msg = await self.bot.wait_for(
@@ -840,14 +842,14 @@ class CustomHelp(commands.Cog):
     async def chelp_settings(self, ctx):
         """Change various help settings"""
 
-    @chelp_settings.command()
-    async def type(self, ctx):
+    @chelp_settings.command(name="type")
+    async def type_(self, ctx):
         """Toggles between various menus and arrow types"""
         options = [
             discord.SelectOption(
                 label="Emojis", description="Old-Fashion, Highly ratelimited", emoji="😃"
             ),
-            discord.SelectOption(label="Buttons", description="Cool chonky buttons", emoji="🔘"),
+            discord.SelectOption(label="Buttons", description="Cool chonky buttons", emoji="🟦"),
             discord.SelectOption(
                 label="Select", description="Minimalistic Dropdown Menus", emoji="⏬"
             ),
@@ -922,7 +924,7 @@ class CustomHelp(commands.Cog):
                 "Example:\n"
                 "left :\n"
                 " - emoji: ↖️\n"
-                " - style: success\n"
+                " - style: success\n (primary, secondary, success, danger)"
                 " - label: 'text is cool'\n"
                 "Note: The other arrows are `right`,`cross`, `home`, `force_left` and `force_right`"
             )

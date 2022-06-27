@@ -11,7 +11,7 @@ from redbot.core.commands.context import Context
 from redbot.core.commands.help import HelpSettings, NoCommand, NoSubCommand, _, dpy_commands
 from redbot.core.utils.chat_formatting import pagify
 from redbot.core.utils.mod import mass_purge
-
+from collections import Counter
 from customhelp.core.views import (
     BaseInteractionMenu,
     ReactButton,
@@ -21,7 +21,7 @@ from customhelp.core.views import (
 
 from . import ARROWS, GLOBAL_CATEGORIES
 from .category import Category, get_category
-from .dpy_menus import BaseMenu, arrow_react, home_page, react_page
+from .dpy_menus import BaseMenu, arrow_react, home_react, react_page
 from .utils import get_aliases, get_cooldowns, get_perms, shorten_line
 
 LOG = logging.getLogger("red.customhelp.core.base_help")
@@ -544,7 +544,7 @@ class HybridMenus:
 
     async def get_pages(self, ctx: commands.Context, category_name: str):
         if not (category_pages := self.category_page_mapping.get(category_name)):
-            if category_name == "home":
+            if category_name.lower() == "home":
                 category_pages = await ctx.bot._help_formatter.format_bot_help(
                     ctx, self.help_settings, get_pages=True
                 )
@@ -554,6 +554,7 @@ class HybridMenus:
 
     def change_source(self, new_source):
         self.pages = new_source
+        self.curr_page = 0
 
     async def show_current_page(self, **kwargs):
         data = self._get_kwargs_from_page(self.pages[self.curr_page])
@@ -584,9 +585,8 @@ class HybridMenus:
 
     async def create_menutype(self):
         """MenuType component"""
-
         # We are not at the homepage
-        if self.category_page_mapping is None:
+        if not self.category_page_mapping:
             return
 
         # TODO use match-case on 3.10
@@ -595,10 +595,7 @@ class HybridMenus:
             # Category buttons
             for cat, pages in self.category_page_mapping.items():
                 if cat.reaction:
-                    print(cat.name, cat.reaction)
                     dpy_menu.add_button(await react_page(cat, pages))
-            # Home Button
-            dpy_menu.add_button(await home_page(ARROWS["home"].emoji, self.help_settings))  # TODO
             self.menus[0] = dpy_menu
         elif self.settings["menutype"] != "hidden":
             view_menu = BaseInteractionMenu(hmenu=self)
@@ -614,8 +611,6 @@ class HybridMenus:
                                 custom_id=cat.name,
                             )
                         )
-                # Home Button
-                # TODO
             else:  # Select
                 options = []
                 # Category buttons
@@ -628,14 +623,7 @@ class HybridMenus:
                                 emoji=cat.reaction,
                             )
                         )
-                # Home button
-                options.append(
-                    discord.SelectOption(
-                        label="Home",
-                        description="Return to the main page",
-                        emoji=ARROWS["home"].emoji,
-                    )
-                )
+
                 select_bar = SelectMenuHelpBar(options)
                 view_menu.add_item(select_bar)
 
@@ -651,6 +639,11 @@ class HybridMenus:
                 dpy_menu = self.menus[0]
 
             for arrow in ARROWS:
+                if arrow.name == "home":
+                    # Main page alone shows the home button
+                    if self.category_page_mapping:
+                        dpy_menu.add_button(await home_react(arrow.emoji))
+                    continue
                 dpy_menu.add_button(await arrow_react(arrow))
 
         elif self.settings["arrowtype"] != "hidden":
@@ -659,27 +652,49 @@ class HybridMenus:
             view_menu = self.menus[1]
 
             if self.settings["arrowtype"] == "buttons":
+                # Main page alone shows the home button
+                if self.category_page_mapping:
+                    home_style = Counter([arrow.style for arrow in ARROWS]).most_common(1)[0][0]
+                    view_menu.add_item(
+                        ReactButton(emoji=ARROWS["home"].emoji, style=home_style, custom_id="home")
+                    )
+
+                class Button(discord.ui.Button):
+                    view: BaseInteractionMenu
+
+                    def __init__(self, name, **kwargs):
+                        self.name = name
+                        super().__init__(**kwargs, row=3)
+
+                    async def callback(self, interaction):
+                        await self.view.hmenu.arrow_emoji_button[self.name]()
+                        await interaction.response.defer()
+
                 for arrow in ARROWS:
+                    if arrow.name == "home":
+                        continue
                     # TODO remove subclass later (dont need a state for each button)
-                    class Button(discord.ui.Button):
-                        view: BaseInteractionMenu
-
-                        def __init__(self, name, **kwargs):
-                            self.name = name
-                            super().__init__(**kwargs)
-
-                        async def callback(self, interaction):
-                            await self.view.hmenu.arrow_emoji_button[self.name]()
-
                     button = Button(arrow.name, **arrow.items())
                     view_menu.add_item(button)
+
             else:  # Select
                 options = []
                 for arrow in ARROWS:
+                    if arrow.name == "home":
+                        continue
                     options.append(
                         discord.SelectOption(
                             label=arrow.name,
                             emoji=arrow.emoji,
+                        )
+                    )
+                # Main page alone shows the home button
+                if self.category_page_mapping:
+                    options.append(
+                        discord.SelectOption(
+                            label="Home",
+                            description="Return to the main page",
+                            emoji=ARROWS["home"].emoji,
                         )
                     )
                 select_bar = SelectArrowHelpBar(options)
@@ -690,15 +705,15 @@ class HybridMenus:
             if menu:
                 menu.stop()
 
-    ### MENU ACTIONS ###
+    # MENU ACTIONS BLOCK #
     async def category_react_action(self, user_ctx: commands.Context, message, category_name: str):
         if category_pages := await self.get_pages(user_ctx, category_name):
             self.change_source(category_pages)
             await self.show_current_page()
 
-    async def home_page(self):
-        # TODO
-        pass
+    async def home_page(self, ctx):
+        self.change_source(await self.get_pages(ctx, "home"))
+        await self.show_current_page()
 
     async def first_page(self):
         self.curr_page = 0

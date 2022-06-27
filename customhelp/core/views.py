@@ -5,13 +5,8 @@ from typing import TYPE_CHECKING, List, Optional
 import discord
 from redbot.core import commands
 
-import customhelp.core.base_help as base_help
-
-from . import ARROWS
-from .category import get_category
-
 if TYPE_CHECKING:
-    from customhelp.core.base_help import BaguetteHelp
+    import customhelp.core.base_help as base_help
 
 LOG = logging.getLogger("red.customhelp.core.views")
 
@@ -51,13 +46,13 @@ class MenuView(discord.ui.View):
             if val:
                 final_message += f"Selected {name.lower()}type: {val}\n"
                 await getattr(self.config, name.lower() + "type").set(val.lower())
-                self.update_callback("settings", name.lower() + "type", val)
+                self.update_callback("settings", name.lower() + "type", val.lower())
 
         await interaction.message.edit(content=final_message, view=None)
 
         self.stop()
 
-    @discord.ui.button(label="Cancel", emoji="❌", style=discord.ButtonStyle.danger, row=2)
+    @discord.ui.button(label="Cancel", emoji="✖", style=discord.ButtonStyle.danger, row=2)
     async def cancel(self, interaction, button):
         await self.message.edit(content="Selection cancelled.", view=None)
         self.stop()
@@ -157,7 +152,9 @@ class ReactButton(discord.ui.Button):
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        await self.view.hmenu.category_react_action(self.view.ctx, self.custom_id)
+        await self.view.hmenu.category_react_action(
+            self.view.ctx, self.view.message, self.custom_id
+        )
 
 
 # Selection Bar
@@ -194,4 +191,8 @@ class SelectArrowHelpBar(discord.ui.Select):
     async def callback(self, interaction):
         await interaction.response.defer()
         if self.values:
+            if self.values[0] == "Home":
+                await self.view.hmenu.category_react_action(
+                    self.view.ctx, self.view.message, "home"
+                )
             await self.view.hmenu.arrow_emoji_button[self.values[0]]()

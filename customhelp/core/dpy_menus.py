@@ -48,19 +48,6 @@ class BaseMenu(menus.Menu):
         return payload.emoji in self.buttons
 
 
-# dpy menus helpers, taken from dpy menus :D
-def _skip_single_arrows(self):
-    max_pages = self._source.get_max_pages()
-    return max_pages == 1
-
-
-def _skip_double_triangle_buttons(self):
-    max_pages = self._source.get_max_pages()
-    if max_pages is None:
-        return True
-    return max_pages <= 2
-
-
 async def react_page(category_obj, pages):
     async def action(menu: BaseMenu, payload):
         await menu.hmenu.category_react_action(menu.ctx, menu.message, category_obj.name)
@@ -75,12 +62,8 @@ async def arrow_react(arrow_obj):
     return menus.Button(arrow_obj.emoji, action)
 
 
-# TODO fix this lol
-async def home_page(emoji, help_settings):
-    async def action(menu, payload):
-        menu.hmenu.change_source(pages)
-        if len(pages) == 1 and ARROWS["left"].name in map(str, menu._buttons.keys()):
-            menu.add_button(empty_button(ARROWS["left"]))
-            menu.add_button(empty_button(ARROWS["right"]))
+async def home_react(home_emoji):
+    async def action(menu: BaseMenu, payload):
+        await menu.hmenu.home_page(menu.ctx)
 
-    return menus.Button(emoji, action)
+    return menus.Button(home_emoji, action)
