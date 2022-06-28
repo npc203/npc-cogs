@@ -617,14 +617,13 @@ class HybridMenus:
                 options = []
                 # Category buttons
                 for cat in self.category_page_mapping:
-                    if cat.reaction or cat.label:
-                        options.append(
-                            discord.SelectOption(
-                                label=cat.name,
-                                description=cat.desc,
-                                emoji=cat.reaction,
-                            )
+                    options.append(
+                        discord.SelectOption(
+                            label=cat.name,
+                            description=cat.desc,
+                            emoji=cat.reaction,
                         )
+                    )
 
                 select_bar = SelectMenuHelpBar(options)
                 view_menu.add_item(select_bar)
@@ -656,9 +655,15 @@ class HybridMenus:
             if self.settings["arrowtype"] == "buttons":
                 # Main page alone shows the home button
                 if self.category_page_mapping:
+                    # haccerman
                     home_style = Counter([arrow.style for arrow in ARROWS]).most_common(1)[0][0]
                     view_menu.add_item(
-                        ReactButton(emoji=ARROWS["home"].emoji, style=home_style, custom_id="home")
+                        ReactButton(
+                            emoji=ARROWS["home"].emoji,
+                            style=home_style,
+                            custom_id="home",
+                            row=4 if self.settings["menutype"] != "buttons" else None,
+                        )
                     )
 
                 class Button(discord.ui.Button):

@@ -47,6 +47,9 @@ class CategoryManager:
     def uncategorised(self):
         return self._list[self.UNCAT_INDEX]
 
+    def get(self, name):
+        return self._list[self.index(name)]
+
     # TODO remove redundant methods
     def clear(self):
         self._list.clear()

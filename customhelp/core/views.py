@@ -99,11 +99,16 @@ class BaseInteractionMenu(discord.ui.View):
 
     async def on_timeout(self):
         children = []
+        # Filter select bars and disable them
         for child in self.children:
             if isinstance(child, discord.ui.Select):
                 child.disabled = True
                 children.append(child)
-        self.children = children
+
+        self.clear_items()
+        for child in children:
+            self.add_item(child)
+
         try:
             await self.message.edit(view=self)
         except discord.NotFound:  # User unloaded the cog

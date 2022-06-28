@@ -149,6 +149,8 @@ class CustomHelp(commands.Cog):
         uncat_index = await self.config.UNCAT_INDEX()
         if uncat_index == -1:
             GLOBAL_CATEGORIES.UNCAT_INDEX = len(GLOBAL_CATEGORIES)
+        else:
+            GLOBAL_CATEGORIES.UNCAT_INDEX = uncat_index
 
         # make the uncategorised cogs
         all_loaded_cogs = set(self.bot.cogs.keys())
@@ -408,7 +410,7 @@ class CustomHelp(commands.Cog):
         uncategorised = all_cogs - set(
             chain(
                 *(
-                    GLOBAL_CATEGORIES.index(category_name).cogs
+                    GLOBAL_CATEGORIES.get(category_name).cogs
                     for category_name in available_categories
                 )
             )
@@ -955,6 +957,11 @@ class CustomHelp(commands.Cog):
         for k, v in yaml_data.items():
             tmp = {}
             for val in v:
+                # Scuffed checking for bad yaml parse
+                if not isinstance(val, dict):
+                    return await ctx.send(
+                        "Invalid syntax, kindly follow the yaml syntax given in the docs"
+                    )
                 final_key, final_val = val.popitem()
                 tmp[final_key] = final_val
             parsed_data[k] = tmp
