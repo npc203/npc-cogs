@@ -154,10 +154,7 @@ class ReactButton(discord.ui.Button):
         self.custom_id: str
 
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.defer()
-        await self.view.hmenu.category_react_action(
-            self.view.ctx, self.view.message, self.custom_id
-        )
+        await self.view.hmenu.category_react_action(self.view.ctx, interaction, self.custom_id)
 
 
 # Selection Bar
@@ -173,11 +170,8 @@ class SelectMenuHelpBar(discord.ui.Select):
             row=0,
         )
 
-    async def callback(self, interaction):
-        await interaction.response.defer()
-        await self.view.hmenu.category_react_action(
-            self.view.ctx, self.view.message, self.values[0]
-        )
+    async def callback(self, interaction: discord.Interaction):
+        await self.view.hmenu.category_react_action(self.view.ctx, interaction, self.values[0])
 
 
 class SelectArrowHelpBar(discord.ui.Select):
@@ -192,10 +186,7 @@ class SelectArrowHelpBar(discord.ui.Select):
         )
 
     async def callback(self, interaction):
-        await interaction.response.defer()
         if self.values:
             if self.values[0] == "Home":
-                await self.view.hmenu.category_react_action(
-                    self.view.ctx, self.view.message, "home"
-                )
-            await self.view.hmenu.arrow_emoji_button[self.values[0]]()
+                await self.view.hmenu.category_react_action(self.view.ctx, interaction, "home")
+            await self.view.hmenu.arrow_emoji_button[self.values[0]](interaction)

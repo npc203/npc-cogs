@@ -558,9 +558,12 @@ class HybridMenus:
         self.pages = new_source
         self.curr_page = 0
 
-    async def show_current_page(self, **kwargs):
+    async def show_current_page(self, interaction, **kwargs):
         data = self._get_kwargs_from_page(self.pages[self.curr_page])
-        await self.bot_message.edit(**data, **kwargs)
+        if isinstance(interaction, discord.Message):
+            await interaction.edit(**data, **kwargs)
+        else:
+            await interaction.response.edit_message(**data, **kwargs)
 
     async def start(self, ctx):
         await self.create_menutype()
@@ -674,8 +677,7 @@ class HybridMenus:
                         super().__init__(**kwargs, row=3)
 
                     async def callback(self, interaction):
-                        await self.view.hmenu.arrow_emoji_button[self.name]()
-                        await interaction.response.defer()
+                        await self.view.hmenu.arrow_emoji_button[self.name](interaction)
 
                 for arrow in ARROWS:
                     if arrow.name == "home":
@@ -713,37 +715,39 @@ class HybridMenus:
                 menu.stop()
 
     # MENU ACTIONS BLOCK #
-    async def category_react_action(self, user_ctx: commands.Context, message, category_name: str):
+    async def category_react_action(
+        self, user_ctx: commands.Context, interaction, category_name: str
+    ):
         if category_pages := await self.get_pages(user_ctx, category_name):
             self.change_source(category_pages)
-            await self.show_current_page()
+            await self.show_current_page(interaction)
 
-    async def home_page(self, ctx):
+    async def home_page(self, ctx, interaction):
         self.change_source(await self.get_pages(ctx, "home"))
-        await self.show_current_page()
+        await self.show_current_page(interaction)
 
-    async def first_page(self):
+    async def first_page(self, interaction):
         self.curr_page = 0
-        await self.show_current_page()
+        await self.show_current_page(interaction)
 
-    async def last_page(self):
+    async def last_page(self, interaction):
         self.curr_page = len(self.pages) - 1
-        await self.show_current_page()
+        await self.show_current_page(interaction)
 
-    async def next_page(self):
+    async def next_page(self, interaction):
         if self.curr_page < len(self.pages) - 1:
             self.curr_page += 1
-            await self.show_current_page()
+            await self.show_current_page(interaction)
         else:
-            await self.first_page()
+            await self.first_page(interaction)
 
-    async def prev_page(self):
+    async def prev_page(self, interaction):
         if self.curr_page > 0:
             self.curr_page -= 1
-            await self.show_current_page()
+            await self.show_current_page(interaction)
         else:
-            await self.last_page()
+            await self.last_page(interaction)
 
-    async def close_menu(self):
+    async def close_menu(self, interaction):
         self.stop()
         await self.bot_message.delete()

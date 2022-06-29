@@ -57,13 +57,13 @@ async def react_page(category_obj, pages):
 
 async def arrow_react(arrow_obj):
     async def action(menu: BaseMenu, payload):
-        await menu.hmenu.arrow_emoji_button[arrow_obj.name]()
+        await menu.hmenu.arrow_emoji_button[arrow_obj.name](menu.message)
 
     return menus.Button(arrow_obj.emoji, action)
 
 
 async def home_react(home_emoji):
     async def action(menu: BaseMenu, payload):
-        await menu.hmenu.home_page(menu.ctx)
+        await menu.hmenu.home_page(menu.ctx, menu.message)
 
     return menus.Button(home_emoji, action)
