@@ -767,6 +767,7 @@ class CustomHelp(commands.Cog):
                     change_uncat_index -= 1
                 conf_cat.pop(index)
 
+        # We gotta do this, to handle uncat index moving down
         if change_uncat_index != 0:
             await self.config.UNCAT_INDEX.set(GLOBAL_CATEGORIES.UNCAT_INDEX + change_uncat_index)
 
@@ -790,21 +791,22 @@ class CustomHelp(commands.Cog):
         uncat = []
         invalid = []
 
-        def get_category_util(name):
-            for ind in range(len(GLOBAL_CATEGORIES)):
-                if name in GLOBAL_CATEGORIES[ind].cogs:
-                    return ind
+        def category_from_cog(cog_name):
+            for category in GLOBAL_CATEGORIES:
+                if cog_name in category.cogs:
+                    return category.name
+            return None
 
         for cog_name in cog_names:
             # valid cog
             if self.bot.get_cog(cog_name):
-                index = get_category_util(cog_name)
+                cat_name = category_from_cog(cog_name)
                 # cog is present in a category
-                if index is not None:
-                    if GLOBAL_CATEGORIES[index] == GLOBAL_CATEGORIES.uncategorised:
+                if cat_name is not None:
+                    if cat_name == GLOBAL_CATEGORIES.uncategorised.name:
                         uncat.append(cog_name)
                     else:
-                        to_config.append((index, cog_name))
+                        to_config.append((cat_name, cog_name))
                 else:
                     # This is a rare case to occur, basically "cog is loaded and valid but it didn't get registered in the GLOBAL_CATEGORIES cache"
                     # Never came to this point, but having it as a check
@@ -815,7 +817,10 @@ class CustomHelp(commands.Cog):
                 invalid.append(cog_name)
         async with self.config.categories() as cat_conf:
             for thing in to_config:
-                cat_conf[thing[0]]["cogs"].remove(thing[1])
+                for category in cat_conf:
+                    if thing[0] == category["name"]:
+                        category["cogs"].remove(thing[1])
+                        break
         text = ""
         if to_config:
             text = "Successfully removed the following\n"
@@ -824,9 +829,7 @@ class CustomHelp(commands.Cog):
                 if last == thing[0]:
                     text += " - {}\n".format(thing[1])
                 else:
-                    text += _("From {}:\n - {}\n").format(
-                        GLOBAL_CATEGORIES[thing[0]].name, thing[1]
-                    )
+                    text += _("From {}:\n - {}\n").format(thing[0], thing[1])
                     last = thing[0]
         if uncat:
             text += (
@@ -1072,7 +1075,7 @@ class CustomHelp(commands.Cog):
                 async with self.config.blacklist.dev() as conf:
                     if category not in conf:
                         conf.append(category)
-                        self._update_conf("blacklist", "dev", conf)
+                        self._update_conf("blacklist_names", "dev", conf)
                         await ctx.send(f"Sucessfully added {category} to dev list")
                     else:
                         await ctx.send(f"{category} is already present in dev list")
@@ -1089,7 +1092,7 @@ class CustomHelp(commands.Cog):
             async with self.config.blacklist.dev() as conf:
                 if category in conf:
                     conf.remove(category)
-                    self._update_conf("blacklist", "dev", conf)
+                    self._update_conf("blacklist_names", "dev", conf)
                     await ctx.send(f"Sucessfully removed {category} from dev category")
                 else:
                     await ctx.send(f"{category} is not present in dev list")
