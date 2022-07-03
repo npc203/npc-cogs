@@ -1,8 +1,9 @@
 import asyncio
 import logging
-from collections import Iterable, namedtuple
+from collections import namedtuple
+from collections.abc import Iterable
 from itertools import chain
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Union, cast
 
 import discord
 from redbot.core import commands
