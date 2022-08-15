@@ -422,7 +422,7 @@ class Google(Yandex, commands.Cog):
         if cards:
             get_card(soup, final, kwargs)
 
-        for res in soup.findAll("div", class_="g tF2Cxc"):
+        for res in soup.select("div.g.tF2Cxc"):
             if name := res.find("div", class_="yuRUbf"):
                 url = name.a["href"]
                 if title := name.find("h3", class_=re.compile("LC20lb")):
@@ -432,13 +432,8 @@ class Google(Yandex, commands.Cog):
             else:
                 url = None
                 title = None
-            if desc := res.find("div", class_="NJo7tc Z26q7c uUuwM"):
-                if remove := desc.find("span", class_="f"):
-                    remove.decompose()
-                if final_desc := desc.find_all("div", class_=re.compile(r"VwiC3b")):
-                    desc = h2t(str(final_desc[-1]))[:500]
-                else:
-                    desc = "Nothing found"
+            if final_desc := res.select("div.VwiC3b.yXK7lf.MUxGbd"):
+                desc = h2t(str(final_desc[-1]))[:500]
             else:
                 desc = "Not found"
             if title:
