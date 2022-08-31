@@ -649,7 +649,8 @@ class HybridMenus:
                     if self.category_page_mapping:
                         dpy_menu.add_button(await home_react(arrow.emoji))
                     continue
-                dpy_menu.add_button(await arrow_react(arrow))
+                if self.settings["nav"]:  # Fix this later, crap inefficient code
+                    dpy_menu.add_button(await arrow_react(arrow))
 
         elif self.settings["arrowtype"] != "hidden":
             if not self.menus[1]:
@@ -680,24 +681,26 @@ class HybridMenus:
                     async def callback(self, interaction):
                         await self.view.hmenu.arrow_emoji_button[self.name](interaction)
 
-                for arrow in ARROWS:
-                    if arrow.name == "home":
-                        continue
-                    # TODO remove subclass later (dont need a state for each button)
-                    button = Button(arrow.name, **arrow.items())
-                    view_menu.add_item(button)
+                if self.settings["nav"]:
+                    for arrow in ARROWS:
+                        if arrow.name == "home":
+                            continue
+                        # TODO remove subclass later (dont need a state for each button)
+                        button = Button(arrow.name, **arrow.items())
+                        view_menu.add_item(button)
 
             else:  # Select
                 options = []
-                for arrow in ARROWS:
-                    if arrow.name == "home":
-                        continue
-                    options.append(
-                        discord.SelectOption(
-                            label=arrow.name,
-                            emoji=arrow.emoji,
+                if self.settings["nav"]:
+                    for arrow in ARROWS:
+                        if arrow.name == "home":
+                            continue
+                        options.append(
+                            discord.SelectOption(
+                                label=arrow.name,
+                                emoji=arrow.emoji,
+                            )
                         )
-                    )
                 # Main page alone shows the home button
                 if self.category_page_mapping:
                     options.append(

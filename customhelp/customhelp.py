@@ -354,7 +354,7 @@ class CustomHelp(commands.Cog):
 
     @chelp.command(name="toggle")
     async def set_formatter(self, ctx, setval: bool):
-        """Set to toggle custom formatter or the default help formatter\n`[p]chelp set 0` to turn custom off \n`[p]chelp set 1` to turn it on"""
+        """Set to toggle custom formatter or the default help formatter\n`[p]chelp toggle 0` to turn custom off \n`[p]chelp toggle 1` to turn it on"""
         async with ctx.typing():
             try:
                 if setval:
