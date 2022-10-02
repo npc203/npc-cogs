@@ -262,11 +262,12 @@ class Snipe(commands.Cog):
         pre_check = await self.pre_check_perms(ctx, channel)
         if not pre_check:
             return
-        if self.deletecache[channel.id]:
+        entries = [msg for msg in reversed(self.deletecache[channel.id]) if msg.content]
+        if entries:
             menu = menus.MenuPages(
                 source=MsgSource(
                     template_emb=discord.Embed(color=await ctx.embed_color()),
-                    entries=[msg for msg in reversed(self.deletecache[channel.id]) if msg.content],
+                    entries=entries,
                     per_page=1,
                 ),
                 delete_message_after=True,
@@ -350,9 +351,10 @@ class Snipe(commands.Cog):
         pre_check = await self.pre_check_perms(ctx, channel)
         if not pre_check:
             return
-        if self.editcache[channel.id]:
+        entries = [msg for msg in reversed(self.editcache[channel.id]) if msg.content]
+        if entries:
             menu = HorizontalEditMenus(
-                source=[msg for msg in reversed(self.editcache[channel.id]) if msg.content],
+                source=entries,
                 delete_message_after=True,
             )
             await menu.start(ctx)
