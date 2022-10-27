@@ -26,7 +26,7 @@ class Mixture(ThemesMeta):
                     ):
                         if i == 0:
                             title = (
-                                str(cat.reaction) if cat.reaction else ""
+                                f"{cat.reaction} " if cat.reaction else ""
                             ) + f"**{cat.name.capitalize()}:**"
                         else:
                             title = EMPTY_STRING
