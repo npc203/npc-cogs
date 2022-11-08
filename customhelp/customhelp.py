@@ -526,7 +526,7 @@ class CustomHelp(commands.Cog):
             _("Set Categories:\n") if len(available_categories_raw) > 1 else _("Set Category:\n")
         )
         for category in available_categories_raw:
-            joined += f'+ {category["name"]}:\n'
+            joined += f"+ {category["name"]}:\n"
             for cog in sorted(category["cogs"]):
                 joined += f"  - {cog}\n"
         joined += f"\n+ {GLOBAL_CATEGORIES[-1].name}: (This is where the uncategorised cogs go in)\n"
