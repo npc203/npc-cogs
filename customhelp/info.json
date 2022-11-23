@@ -8,7 +8,10 @@
         "PhenoM4n4n"
     ],
     "install_msg": "This is a BETA cog, so expect bugs and kindly report them to me in the cog support server\n The docs for this cog can be found here: https://npc-cogs.readthedocs.io/en/latest/",
-    "requirements": ["tabulate","packaging"],
+    "requirements": [
+        "tabulate",
+        "packaging"
+    ],
     "tags": [
         "help",
         "utility",

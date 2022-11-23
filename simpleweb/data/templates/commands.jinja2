@@ -23,7 +23,7 @@
         cmds = []
         fetch("/api/cmds").then(function (response) {
             return response.json();
-        }).then(function (data) { cmds = data; 
+        }).then(function (data) { cmds = data;
             search_bar.placeholder = `Search from ${cmds.length} commands`
         })
 
@@ -41,7 +41,7 @@
                     results.push(`
                                 <div class="card">
                                     <div class="container">
-                                        <h2><b>${item[0]}</b></h2> 
+                                        <h2><b>${item[0]}</b></h2>
                                         ${nl2br(item[1])}
                                     </div>
                                 </div>`)

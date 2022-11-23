@@ -1,15 +1,15 @@
 from typing import Literal
+
+import aiohttp_jinja2
+import discord
+import jinja2
+import redbot
+from aiohttp import web
 from aiohttp.web_response import json_response
 from aiohttp.web_urldispatcher import StaticResource
-
-import discord
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.config import Config
-from aiohttp import web
-import jinja2
-import aiohttp_jinja2
-import redbot
 
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
 

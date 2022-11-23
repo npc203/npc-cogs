@@ -4,8 +4,8 @@
 [![Discord.py](https://img.shields.io/badge/Discord.py-rewrite-blue.svg)](https://github.com/Rapptz/discord.py/tree/rewrite)
 [![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
-A fun oriented list of Red-Cogs made for fun and stonks.  
-Discord User: epic guy#0715  
+A fun oriented list of Red-Cogs made for fun and stonks.
+Discord User: epic guy#0715
 Docs: https://npc-cogs.readthedocs.io/en/latest
 
 # Installation

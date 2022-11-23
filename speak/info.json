@@ -1,5 +1,7 @@
 {
-    "author": ["epic guy#0715"],
+    "author": [
+        "epic guy#0715"
+    ],
     "name": "Speak",
     "install_msg": "This cog uses webhooks and thus requires manage webhook permissions to work \nThis cog comes with bundled data",
     "short": "A cog that speaks for you or speaks what you type as others",

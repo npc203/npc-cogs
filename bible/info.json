@@ -8,7 +8,10 @@
         "epic guy"
     ],
     "required_cogs": {},
-    "requirements":  ["html2text","beautifulsoup4"],
+    "requirements": [
+        "html2text",
+        "beautifulsoup4"
+    ],
     "tags": [
         "utility",
         "fun"
