@@ -529,7 +529,9 @@ class CustomHelp(commands.Cog):
             joined += f"+ {category['name']}:\n"
             for cog in sorted(category["cogs"]):
                 joined += f"  - {cog}\n"
-        joined += f"\n+ {GLOBAL_CATEGORIES[-1].name}: (This is where the uncategorised cogs go in)\n"
+        joined += (
+            f"\n+ {GLOBAL_CATEGORIES[-1].name}: (This is where the uncategorised cogs go in)\n"
+        )
 
         for name in sorted(uncategorised):
             joined += f"  - {name}\n"
