@@ -254,6 +254,18 @@ class CustomHelp(commands.Cog):
         await self.refresh_cache()
         await ctx.tick()
 
+    @chelp.command(hidden=True)
+    async def ffs(self, ctx):
+        """Attempt to fix, if the uncategorised index tracker messes up"""
+        uncat_raw = await self.config.uncategorised()
+        for ind, cat in enumerate(GLOBAL_CATEGORIES):
+            if uncat_raw["name"] == cat.name:
+                await self.config.UNCAT_INDEX.set(ind)
+                GLOBAL_CATEGORIES.UNCAT_INDEX = ind
+                await ctx.tick()
+                break
+        await ctx.send("Nothing to change")
+
     @chelp.command()
     async def auto(self, ctx):
         """Auto categorise cogs based on it's tags and display them"""
