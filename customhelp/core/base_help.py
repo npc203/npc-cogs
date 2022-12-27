@@ -643,14 +643,17 @@ class HybridMenus:
             else:
                 dpy_menu = self.menus[0]
 
-            for arrow in ARROWS:
-                if arrow.name == "home":
-                    # Main page alone shows the home button
-                    if self.category_page_mapping:
-                        dpy_menu.add_button(await home_react(arrow.emoji))
-                    continue
-                if self.settings["nav"]:  # Fix this later, crap inefficient code
-                    dpy_menu.add_button(await arrow_react(arrow))
+            if len(self.pages) == 1:
+                dpy_menu.add_button(await arrow_react(ARROWS["cross"]))
+            else:
+                for arrow in ARROWS:
+                    if arrow.name == "home":
+                        # Main page alone shows the home button
+                        if self.category_page_mapping:
+                            dpy_menu.add_button(await home_react(arrow.emoji))
+                        continue
+                    if self.settings["nav"]:  # Fix this later, crap inefficient code
+                        dpy_menu.add_button(await arrow_react(arrow))
 
         elif self.settings["arrowtype"] != "hidden":
             if not self.menus[1]:
@@ -682,12 +685,17 @@ class HybridMenus:
                         await self.view.hmenu.arrow_emoji_button[self.name](interaction)
 
                 if self.settings["nav"]:
-                    for arrow in ARROWS:
-                        if arrow.name == "home":
-                            continue
-                        # TODO remove subclass later (dont need a state for each button)
+                    if len(self.pages) == 1:
+                        arrow = ARROWS["cross"]
                         button = Button(arrow.name, **arrow.items())
                         view_menu.add_item(button)
+                    else:
+                        for arrow in ARROWS:
+                            if arrow.name == "home":
+                                continue
+                            # TODO remove subclass later (dont need a state for each button)
+                            button = Button(arrow.name, **arrow.items())
+                            view_menu.add_item(button)
 
             else:  # Select
                 options = []
