@@ -305,7 +305,7 @@ class Google(Yandex, commands.Cog):
             else:
                 await ctx.send("No result")
 
-    @google.command(aliases=["rev"])
+    @google.command(aliases=["rev"], enabled=False)
     async def reverse(self, ctx, *, url: str = None):
         """Attach or paste the url of an image to reverse search, or reply to a message which has the image/embed with the image"""
         isnsfw = nsfwcheck(ctx)
