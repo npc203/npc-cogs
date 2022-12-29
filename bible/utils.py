@@ -4,7 +4,7 @@ from typing import List
 EmbedField = namedtuple("EmbedField", "name value inline")
 
 
-# Yoinked from the RedHelpFormatter https://github.com/Cog-Creators/Red-DiscordBot/blob/V3/develop/redbot/core/commands/help.py#L438-#L460
+# Yoinked from the RedHelpFormatter https://github.com/Cog-Creators/Red-DiscordBot/blob/1fa76bf43f0df9eecf264c0f21dd3d3505d89d60/redbot/core/commands/help.py#L438-#L460
 def group_embed_fields(fields: List[EmbedField], max_chars=1000):
 
     curr_group = []
