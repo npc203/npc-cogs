@@ -1,15 +1,17 @@
 {
-    "author": ["epic guy#0715"],
+    "author": [
+        "epic guy#0715"
+    ],
     "name": "TypeRacer",
     "short": "A fun typing speed test cog",
-    "install_msg":"This cog uses bundled data to make words out of thin air.",
+    "install_msg": "This cog uses bundled data to make words out of thin air.",
     "description": "This cog can be used to check your typing speed, it isnt that accurate cause of ping issues, otherwise it's a decent one",
     "tags": [
         "utility",
         "fun",
         "speedtest"
     ],
-    "hidden":false,
+    "hidden": false,
     "requirements": [
         "tabulate"
     ],

@@ -1,8 +1,14 @@
 {
-    "author" : ["epic guy#0715"],
-    "install_msg" : "Thank you for installing my repo. If you need support, ping me in the Cog Support server. Have fun",
-    "name" : "npc-cogs",
-    "short" : "A decent bunch of cogs aimed for having fun",
-    "description" : "A simple set of cogs that I wrote for people to enjoy",
-    "tags" : ["fun", "utility","webhooks"]
+    "author": [
+        "epic guy#0715"
+    ],
+    "install_msg": "Thank you for installing my repo. If you need support, ping me in the Cog Support server. Have fun",
+    "name": "npc-cogs",
+    "short": "A decent bunch of cogs aimed for having fun",
+    "description": "A simple set of cogs that I wrote for people to enjoy",
+    "tags": [
+        "fun",
+        "utility",
+        "webhooks"
+    ]
 }

@@ -6,16 +6,33 @@ from typing import List, Union, cast
 import discord
 from redbot.core import commands
 from redbot.core.commands.context import Context
-from redbot.core.commands.help import (HelpSettings, NoCommand, NoSubCommand,
-                                       _, dpy_commands, mass_purge)
+from redbot.core.commands.help import (
+    HelpSettings,
+    NoCommand,
+    NoSubCommand,
+    _,
+    dpy_commands,
+    mass_purge,
+)
 from redbot.core.utils.chat_formatting import pagify
 
 from . import ARROWS, GLOBAL_CATEGORIES, get_menu
 from .category import Category, get_category
 from .dpy_menus import ListPages
-from .utils import (close_menu, emoji_converter, first_page, get_aliases,
-                    get_cooldowns, get_perms, home_page, last_page, next_page,
-                    prev_page, react_page, shorten_line)
+from .utils import (
+    close_menu,
+    emoji_converter,
+    first_page,
+    get_aliases,
+    get_cooldowns,
+    get_perms,
+    home_page,
+    last_page,
+    next_page,
+    prev_page,
+    react_page,
+    shorten_line,
+)
 
 HelpTarget = Union[
     commands.Command,

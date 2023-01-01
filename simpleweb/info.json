@@ -9,7 +9,9 @@
         "epic guy"
     ],
     "required_cogs": {},
-    "requirements": ["aiohttp_jinja2"],
+    "requirements": [
+        "aiohttp_jinja2"
+    ],
     "tags": [
         "fun",
         "utility",

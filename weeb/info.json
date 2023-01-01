@@ -1,9 +1,11 @@
 {
-    "author": ["epic guy#0715"],
+    "author": [
+        "epic guy#0715"
+    ],
     "name": "Weeb",
     "short": "Bunch of weeb emoticons OwO",
     "description": "a random bunch of emoticons for the otakus",
-    "install_msg":"This cog comes with bundled data",
+    "install_msg": "This cog comes with bundled data",
     "tags": [
         "emoticons",
         "emojis",

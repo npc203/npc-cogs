@@ -7,10 +7,13 @@
     "author": [
         "epic guy",
         "ow0x",
-        "fixator10"  
+        "fixator10"
     ],
     "required_cogs": {},
-    "requirements": ["html2text", "beautifulsoup4"],
+    "requirements": [
+        "html2text",
+        "beautifulsoup4"
+    ],
     "tags": [
         "fun",
         "utility",
