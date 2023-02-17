@@ -707,17 +707,18 @@ class HybridMenus:
                 # Main page alone shows the home button
                 if self.category_page_mapping:
                     # haccerman
-                    home_style = Counter([arrow.style for arrow in ARROWS]).most_common(
-                        1
-                    )[0][0]
-                    view_menu.add_item(
-                        ReactButton(
-                            emoji=ARROWS["home"].emoji,
-                            style=home_style,
-                            custom_id="home",
-                            row=4 if self.settings["menutype"] != "buttons" else None,
-                        )
-                    )
+                    # home_style = Counter([arrow.style for arrow in ARROWS]).most_common(
+                    #     1
+                    # )[0][0]
+                    # view_menu.add_item(
+                    #     ReactButton(
+                    #         emoji=ARROWS["home"].emoji,
+                    #         style=home_style,
+                    #         custom_id="home",
+                    #         row=4 if self.settings["menutype"] != "buttons" else None,
+                    #     )
+                    # )
+                    pass
 
                 class Button(discord.ui.Button):
                     view: BaseInteractionMenu
