@@ -389,14 +389,14 @@ class BaguetteHelp(commands.RedHelpFormatter):
             "footer": {"text": ""},
             "fields": [],
         }
-        if description:
-            splitted = description.split("\n\n")
-            name = splitted[0]
-            value = "\n\n".join(splitted[1:])
-            if not value:
-                value = EMPTY_STRING
-            field = EmbedField(name[:250], value[:1024], False)
-            emb["fields"].append(field)
+        # if description:
+        #     splitted = description.split("\n\n")
+        #     name = splitted[0]
+        #     value = "\n\n".join(splitted[1:])
+        #     if not value:
+        #         value = EMPTY_STRING
+        #     field = EmbedField(name[:250], value[:1024], False)
+        #     emb["fields"].append(field)
         emb["footer"]["text"] = (help_settings.tagline) or self.get_default_tagline(ctx)
         return emb
 
