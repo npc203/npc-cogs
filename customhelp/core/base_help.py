@@ -692,8 +692,8 @@ class HybridMenus:
                 for arrow in ARROWS:
                     if arrow.name == "home":
                         # Main page alone shows the home button
-                        if self.category_page_mapping:
-                            dpy_menu.add_button(await home_react(arrow.emoji))
+                        # if self.category_page_mapping:
+                        # dpy_menu.add_button(await home_react(arrow.emoji))
                         continue
                     if self.settings["nav"]:  # Fix this later, crap inefficient code
                         dpy_menu.add_button(await arrow_react(arrow))
