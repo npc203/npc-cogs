@@ -349,7 +349,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
         self, ctx: Context, help_settings: HelpSettings, get_pages: bool = False
     ):
         if await ctx.embed_requested():
-            emb = await self.embed_template(help_settings, ctx, ctx.bot.description)
+            emb = await self.embed_template(help_settings, ctx)
             filtered_categories = await self.filter_categories(ctx, GLOBAL_CATEGORIES)
 
             page_raw_str_data = []
@@ -366,7 +366,9 @@ class BaguetteHelp(commands.RedHelpFormatter):
                     )
 
             for i in pagify("\n".join(page_raw_str_data), page_length=1018):
-                emb["fields"].append(EmbedField("Categories:", i, False))
+                emb["fields"].append(
+                    EmbedField(f"{ctx.bot.description}\n_ _", i, False)
+                )
 
             pages = await self.make_embeds(ctx, emb, help_settings=help_settings)
             if get_pages:
