@@ -244,7 +244,6 @@ class BaguetteHelp(commands.RedHelpFormatter):
     async def format_command_help(
         self, ctx: Context, obj: commands.Command, help_settings: HelpSettings
     ):
-
         send = help_settings.verify_exists
         if not send:
             async for __ in self.help_filter_func(
@@ -452,7 +451,6 @@ class BaguetteHelp(commands.RedHelpFormatter):
             await ctx.message.delete()
 
         if not (channel_permissions.add_reactions and help_settings.use_menus):
-
             max_pages_in_guild = help_settings.max_pages_in_guild
             use_DMs = len(pages) > max_pages_in_guild
             destination = ctx.author if use_DMs else ctx.channel
@@ -484,7 +482,6 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 and delete_delay > 0  # delete delay is enabled
                 and channel_permissions.manage_messages  # we can manage messages here
             ):
-
                 # We need to wrap this in a task to not block after-sending-help interactions.
                 # The channel has to be TextChannel as we can't bulk-delete from DMs
                 async def _delete_delay_help(
@@ -544,6 +541,7 @@ class HybridMenus:
         self.curr_page = 0
         self.pages: List[Union[str, discord.Embed]] = pages
         self.category_page_mapping = page_mapping
+        self.no_arrows_yet = False
 
     async def get_pages(self, ctx: commands.Context, category_name: str):
         if not (category_pages := self.category_page_mapping.get(category_name)):
@@ -621,10 +619,16 @@ class HybridMenus:
                 options = []
                 # Category buttons
                 for cat in self.category_page_mapping:
+                    # Kinda hacky
+                    if cat.desc == "Not provided":
+                        category_desc = None
+                    else:
+                        category_desc = cat.desc
+
                     options.append(
                         discord.SelectOption(
                             label=cat.name,
-                            description=cat.desc,
+                            description=category_desc,
                             emoji=cat.reaction,
                         )
                     )
@@ -644,6 +648,7 @@ class HybridMenus:
                 dpy_menu = self.menus[0]
 
             if len(self.pages) == 1:
+                self.no_arrows_yet = True
                 dpy_menu.add_button(await arrow_react(ARROWS["cross"]))
             else:
                 for arrow in ARROWS:
@@ -686,6 +691,7 @@ class HybridMenus:
 
                 if self.settings["nav"]:
                     if len(self.pages) == 1:
+                        self.no_arrows_yet = True
                         arrow = ARROWS["cross"]
                         button = Button(arrow.name, **arrow.items())
                         view_menu.add_item(button)
@@ -732,7 +738,46 @@ class HybridMenus:
     ):
         if category_pages := await self.get_pages(user_ctx, category_name):
             self.change_source(category_pages)
-            await self.show_current_page(interaction)
+
+            # Dynamically pull up arrows if we have more than one page
+            # And we maintain the arrows, even if we go back to pages of size 1
+            if self.no_arrows_yet and len(self.pages) > 1:
+                if self.settings["arrowtype"] == "emojis":
+                    # Copy Pasta from create_arrowtype
+                    for arrow in ARROWS:
+                        if arrow.name == "home":
+                            # We already must have come from the home page
+                            # else we wouldn't have the category buttons
+                            continue
+                        if arrow.name == "cross":
+                            # home page already has cross
+                            continue
+                        if self.settings["nav"]:
+                            await self.menus[0].add_button(await arrow_react(arrow), react=True)
+
+                if self.settings["arrowtype"] == "buttons":
+                    # Buttons/select
+                    # We recreate the menu, so we can add the arrows
+                    sender_ctx = self.menus[1].ctx
+                    bot_message = self.menus[1].message
+
+                    # This is needed for the interaction to not failed,
+                    # when the category is a button
+                    if type(interaction) == discord.Interaction:
+                        await interaction.response.defer()
+
+                    self.menus[1].clear_items()
+
+                    await self.create_menutype()
+                    await self.create_arrowtype(sender_ctx)
+                    await self.menus[1].start(ctx=sender_ctx, message=bot_message)
+
+                if any(self.menus):
+                    await self.show_current_page(self.bot_message, view=self.menus[1])
+
+                self.no_arrows_yet = False
+            else:
+                await self.show_current_page(interaction)
 
     async def home_page(self, ctx, interaction):
         self.change_source(await self.get_pages(ctx, "home"))

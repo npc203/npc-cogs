@@ -27,25 +27,13 @@ class ArrowManager:
 class CategoryManager:
     def __init__(self) -> None:
         self._list: List[Category] = []
-        self._UNCAT_INDEX = -1
-
-    def add_uncategorised(self, category):
-        self._list.insert(self.UNCAT_INDEX, category)
-
-    @property
-    def UNCAT_INDEX(self):
-        # if self._UNCAT_INDEX < 0:
-        #     # Dev debug
-        #     raise RuntimeError("Uncategorised category not set!")
-        return self._UNCAT_INDEX
-
-    @UNCAT_INDEX.setter
-    def UNCAT_INDEX(self, value):
-        self._UNCAT_INDEX = value
 
     @property
     def uncategorised(self):
-        return self._list[self.UNCAT_INDEX]
+        for category in self._list:
+            if category.is_uncat:
+                return category
+        raise RuntimeError("Uncategorised category not set!")
 
     def get(self, name):
         return self._list[self.index(name)]

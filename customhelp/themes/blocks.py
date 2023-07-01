@@ -42,7 +42,6 @@ class Blocks(ThemesMeta):
         )
 
         if await ctx.embed_requested():
-
             emb = await self.embed_template(help_settings, ctx)
             emb["embed"]["title"] = (
                 (str(obj.reaction) if obj.reaction else "") + " " + obj.name.capitalize()
@@ -78,7 +77,6 @@ class Blocks(ThemesMeta):
             )
 
     async def format_cog_help(self, ctx: Context, obj: commands.Cog, help_settings: HelpSettings):
-
         coms = await self.get_cog_help_mapping(ctx, obj, help_settings=help_settings)
         if not (coms or help_settings.verify_exists):
             return

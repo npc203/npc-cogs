@@ -227,6 +227,24 @@ Credits
 Changelogs
 ==========
 
+v1.1.0
+------
+
+-------------
+Major Changes
+-------------
+- Revamped the Uncategorised cog architecture, uncategorised is no longer a "special" config entry
+- Improved chelp create and edit
+- Better cog setup, loads/reload handling
+- Some QoL improvements on display
+
+-------------
+Bug Fixes
+-------------
+- Fixed [p]chelp nsfw add not working
+- Fixed [p]chelp reorder
+- Properly show up arrows when the page needs it
+
 v1.0.1
 ------
 
