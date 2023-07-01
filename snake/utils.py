@@ -20,6 +20,7 @@ GET_DIR = {
     None: "Click on a reaction to start",
 }
 
+
 # The locks part to sync was inspired by some stackoverflow post which I forgot by now
 # Will add the credit if I find it again
 class BoardMenu(menus.Menu):
@@ -32,7 +33,7 @@ class BoardMenu(menus.Menu):
         self.is_started = asyncio.Event()
 
     def edit_board(self, end=False):
-        emb = discord.Embed(name="Snake", description=self.make_board())
+        emb = discord.Embed(title="Snake", description=self.make_board())
         emb.add_field(name="Score", value=self.game.score)
         emb.add_field(name="Player", value=self.player_name)
         if end:
