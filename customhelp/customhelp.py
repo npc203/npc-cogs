@@ -172,13 +172,17 @@ class CustomHelp(commands.Cog):
         # Arrow migration
         if (await self.config.version()) < "1.0.0":
             new_arrows = []
-            async with self.config.settings.arrows() as arrows:
-                for name, emoji in arrows.items():
-                    new_arrows.append(
-                        {"name": name, "emoji": emoji, "style": "primary", "label": ""}
-                    )
-                arrows.clear()
-            await self.config.arrows.set(new_arrows)
+            try:
+                async with self.config.settings.arrows() as arrows:
+                    for name, emoji in arrows.items():
+                        new_arrows.append(
+                            {"name": name, "emoji": emoji, "style": "primary", "label": ""}
+                        )
+                    arrows.clear()
+                await self.config.arrows.set(new_arrows)
+            except AttributeError:
+                # We don't care if settings.arrows doesn't exist in the first place
+                pass
             await self.config.version.set(self.__version__)
 
         # Category migration V1 - not needed anymore
