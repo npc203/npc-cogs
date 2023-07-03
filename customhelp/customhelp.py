@@ -373,7 +373,7 @@ class CustomHelp(commands.Cog):
                 if setval:
                     # TODO potiential save a config call?
                     await self.config.settings.set_formatter.set(True)
-                    await self._setup()
+                    await self.cog_load()
                     await ctx.send("Fomatter set to custom")
                 else:
                     await self.config.settings.set_formatter.set(False)
