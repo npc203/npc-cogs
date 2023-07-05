@@ -670,21 +670,33 @@ class HybridMenus:
                 if self.category_page_mapping:
                     # haccerman
                     home_style = Counter([arrow.style for arrow in ARROWS]).most_common(1)[0][0]
-                    view_menu.add_item(
-                        ReactButton(
-                            emoji=ARROWS["home"].emoji,
-                            style=home_style,
-                            custom_id="home",
-                            row=4 if self.settings["menutype"] != "buttons" else None,
+                    # If menutype is select, chug it in the select bar
+                    # To save space
+                    if self.settings["menutype"] == "select":
+                        for child in view_menu.children:
+                            if type(child) == SelectMenuHelpBar:
+                                child.add_option(
+                                    label="Home",
+                                    description="Go to the main page",
+                                    emoji=ARROWS["home"].emoji,
+                                )
+                                break
+                    else:
+                        view_menu.add_item(
+                            ReactButton(
+                                emoji=ARROWS["home"].emoji,
+                                style=home_style,
+                                custom_id="home",
+                                row=3 if self.settings["menutype"] != "buttons" else None,
+                            )
                         )
-                    )
 
                 class Button(discord.ui.Button):
                     view: BaseInteractionMenu
 
-                    def __init__(self, name, **kwargs):
+                    def __init__(self, name, row=4, **kwargs):
                         self.name = name
-                        super().__init__(**kwargs, row=3)
+                        super().__init__(**kwargs, row=row)
 
                     async def callback(self, interaction):
                         await self.view.hmenu.arrow_emoji_button[self.name](interaction)
@@ -693,7 +705,7 @@ class HybridMenus:
                     if len(self.pages) == 1:
                         self.no_arrows_yet = True
                         arrow = ARROWS["cross"]
-                        button = Button(arrow.name, **arrow.items())
+                        button = Button(arrow.name, **arrow.items(), row=None)
                         view_menu.add_item(button)
                     else:
                         for arrow in ARROWS:
