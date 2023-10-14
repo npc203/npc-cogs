@@ -121,10 +121,13 @@ class BaseInteractionMenu(discord.ui.View):
     ):
         if message is None:
             if self.hmenu.settings["replies"]:
-                self.message = await ctx.reply(
+                self.message = await ctx.send(
                     **self._get_kwargs_from_page(self.hmenu.pages[0]),
                     view=self,
                     mention_author=False,
+                    reference=ctx.message.to_reference(
+                        fail_if_not_exists=False
+                    ),
                 )
             else:
                 self.message = await ctx.send(
