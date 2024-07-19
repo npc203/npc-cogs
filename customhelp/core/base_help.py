@@ -282,8 +282,17 @@ class BaguetteHelp(commands.RedHelpFormatter):
                 value = "\n\n".join(splitted[1:])
                 if not value:
                     value = EMPTY_STRING
-                field = EmbedField("Description", name[:250] + "\n" + value[:1024], False)
-                emb["fields"].append(field)
+
+                for i, page in enumerate(
+                    pagify(name + "\n" + value, page_length=1024, shorten_by=0)
+                ):
+                    if i == 0:
+                        title = "Description"
+                    else:
+                        title = EMPTY_STRING
+
+                    field = EmbedField(title, page, False)
+                    emb["fields"].append(field)
 
                 if alias := get_aliases(command, ctx.invoked_with):
                     emb["fields"].append(EmbedField("Aliases", ",".join(alias), False))
