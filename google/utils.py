@@ -65,13 +65,13 @@ def get_query(ctx, url):
 def get_card(soup, final, kwargs):
     """Getting cards if present, here started the pain"""
     # common card
-    if card := soup.find("div", class_="g mnr-c g-blk"):
+    if card := soup.select_one("div.g.mnr-c.g-blk"):
         if desc := card.find("span", class_="hgKElc"):
             final.append(s(None, "Google Info Card:", h2t(str(desc))))
             return
     # another webpull card: what is the language JetBrains made? TODO fix this, depends on too many classes as of now
-    if card := soup.find("div", class_="kp-blk c2xzTb"):
-        if head := card.find("div", class_="Z0LcW XcVN5d AZCkJd"):
+    if card := soup.select("div.kp-blk.c2xzTb"):
+        if head := card.select("div.Z0LcW.XcVN5d.AZCkJd"):
             if desc := card.find("div", class_="iKJnec"):
                 final.append(s(None, f"Answer: {head.text}", h2t(str(desc))))
                 return

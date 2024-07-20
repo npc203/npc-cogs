@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+
+<head>
+    <title>{{app_info.name}}'s Dashboard</title>
+    <link rel="stylesheet" href="/static/main.css">
+</head>
+
+<body>
+    <h1>{{app_info.name}}'s Commands </h1>
+    <input id="search">
+    <p id="res-count">Search Results: 0</p>
+    <div id="results">
+    </div>
+    <script>
+        function nl2br(str, is_xhtml) {
+            var breakTag = (is_xhtml || typeof is_xhtml === 'undefined') ? '<br />' : '<br>';
+            return (str + '').replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1' + breakTag + '$2');
+        }
+
+        const search_bar = document.getElementById("search");
+        const res_count = document.getElementById("res-count");
+
+        cmds = []
+        fetch("/api/cmds").then(function (response) {
+            return response.json();
+        }).then(function (data) { cmds = data; 
+            search_bar.placeholder = `Search from ${cmds.length} commands`
+        })
+
+        search_bar.addEventListener('input', (event) => {
+            const target = document.getElementById('results');
+            if (event.target.value == "") {
+                target.innerHTML = "";
+                res_count.innerHTML = `Search Results: 0`
+                return;
+            }
+
+            results = []
+            for (item of cmds) {
+                if (item[0].startsWith(event.target.value)) {
+                    results.push(`
+                                <div class="card">
+                                    <div class="container">
+                                        <h2><b>${item[0]}</b></h2> 
+                                        ${nl2br(item[1])}
+                                    </div>
+                                </div>`)
+                }
+            }
+            res_count.innerHTML = `Search Results: ${results.length}`
+
+            target.innerHTML = results.join("<br>");
+
+        });
+
+    </script>
+</body>
+
+</html>

@@ -28,7 +28,7 @@ from .core.views import ComponentType, MenuPicker, MenuView
 
 _ = Translator("CustomHelp", __file__)
 
-# Swtichable alphabetic ordered display
+# Switchable alphabetic ordered display
 # Crowdin stuff ;-;
 # Generating every category page on format_bot_help so as to save time in reaction stuff?
 # No need to fetch config uncat, when u can use global cache, but is that better?
@@ -281,7 +281,7 @@ class CustomHelp(commands.Cog):
                         data[k] = [i.lower() for i in tmp["tags"]] if "tags" in tmp else []
                     except json.JSONDecodeError:
                         # TODO Implement logger you lazy bum <_<
-                        print("[ERROR] Invaild JSON in cog {}".format(k))
+                        print(f"[ERROR] Invalid JSON in cog {k}")
                         data[k] = []
 
             else:
@@ -371,10 +371,10 @@ class CustomHelp(commands.Cog):
         async with ctx.typing():
             try:
                 if setval:
-                    # TODO potiential save a config call?
+                    # TODO potential save a config call?
                     await self.config.settings.set_formatter.set(True)
                     await self.cog_load()
-                    await ctx.send("Fomatter set to custom")
+                    await ctx.send("Formatter set to custom")
                 else:
                     await self.config.settings.set_formatter.set(False)
                     self.bot.reset_help_formatter()
@@ -389,7 +389,7 @@ class CustomHelp(commands.Cog):
             content = yaml_txt
         else:
             await ctx.send(
-                "Your next message should be a yaml with the specfied format as in the docs\n"
+                "Your next message should be a yaml with the specified format as in the docs\n"
                 "Example:\n"
                 "category1:\n"
                 " - Cog1\n - Cog2"
@@ -778,7 +778,7 @@ class CustomHelp(commands.Cog):
                     new_conf_list.append(cat)
             conf_cat[:] = new_conf_list
 
-        text += _("Sucessfully removed: ") + (", ".join(to_config) + "\n") if to_config else ""
+        text += _("Successfully removed: ") + (", ".join(to_config) + "\n") if to_config else ""
         if invalid:
             text += _("These categories aren't present in the list:\n" + ",".join(invalid))
         await self.refresh_cache()
@@ -909,7 +909,7 @@ class CustomHelp(commands.Cog):
         if wait > 20:
             await self.config.settings.timeout.set(wait)
             self._update_conf("settings", "timeout", wait)
-            await ctx.send(f"Sucessfully set timeout to {wait}")
+            await ctx.send(f"Successfully set timeout to {wait}")
         else:
             await ctx.send("Timeout must be atleast 20 seconds")
 
@@ -920,7 +920,7 @@ class CustomHelp(commands.Cog):
         """
         await self.config.settings.deletemessage.set(toggle)
         self._update_conf("settings", "deletemessage", toggle)
-        await ctx.send(f"Sucessfully set delete user toggle to {toggle}")
+        await ctx.send(f"Successfully set delete user toggle to {toggle}")
 
     @chelp_settings.command(aliases=["arrow"])
     async def arrows(self, ctx, *, correct_txt=None):
@@ -1041,7 +1041,7 @@ class CustomHelp(commands.Cog):
                     if category not in conf:
                         conf.append(category)
                         self._update_conf("blacklist_names", "nsfw", conf)
-                        await ctx.send(f"Sucessfully added {category} to nsfw category")
+                        await ctx.send(f"Successfully added {category} to nsfw category")
                     else:
                         await ctx.send(f"{category} is already present in nsfw blocklist")
         else:
@@ -1058,7 +1058,7 @@ class CustomHelp(commands.Cog):
                 if category in conf:
                     conf.remove(category)
                     self._update_conf("blacklist_names", "nsfw", conf)
-                    await ctx.send(f"Sucessfully removed {category} from nsfw category")
+                    await ctx.send(f"Successfully removed {category} from nsfw category")
                 else:
                     await ctx.send(f"{category} is not present in nsfw blocklist")
         else:
@@ -1081,7 +1081,7 @@ class CustomHelp(commands.Cog):
                     if category not in conf:
                         conf.append(category)
                         self._update_conf("blacklist_names", "dev", conf)
-                        await ctx.send(f"Sucessfully added {category} to dev list")
+                        await ctx.send(f"Successfully added {category} to dev list")
                     else:
                         await ctx.send(f"{category} is already present in dev list")
         else:
@@ -1098,7 +1098,7 @@ class CustomHelp(commands.Cog):
                 if category in conf:
                     conf.remove(category)
                     self._update_conf("blacklist_names", "dev", conf)
-                    await ctx.send(f"Sucessfully removed {category} from dev category")
+                    await ctx.send(f"Successfully removed {category} from dev category")
                 else:
                     await ctx.send(f"{category} is not present in dev list")
         else:
@@ -1167,8 +1167,12 @@ class CustomHelp(commands.Cog):
 
         await self.refresh_cache()
         await ctx.send(
-            "Sucessfully reordered the categories\n"
-            + ("Invalid categories:\n" + "\n".join(failed) if failed else "")
+            "Successfully reordered the categories\n"
+            + (
+                "Invalid categories: (uncategorised is invalid as well)\n" + "\n".join(failed)
+                if failed
+                else ""
+            )
         )
 
     @commands.command(aliases=["findcat"])

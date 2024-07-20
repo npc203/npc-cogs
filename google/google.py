@@ -26,13 +26,13 @@ class Google(Yandex, commands.Cog):
     A Simple google search with image support as well
     """
 
-    __version__ = "0.0.3"
+    __version__ = "0.0.4"
     __authors__ = ["epic guy", "ow0x", "fixator10"]
 
     def __init__(self, bot: Red) -> None:
         self.bot = bot
         self.options = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36",
             "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
         }
         self.link_regex = re.compile(
@@ -303,7 +303,7 @@ class Google(Yandex, commands.Cog):
             else:
                 await ctx.send("No result")
 
-    @google.command(aliases=["rev"])
+    @google.command(aliases=["rev"], enabled=False)
     async def reverse(self, ctx, *, url: str = None):
         """Attach or paste the url of an image to reverse search, or reply to a message which has the image/embed with the image"""
         isnsfw = nsfwcheck(ctx)
@@ -421,7 +421,7 @@ class Google(Yandex, commands.Cog):
         if cards:
             get_card(soup, final, kwargs)
 
-        for res in soup.findAll("div", class_="g"):
+        for res in soup.select("div.g.tF2Cxc"):
             if name := res.find("div", class_="yuRUbf"):
                 url = name.a["href"]
                 if title := name.find("h3", class_=re.compile("LC20lb")):

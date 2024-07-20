@@ -1,0 +1,22 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Cog-Creators/Red-DiscordBot/V3/develop/schema/red_cog.schema.json",
+    "name": "SimpleWeb",
+    "short": "A simple webpage dashboard",
+    "description": "Simple Dashboard for a quick overview of the bot",
+    "end_user_data_statement": "This cog does not persistently store any data or metadata about users.",
+    "install_msg": "Very much BETA WIP stuff, you need to have the --rpc flag to use it, check out [p]routes for the available routes. Example: 127.0.0.1:6133/ \n The port 6133 needs to be exposed if you are accessing it remotely (which usually isnt a good idea)",
+    "author": [
+        "epic guy"
+    ],
+    "required_cogs": {},
+    "requirements": ["aiohttp_jinja2"],
+    "tags": [
+        "fun",
+        "utility",
+        "web"
+    ],
+    "min_bot_version": "3.3.10",
+    "hidden": true,
+    "disabled": false,
+    "type": "COG"
+}

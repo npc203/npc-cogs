@@ -31,7 +31,7 @@ class TwinHelp(ThemesMeta):
                     cog_names = "`" + "` `".join(cat.cogs) + "`" if cat.cogs else ""
                     for i, page in enumerate(pagify(cog_names, page_length=1000, shorten_by=0)):
                         if i == 0:
-                            title = (str(cat.reaction) or "") + f"  __{cat.name.capitalize()}:__ "
+                            title = (cat.reaction and str(cat.reaction) or "") + f"  __{cat.name.capitalize()}:__ "
                         else:
                             title = EMPTY_STRING
                         emb["fields"].append(EmbedField(title, cog_names, False))
