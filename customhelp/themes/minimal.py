@@ -12,6 +12,7 @@ from ..core.base_help import (
     get_cooldowns,
     get_perms,
     pagify,
+    get_category_page_mapper_chunk,
 )
 
 
@@ -29,9 +30,15 @@ class MinimalHelp(ThemesMeta):
         full_text = f"{description}\n\n{tagline}"
 
         filtered_categories = await self.filter_categories(ctx, GLOBAL_CATEGORIES)
+        page_mapping = {}
         # Maybe add category desc somewhere?
         for cat in filtered_categories:
             if cat.cogs:
+                if not await get_category_page_mapper_chunk(
+                    self, get_pages, ctx, cat, help_settings, page_mapping
+                ):
+                    continue
+                # TODO getting categories twice, remove sometime!
                 coms = await self.get_category_help_mapping(ctx, cat, help_settings=help_settings)
                 all_cog_text = [" · ".join(f"{name}" for name in data) for cogname, data in coms]
                 all_cog_text = " · ".join(all_cog_text)
@@ -44,7 +51,7 @@ class MinimalHelp(ThemesMeta):
             text_no,
             embed=False,
             help_settings=help_settings,
-            emoji_mapping=filtered_categories,
+            page_mapping=page_mapping,
         )
 
     async def format_category_help(
@@ -102,7 +109,6 @@ class MinimalHelp(ThemesMeta):
     async def format_command_help(
         self, ctx: Context, obj: commands.Command, help_settings: HelpSettings
     ):
-
         send = help_settings.verify_exists
         if not send:
             async for __ in self.help_filter_func(

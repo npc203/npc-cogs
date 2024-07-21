@@ -13,6 +13,7 @@ from ..core.base_help import (
     get_cooldowns,
     get_perms,
     pagify,
+    get_category_page_mapper_chunk,
 )
 
 
@@ -22,19 +23,26 @@ class DankHelp(ThemesMeta):
     async def format_bot_help(
         self, ctx: Context, help_settings: HelpSettings, get_pages: bool = False
     ):
-
         if await ctx.embed_requested():
             emb = await self.embed_template(help_settings, ctx)
             description = ctx.bot.description or ""
             emb["embed"]["description"] = description
 
             filtered_categories = await self.filter_categories(ctx, GLOBAL_CATEGORIES)
+            page_mapping = {}
+
             # Maybe add category desc with long_desc somewhere?
             for cat in filtered_categories:
                 if cat.cogs:
+                    if not await get_category_page_mapper_chunk(
+                        self, get_pages, ctx, cat, help_settings, page_mapping
+                    ):
+                        continue
+
                     title = (
                         str(cat.reaction) + " " if cat.reaction else ""
                     ) + cat.name.capitalize()
+
                     emb["fields"].append(
                         EmbedField(
                             title,
@@ -51,8 +59,7 @@ class DankHelp(ThemesMeta):
                     pages,
                     embed=True,
                     help_settings=help_settings,
-                    add_emojis=((await self.config.settings())["react"]) and True,
-                    emoji_mapping=filtered_categories,
+                    page_mapping=page_mapping,
                 )
         else:
             await ctx.send(_("You need to enable embeds to use the help menu"))
@@ -111,7 +118,6 @@ class DankHelp(ThemesMeta):
     async def format_command_help(
         self, ctx: Context, obj: commands.Command, help_settings: HelpSettings
     ):
-
         send = help_settings.verify_exists
         if not send:
             async for __ in self.help_filter_func(

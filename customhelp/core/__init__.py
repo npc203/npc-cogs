@@ -1,67 +1,63 @@
-from discord import __version__ as dpy_version
+from typing import TYPE_CHECKING, List
 
-from .dpy_menus import NoReplyMenus, ReplyMenus, get_button_menu
+if TYPE_CHECKING:
+    from customhelp.core.category import Arrow, Category
+
+
+class ArrowManager:
+    def __init__(self):
+        self.arrows: List[Arrow] = []
+
+    def append(self, arrow):
+        self.arrows.append(arrow)
+
+    def clear(self):
+        self.arrows.clear()
+
+    def __getitem__(self, name: str):
+        for arrow in self.arrows:
+            if arrow.name == name:
+                return arrow
+        raise RuntimeError(f"No arrow with name {name}")
+
+    def __iter__(self):
+        return iter(self.arrows)
+
+
+class CategoryManager:
+    def __init__(self) -> None:
+        self._list: List[Category] = []
+
+    @property
+    def uncategorised(self):
+        for category in self._list:
+            if category.is_uncat:
+                return category
+        raise RuntimeError("Uncategorised category not set!")
+
+    def get(self, name):
+        return self._list[self.index(name)]
+
+    # TODO remove redundant methods
+    def clear(self):
+        self._list.clear()
+
+    def index(self, name):
+        return self._list.index(name)
+
+    def append(self, value):
+        self._list.append(value)
+
+    def __len__(self):
+        return len(self._list)
+
+    def __bool__(self):
+        return bool(self._list)
+
+    def __iter__(self):
+        return iter(self._list)
+
 
 # Keeping all global vars in one place
-GLOBAL_CATEGORIES = []
-ARROWS = {}
-
-use_buttons = False
-use_replies = True
-
-
-def set_menu(*, replies, buttons, validate_buttons: bool = False):
-    global use_replies
-    global use_buttons
-
-    if replies is not None:
-        if replies:
-            if dpy_version <= "1.5.0":
-                return (
-                    "You need to have discord.py version 1.6.0 or greater to use replies.",
-                    False,
-                )
-            use_replies = True
-            if buttons is None:
-                return "Enabled replies for help menus.", True
-        else:
-            use_replies = False
-            if buttons is None:
-                return "Disabled replies for help menus.", True
-
-    if buttons is not None:
-        if buttons:
-            if validate_buttons:
-                try:
-                    get_button_menu(use_replies)
-                except RuntimeError as error:
-                    return str(error), 0
-            use_buttons = True
-            return "Enabled buttons for help menus.", True
-        else:
-            use_buttons = False
-            return "Disabled buttons for help menus.", True
-
-    if buttons is False and replies is False:
-        use_replies = False
-        use_buttons = False
-        return "Reset the help menu to vanilla.", True
-    elif buttons is True and replies is True:
-        return "Enabled replies and buttons for help menus.", True
-
-    raise RuntimeError(f"unreachable code reached: replies={replies}, buttons={buttons}")
-
-
-# wew thanks jack
-def get_menu():
-    global use_buttons
-    global use_replies
-    if use_buttons:
-        try:
-            return get_button_menu(use_replies)
-        except RuntimeError:
-            # User unloaded slashtags, so fallback to normal menu
-            pass
-    if use_replies:
-        return ReplyMenus
-    return NoReplyMenus
+GLOBAL_CATEGORIES = CategoryManager()
+ARROWS = ArrowManager()

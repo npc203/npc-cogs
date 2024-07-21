@@ -70,9 +70,7 @@ class Google(Yandex, commands.Cog):
                     url=kwargs["redir"],
                 )
                 for result in group:
-                    desc = (
-                        f"[{result.url[:60]}]({result.url})\n" if result.url else ""
-                    ) + f"{result.desc}"[:800]
+                    desc = (f"{result.url}\n" if result.url else "") + f"{result.desc}"[:800]
                     emb.add_field(
                         name=f"{result.title}",
                         value=desc or "Nothing",
@@ -370,7 +368,6 @@ class Google(Yandex, commands.Cog):
     @commands.is_owner()
     @google.command(hidden=True)
     async def debug(self, ctx, url: str):
-        await ctx.trigger_typing()
         async with self.session.get(url, headers=self.options) as resp:
             text = await resp.text()
         raw_html = BeautifulSoup(text, "html.parser")
@@ -411,6 +408,8 @@ class Google(Yandex, commands.Cog):
         if res := soup.find("input", class_="gLFyf gsfi"):
             return res["value"], (self.parser_text(text, soup=soup, cards=False) or (None, None))
 
+        return None, (None, None)
+
     def parser_text(self, text, soup=None, cards: bool = True):
         """My bad logic for scraping"""
         if not soup:
@@ -432,8 +431,8 @@ class Google(Yandex, commands.Cog):
             else:
                 url = None
                 title = None
-            if final_desc := res.select("div.VwiC3b.yXK7lf.MUxGbd"):
-                desc = h2t(str(final_desc[-1]))[:500]
+            if desc := res.select_one("div.Z26q7c>div.VwiC3b"):
+                desc = h2t(desc.text)[:500]
             else:
                 desc = "Not found"
             if title:

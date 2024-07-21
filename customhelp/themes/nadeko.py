@@ -10,6 +10,7 @@ from ..core.base_help import (
     HelpSettings,
     _,
     pagify,
+    get_category_page_mapper_chunk,
 )
 
 
@@ -19,11 +20,18 @@ class NadekoHelp(ThemesMeta):
     async def format_bot_help(
         self, ctx: Context, help_settings: HelpSettings, get_pages: bool = False
     ):
-
         if await ctx.embed_requested():
             emb = await self.embed_template(help_settings, ctx, ctx.bot.description)
             filtered_categories = await self.filter_categories(ctx, GLOBAL_CATEGORIES)
-            cat_titles = "".join(f"• {cat.name}\n" for cat in filtered_categories if cat.cogs)
+            page_mapping = {}
+            cat_titles = ""
+            for cat in filtered_categories:
+                if cat.cogs:
+                    if not await get_category_page_mapper_chunk(
+                        self, get_pages, ctx, cat, help_settings, page_mapping
+                    ):
+                        continue
+                    cat_titles += f"• {cat.name}\n"
 
             # TODO Dont be a moron trying to pagify this or do we? yes we do, lmao.
             for i, vals in enumerate(pagify(cat_titles, page_length=1000)):
@@ -41,7 +49,7 @@ class NadekoHelp(ThemesMeta):
                     pages,
                     embed=True,
                     help_settings=help_settings,
-                    emoji_mapping=filtered_categories,
+                    page_mapping=page_mapping,
                 )
         else:
             await ctx.send(_("You need to enable embeds to use the help menu"))

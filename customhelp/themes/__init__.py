@@ -9,7 +9,7 @@ list = {}
 
 # This auto populates the list with the themes present in this folder
 pkg_dir = os.path.dirname(__file__)
-for (module_loader, name, ispkg) in iter_modules([pkg_dir]):
+for module_loader, name, ispkg in iter_modules([pkg_dir]):
     theme_module = import_module(f"{__name__}.{name}")
     for attribute in dir(theme_module):
         attr = getattr(theme_module, attribute)

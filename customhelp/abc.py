@@ -1,5 +1,20 @@
+from types import FunctionType
+
+
 class ThemesMeta:
     """This is the skeletal structure of any theme"""
+
+    make_embeds: FunctionType
+    get_default_tagline: FunctionType
+    embed_template: FunctionType
+    filter_categories: FunctionType
+    send_pages: FunctionType
+
+    help_filter_func: FunctionType
+
+    get_category_help_mapping: FunctionType
+    get_cog_help_mapping: FunctionType
+    get_group_help_mapping: FunctionType
 
     # Would need to work on this, to make the class look like an ABC ie:ABC but incomplete interfaces.
     # https://stackoverflow.com/questions/61328355/prohibit-addition-of-new-methods-to-a-python-child-class

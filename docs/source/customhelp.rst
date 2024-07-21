@@ -6,13 +6,13 @@ A Customisable Custom Help Cog For Red:
 |
 | This cog is made cause I didn't like 30 help pages for my bot and I wanted to bunch my cogs.
 |
-| Use ``[p]chelp`` to see what can be customised and ``[p]chelp settings`` for even more customisations.
-|
+| Use ``[p]chelp`` to see what can be customised and ``[p]chelp set`` for even more customisations.
+| 
 | As an additional bonus, if you have the alias cog loaded, those aliases will also be retrieved.
 
 Setup
 -----
-*Note: Use* ``[p]chelp set 1`` *to set your help to the custom help, else it'll remain as the normal one*
+*Note: Use* ``[p]chelp toggle 1`` *to set your help to the custom help, else it'll remain as the normal one* 
 
 1. | Start by doing ``[p]chelp list`` to list all your cogs
 
@@ -52,6 +52,9 @@ Setup
       - desc: new description
       - long_desc: long description
       - reaction: reaction emoji
+      - thumbnail: url to thumbnail for the category
+      - label: Label for category (For category and buttons)
+      - style: ButtonStyle for category button (primary, secondary, success, danger)
 
    | Feel free to mix and match to your liking, as in example below:
    | |editz|
@@ -118,45 +121,45 @@ Category Configuration
 Custom Help Settings
 --------------------
 
-| Additional settings in Custom Help can be configured via ``[p]chelp settings``, including but not limited to
+| Additional settings in Custom Help can be configured via ``[p]chelp set``, including but not limited to 
 | custom navigation, thumbnails, using replies, and more.
 
-1. | ``[p]chelp settings arrows``
+1. | ``[p]chelp set arrows``
    | Custom Navigation, YAY!
    | If you feel the default arrow icons are boring and plain, and you want to spice up navigation, you're probably looking for this. (Supports custom emotes.)
    | When using custom emotes from servers, your bot must also have access to them to be used.
    | You can use the emote ID (``:some_emote:123456789123``), or use the emote itself in the following format:
 
-   .. code-block:: javascript
+   .. note::
+      The valid arrows are ``left``, ``right``, ``cross``, ``home``, ``force_left`` and ``force_right``
+   
+   .. code-block:: yaml
 
-      left : emoji
-      right: emoji
-      cross: emoji
-      home : emoji
-      force_left: emoji
-      force_right: emoji
+      Example:
+      left :
+      - emoji: ↖️
+      - style: success (primary, secondary, success, danger)
+      - label: 'text is cool'
 
-2. | ``[p]chelp settings thumbnail``
-   | If you ever wanted to add a little image on the top right of the embed, you can set the image
+2. | ``[p]chelp set thumbnail``
+   | If you ever wanted to add a little image on the top right of the embed, you can set the image 
    | for the thumbnail with a valid link.
 
    .. note::
       The link must be a direct image link, ending in GIF, JPG, or PNG.
 
-3. | ``[p]chelp settings timeout``
+3. | ``[p]chelp set timeout``
    | This will change how long the reaction menu stays (in seconds) before being removed.
 
-4. | ``[p]chelp settings usebuttons``
-   | If you want to use buttons instead of emote reactions for menus, you'll want to use this command.
+4. | ``[p]chelp set type``
+   | This command enables the owner to change the menutype/arrowtype to buttons, dropdowns or just reactions 
 
-   .. note::
-      In order to use buttons, you need ``slashtags`` from `Phen-cogs <https://github.com/phenom4n4n/phen-cogs>`__ for them to work properly.
-
-5. | ``[p]chelp settings usereactions``
-   | This will enable (or disable) the use of reactions for the help menu.
-
-6. | ``[p]chelp settings usereply``
+5. | ``[p]chelp set usereply``
    | This will have the bot reply to your message after using commands.
+
+6. | ``[p]chelp set nav``
+   | This command allows to remove the arrows completely. Without the arrows, the user cannot navigate.
+   | This setting was made cause of multiple user requests, use it at will.
 
 Additional Notes
 ----------------
@@ -220,3 +223,47 @@ Credits
 .. |list themes| image:: images/listthemes.png
 .. |image5| image:: images/myhelp.png
 .. |image6| image:: images/chelp_show.png
+
+Changelogs
+==========
+
+v1.1.0
+------
+
+-------------
+Major Changes
+-------------
+- Revamped the Uncategorised cog architecture, uncategorised is no longer a "special" config entry
+- Improved chelp create and edit
+- Better cog setup, loads/reload handling
+- Some QoL improvements on display
+
+-------------
+Bug Fixes
+-------------
+- Fixed [p]chelp nsfw add not working
+- Fixed [p]chelp reorder
+- Properly show up arrows when the page needs it
+
+v1.0.1
+------
+
+-------------
+Major Changes
+-------------
+- Removed slashtags and it's dependencies from the cog
+- Uncategorised can now be reordered to be placed anywhere using ``[p]chelp reorder``
+- Support for dpy2
+- Addition of dropdowns, buttons, and reactions for both menus and arrows
+- Added support for custom thumbnails per category
+- Zero config read calls when [p]help is called, Additional internal caches for optimised page processing
+
+---------------
+Command Changes
+---------------
+- Changed ``chelp set`` to ``chelp toggle``
+- ``chelp set`` is used as an alias for ``chelp settings``
+- ``chelp set`` now has a new subcommand ``nav`` to toggle the navigation arrows
+- ``chelp show`` shows more info now
+- ``chelp set type`` for setting the menu and arrow type
+- chelp create and edit now have more arguments for button/dropdown customisability

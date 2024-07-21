@@ -28,7 +28,7 @@ class Speak(commands.Cog):
             await ctx.message.delete()
         await hook.send(
             username=ctx.author.display_name,
-            avatar_url=ctx.author.avatar_url,
+            avatar_url=ctx.author.avatar.url,
             content=sentence,
         )
 
@@ -50,7 +50,7 @@ class Speak(commands.Cog):
             await ctx.message.delete()
         await hook.send(
             username=mention.display_name,
-            avatar_url=mention.avatar_url,
+            avatar_url=mention.avatar.url,
             content=sentence,
         )
 
@@ -108,7 +108,7 @@ class Speak(commands.Cog):
         try:
             await hook.send(
                 username=ctx.message.author.display_name,
-                avatar_url=ctx.message.author.avatar_url,
+                avatar_url=ctx.message.author.avatar.url,
                 content=stuff,
             )
         except discord.NotFound:  # Yup user deleted the hook, invalidate cache, retry

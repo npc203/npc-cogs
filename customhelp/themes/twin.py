@@ -8,6 +8,7 @@ from ..core.base_help import (
     HelpSettings,
     _,
     pagify,
+    get_category_page_mapper_chunk,
 )
 
 
@@ -20,8 +21,13 @@ class TwinHelp(ThemesMeta):
         if await ctx.embed_requested():
             emb = await self.embed_template(help_settings, ctx, ctx.bot.description)
             filtered_categories = await self.filter_categories(ctx, GLOBAL_CATEGORIES)
+            page_mapping = {}
             for cat in filtered_categories:
                 if cat.cogs:
+                    if not await get_category_page_mapper_chunk(
+                        self, get_pages, ctx, cat, help_settings, page_mapping
+                    ):
+                        continue
                     cog_names = "`" + "` `".join(cat.cogs) + "`" if cat.cogs else ""
                     for i, page in enumerate(pagify(cog_names, page_length=1000, shorten_by=0)):
                         if i == 0:
@@ -40,8 +46,7 @@ class TwinHelp(ThemesMeta):
                     pages,
                     embed=True,
                     help_settings=help_settings,
-                    add_emojis=((await self.config.settings())["react"]) and True,
-                    emoji_mapping=filtered_categories,
+                    page_mapping=page_mapping,
                 )
         else:
             await ctx.send(_("You need to enable embeds to use the help menu"))
