@@ -18,7 +18,7 @@ jobs:
       # Setup Python and install pre-commit
       - uses: actions/setup-python@v2
         with:
-          python_version: "3.8"
+          python-version: "3.11"
       - name: Install pre-commit
         run: |
           pip install -U pre-commit
