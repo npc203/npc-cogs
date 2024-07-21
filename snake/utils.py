@@ -2,6 +2,7 @@ import asyncio
 
 import discord
 from redbot.vendored.discord.ext import menus
+from redbot_ext_menus import ViewMenu
 
 from .game import Game
 
@@ -23,7 +24,7 @@ GET_DIR = {
 
 # The locks part to sync was inspired by some stackoverflow post which I forgot by now
 # Will add the credit if I find it again
-class BoardMenu(menus.Menu):
+class BoardMenu(ViewMenu):
     def __init__(self, player_name, **kwargs):
         super().__init__(**kwargs)
         self.cur_dir = None
@@ -57,7 +58,7 @@ class BoardMenu(menus.Menu):
 
     async def send_initial_message(self, ctx, channel):
         self.task = ctx.bot.loop.create_task(self.loop())
-        return await ctx.send(embed=self.edit_board())
+        return await self.send_with_view(channel, embed=self.edit_board())
 
     @menus.button("⬆️")
     async def up(self, payload):

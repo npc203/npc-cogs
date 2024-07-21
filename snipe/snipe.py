@@ -9,6 +9,7 @@ from redbot.core import Config, commands
 from redbot.core.bot import Red
 from redbot.core.utils import chat_formatting as cf
 from redbot.vendored.discord.ext import menus
+from redbot_ext_menus import ViewMenu, ViewMenuPages
 
 
 # https://stackoverflow.com/questions/1094841/get-human-readable-version-of-file-size
@@ -152,7 +153,7 @@ class Snipe(commands.Cog):
             except IndexError:
                 return await ctx.send("Out of range")
         if msg:
-            menu = menus.MenuPages(
+            menu = ViewMenuPages(
                 source=MsgSource(
                     template_emb=discord.Embed(color=await ctx.embed_color()),
                     entries=[msg],
@@ -177,7 +178,7 @@ class Snipe(commands.Cog):
                 or (msg.embed and lower_text in str(msg.embed.to_dict()).lower())
             ]
             if user_msgs:
-                menu = menus.MenuPages(
+                menu = ViewMenuPages(
                     source=MsgSource(
                         template_emb=discord.Embed(color=await ctx.embed_color()),
                         entries=user_msgs,
@@ -214,7 +215,7 @@ class Snipe(commands.Cog):
                 if msg.content and msg.author.id == user.id
             ]
             if user_msgs:
-                menu = menus.MenuPages(
+                menu = ViewMenuPages(
                     source=MsgSource(
                         template_emb=discord.Embed(color=await ctx.embed_color()),
                         entries=user_msgs,
@@ -242,7 +243,7 @@ class Snipe(commands.Cog):
         if embs_obj := [
             (msg.author, msg.embed) for msg in reversed(self.deletecache[channel.id]) if msg.embed
         ]:
-            menu = menus.MenuPages(
+            menu = ViewMenuPages(
                 source=EmbSource(embs_obj, per_page=1),
                 delete_message_after=True,
             )
@@ -263,7 +264,7 @@ class Snipe(commands.Cog):
             return
         entries = [msg for msg in reversed(self.deletecache[channel.id]) if msg.content]
         if entries:
-            menu = menus.MenuPages(
+            menu = ViewMenuPages(
                 source=MsgSource(
                     template_emb=discord.Embed(color=await ctx.embed_color()),
                     entries=entries,
@@ -480,7 +481,7 @@ class VerticalNavSource(menus.ListPageSource):
         return emb
 
 
-class VertNavEmbMenus(menus.MenuPages, inherit_buttons=False):
+class VertNavEmbMenus(ViewMenuPages, inherit_buttons=False):
     def _skip_single(self):
         max_pages = self._source.get_max_pages()
         if max_pages is None:
@@ -496,7 +497,7 @@ class VertNavEmbMenus(menus.MenuPages, inherit_buttons=False):
         await self.show_checked_page(self.current_page + 1)
 
 
-class HorizontalEditMenus(menus.Menu):
+class HorizontalEditMenus(ViewMenu):
     def __init__(self, source, **kwargs):
         super().__init__(**kwargs, timeout=60)
         self.message: discord.Message
@@ -509,7 +510,7 @@ class HorizontalEditMenus(menus.Menu):
     async def send_initial_message(self, ctx, channel):
         self.template_embed = discord.Embed(color=await ctx.embed_color())
         emb = self.get_page(0)
-        return await channel.send(embed=emb)
+        return await self.send_with_view(channel, embed=emb)
 
     def get_page(self, page_number):
         emb = self.template_embed.copy()

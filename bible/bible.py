@@ -8,6 +8,7 @@ from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.core.utils.chat_formatting import pagify
 from redbot.vendored.discord.ext import menus
+from redbot_ext_menus import ViewMenuPages
 
 from .utils import EmbedField, group_embed_fields
 
@@ -140,7 +141,7 @@ class Bible(commands.Cog):
                         "2) Use the format of `book chapter:verse-range`"
                     )
 
-                menu = menus.MenuPages(Source(pages, per_page=1), clear_reactions_after=True)
+                menu = ViewMenuPages(Source(pages, per_page=1), clear_reactions_after=True)
                 await menu.start(ctx)
 
     async def red_delete_data_for_user(self, *, requester, user_id: int) -> None:

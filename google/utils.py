@@ -6,6 +6,7 @@ import discord
 from html2text import html2text as h2t
 from redbot.core.utils.chat_formatting import pagify
 from redbot.vendored.discord.ext import menus
+from redbot_ext_menus import ViewMenuPages
 
 nsfwcheck = lambda ctx: (not ctx.guild) or ctx.channel.is_nsfw()
 
@@ -241,7 +242,7 @@ class Source(menus.ListPageSource):
 
 
 # Thanks fixator https://github.com/fixator10/Fixator10-Cogs/blob/V3.leveler_abc/leveler/menus/top.py
-class ResultMenu(menus.MenuPages, inherit_buttons=False):
+class ResultMenu(ViewMenuPages, inherit_buttons=False):
     def __init__(self, **kwargs):
         super().__init__(
             **kwargs,

@@ -10,6 +10,7 @@ from redbot.core.utils.chat_formatting import pagify
 from redbot.core.utils.menus import start_adding_reactions
 from redbot.core.utils.predicates import ReactionPredicate
 from redbot.vendored.discord.ext import menus
+from redbot_ext_menus import ViewMenuPages
 
 RequestType = Literal["discord_deleted_user", "owner", "user", "user_strict"]
 
@@ -236,7 +237,7 @@ class Source(menus.ListPageSource):
 
 
 # Thanks fixator https://github.com/fixator10/Fixator10-Cogs/blob/V3.leveler_abc/leveler/menus/top.py
-class ResultMenu(menus.MenuPages, inherit_buttons=False):
+class ResultMenu(ViewMenuPages, inherit_buttons=False):
     def __init__(self, **kwargs):
         super().__init__(
             **kwargs,

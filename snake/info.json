@@ -8,7 +8,9 @@
         "epic guy"
     ],
     "required_cogs": {},
-    "requirements": [],
+    "requirements": [
+        "git+https://github.com/npc203/redbot-ext-menus-views"
+    ],
     "tags": [
         "games",
         "fun"
