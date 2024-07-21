@@ -9,9 +9,9 @@ from ..core.base_help import (
     _,
     chain,
     commands,
+    get_category_page_mapper_chunk,
     pagify,
     shorten_line,
-    get_category_page_mapper_chunk,
 )
 
 

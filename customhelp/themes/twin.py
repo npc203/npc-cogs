@@ -7,8 +7,8 @@ from ..core.base_help import (
     EmbedField,
     HelpSettings,
     _,
-    pagify,
     get_category_page_mapper_chunk,
+    pagify,
 )
 
 

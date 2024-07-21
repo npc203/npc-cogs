@@ -455,7 +455,7 @@ class MsgSource(menus.ListPageSource):
         emb.add_field(name="Deleted At", value=f"<t:{msg.deleted_at}:R>")
         emb.set_footer(
             text=f"Sniped at {menu.ctx.guild} | Page {menu.current_page+1}/{self._max_pages}",
-            icon_url=getattr(menu.ctx.guild.icon,"url",None),
+            icon_url=getattr(menu.ctx.guild.icon, "url", None),
         )
 
         return emb

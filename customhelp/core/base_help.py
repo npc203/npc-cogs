@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from collections import namedtuple
+from collections import Counter, namedtuple
 from collections.abc import Iterable
 from itertools import chain
 from typing import Any, Dict, List, Optional, Union, cast
@@ -12,7 +12,7 @@ from redbot.core.commands.context import Context
 from redbot.core.commands.help import HelpSettings, NoCommand, NoSubCommand, _, dpy_commands
 from redbot.core.utils.chat_formatting import pagify
 from redbot.core.utils.mod import mass_purge
-from collections import Counter
+
 from customhelp.core.views import (
     BaseInteractionMenu,
     ReactButton,
@@ -25,10 +25,10 @@ from .category import Category, get_category
 from .dpy_menus import BaseMenu, arrow_react, home_react, react_page
 from .utils import (
     get_aliases,
+    get_category_page_mapper_chunk,
     get_cooldowns,
     get_perms,
     shorten_line,
-    get_category_page_mapper_chunk,
 )
 
 LOG = logging.getLogger("red.customhelp.core.base_help")

@@ -862,7 +862,9 @@ class CustomHelp(commands.Cog):
             discord.SelectOption(
                 label="Select", description="Minimalistic Dropdown Menus", emoji="⏬"
             ),
-            discord.SelectOption(label="Hidden", description="No components are shown", emoji="🥷"),
+            discord.SelectOption(
+                label="Hidden", description="No components are shown", emoji="🥷"
+            ),
         ]
         select_bar_view = MenuView(ctx.author.id, self.config.settings, self._update_conf)
         select_bar_view.add_item(MenuPicker(ComponentType.MENU, options))

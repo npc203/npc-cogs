@@ -7,12 +7,12 @@ A Customisable Custom Help Cog For Red:
 | This cog is made cause I didn't like 30 help pages for my bot and I wanted to bunch my cogs.
 |
 | Use ``[p]chelp`` to see what can be customised and ``[p]chelp set`` for even more customisations.
-| 
+|
 | As an additional bonus, if you have the alias cog loaded, those aliases will also be retrieved.
 
 Setup
 -----
-*Note: Use* ``[p]chelp toggle 1`` *to set your help to the custom help, else it'll remain as the normal one* 
+*Note: Use* ``[p]chelp toggle 1`` *to set your help to the custom help, else it'll remain as the normal one*
 
 1. | Start by doing ``[p]chelp list`` to list all your cogs
 
@@ -121,7 +121,7 @@ Category Configuration
 Custom Help Settings
 --------------------
 
-| Additional settings in Custom Help can be configured via ``[p]chelp set``, including but not limited to 
+| Additional settings in Custom Help can be configured via ``[p]chelp set``, including but not limited to
 | custom navigation, thumbnails, using replies, and more.
 
 1. | ``[p]chelp set arrows``
@@ -132,7 +132,7 @@ Custom Help Settings
 
    .. note::
       The valid arrows are ``left``, ``right``, ``cross``, ``home``, ``force_left`` and ``force_right``
-   
+
    .. code-block:: yaml
 
       Example:
@@ -142,7 +142,7 @@ Custom Help Settings
       - label: 'text is cool'
 
 2. | ``[p]chelp set thumbnail``
-   | If you ever wanted to add a little image on the top right of the embed, you can set the image 
+   | If you ever wanted to add a little image on the top right of the embed, you can set the image
    | for the thumbnail with a valid link.
 
    .. note::
@@ -152,7 +152,7 @@ Custom Help Settings
    | This will change how long the reaction menu stays (in seconds) before being removed.
 
 4. | ``[p]chelp set type``
-   | This command enables the owner to change the menutype/arrowtype to buttons, dropdowns or just reactions 
+   | This command enables the owner to change the menutype/arrowtype to buttons, dropdowns or just reactions
 
 5. | ``[p]chelp set usereply``
    | This will have the bot reply to your message after using commands.

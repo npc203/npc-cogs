@@ -10,10 +10,10 @@ from ..core.base_help import (
     cast,
     commands,
     get_aliases,
+    get_category_page_mapper_chunk,
     get_cooldowns,
     get_perms,
     pagify,
-    get_category_page_mapper_chunk,
 )
 
 
