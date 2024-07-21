@@ -12,7 +12,8 @@
     "required_cogs": {},
     "requirements": [
         "html2text",
-        "beautifulsoup4"
+        "beautifulsoup4",
+        "git+https://github.com/npc203/redbot-ext-menus-views"
     ],
     "tags": [
         "fun",
