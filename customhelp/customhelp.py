@@ -161,7 +161,7 @@ class CustomHelp(commands.Cog):
             # Doesn't work cause force_registration=True
             # uncat_conf = await self.config.uncategorised()
             uncat_obj = Category(
-                name="uncategorised‎", desc="Miscellaneous cogs", cogs=[], is_uncat=True
+                name="uncategorised", desc="Miscellaneous cogs", cogs=[], is_uncat=True
             )
             async with self.config.categories() as conf_cat:
                 conf_cat.append(uncat_obj.to_dict())
