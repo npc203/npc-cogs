@@ -14,8 +14,7 @@
     ],
     "tags": [
         "help",
-        "utility",
-        "fun"
+        "utility"
     ],
     "min_bot_version": "3.3.10",
     "type": "COG"

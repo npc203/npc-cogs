@@ -60,7 +60,7 @@ class CustomHelp(commands.Cog):
     A custom customisable help for fun and profit
     """
 
-    __version__ = "1.1.0"
+    __version__ = "1.1.1"
 
     def __init__(self, bot: Red):
         self.bot = bot
@@ -152,16 +152,13 @@ class CustomHelp(commands.Cog):
         GLOBAL_CATEGORIES.uncategorised.cogs = list(uncategorised)
 
     async def add_placeholder_uncategorised(self):
-        # Make sure there's no is_uncat category
+        """Create and sync uncategorised category if doesn't exist"""
         for cat in await self.config.categories():
             if cat.get("is_uncat", False) == True:
                 break
         else:
-            # Create uncat category
-            # Doesn't work cause force_registration=True
-            # uncat_conf = await self.config.uncategorised()
             uncat_obj = Category(
-                name="uncategorised‎", desc="Miscellaneous cogs", cogs=[], is_uncat=True
+                name="uncategorised", desc="Miscellaneous cogs", cogs=[], is_uncat=True
             )
             async with self.config.categories() as conf_cat:
                 conf_cat.append(uncat_obj.to_dict())
@@ -183,6 +180,14 @@ class CustomHelp(commands.Cog):
             except AttributeError:
                 # We don't care if settings.arrows doesn't exist in the first place
                 pass
+            await self.config.version.set(self.__version__)
+
+        # Uncategory rename, migration
+        if (await self.config.version()) < "1.1.1":
+            async with self.config.categories() as my_categories:
+                for category in my_categories:
+                    if category.get("is_uncat"):
+                        category["name"] = "uncategorised"
             await self.config.version.set(self.__version__)
 
         # Category migration V1 - not needed anymore
@@ -520,10 +525,8 @@ class CustomHelp(commands.Cog):
             i: [(k, v) for f in my_list for k, v in f.items()]
             for i, my_list in parsed_data.items()
         }
-        check = ["name", "desc", "long_desc", "reaction", "thumbnail", "label", "style"]
-        available_categories = [
-            category.name for category in GLOBAL_CATEGORIES if category.is_uncat == False
-        ]
+        check_options = ["name", "desc", "long_desc", "reaction", "thumbnail", "label", "style"]
+        available_categories = [category.name for category in GLOBAL_CATEGORIES]
         already_present_emojis = [str(i.reaction) for i in GLOBAL_CATEGORIES if i.reaction] + [
             i.emoji for i in ARROWS
         ]
@@ -531,29 +534,26 @@ class CustomHelp(commands.Cog):
 
         def validity_checker(category, item):
             """Returns the thing needs to be saved on config if valid, else None"""
-            if item[0] in check:
-                if item[0] == "name":
-                    if " " not in item[1] and item[1] not in available_categories:
-                        return item[1]
+            key, value = item
+            if key in check_options:
+                # name shall not contain spaces and should be unique
+                if key == "name":
+                    if " " not in value and value not in available_categories:
+                        return value
                 # dupe emoji and valid emoji?
-                elif item[0] == "reaction":
-                    if item[1] not in already_present_emojis:
-                        return str(emoji_converter(self.bot, item[1]))
-                elif item[0] == "style":
-                    return item[1] if hasattr(discord.ButtonStyle, item[1]) else None
+                elif key == "reaction":
+                    if value not in already_present_emojis:
+                        return str(emoji_converter(self.bot, value))
+                elif key == "style":
+                    return value if hasattr(discord.ButtonStyle, value) else None
                 else:
-                    return item[1]
+                    return value
 
         # format: {category_name:[(name,value),..],..} --- could use defaultdict(list)
         to_config = {}
-        uncat_name = GLOBAL_CATEGORIES.uncategorised.name
         for category_name in parsed_data:
-            # default uncat name is "uncategorised‎"
-            if (
-                category_name in available_categories
-                or category_name == uncat_name
-                or (category_name == "uncategorised" and uncat_name == "uncategorised‎")
-            ):
+            # default uncat name is "uncategorised"
+            if category_name in available_categories:
                 to_config[category_name] = {}
 
                 for item in parsed_data[category_name]:
@@ -761,10 +761,7 @@ class CustomHelp(commands.Cog):
                     break
             else:
                 # Uncategorised Name
-                if given_category == GLOBAL_CATEGORIES.uncategorised.name or (
-                    given_category == "uncategorised"
-                    and GLOBAL_CATEGORIES.uncategorised.name == "uncategorised‎"
-                ):
+                if given_category == GLOBAL_CATEGORIES.uncategorised.name:
                     text += _(
                         "You can't remove {} cause it is where the uncategorised cogs go into\n\n"
                     ).format(given_category)
