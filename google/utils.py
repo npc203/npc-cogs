@@ -35,6 +35,7 @@ def get_url(msg_obj, check=False):
         return None if check else msg_obj.content.lstrip("<").rstrip(">")
 
 
+# TODO improve this?
 def check_url(url: str):
     # Helper function to check if valid url or not
     return url.startswith("http") and " " not in url

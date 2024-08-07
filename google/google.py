@@ -1,13 +1,16 @@
 import asyncio
 import functools
 import json
+import logging
 import re
 from datetime import datetime, timezone
 from textwrap import shorten
+from typing import Optional
 from urllib.parse import quote_plus, urlencode
 
 import aiohttp
 import discord
+import js2py
 from bs4 import BeautifulSoup
 from html2text import html2text as h2t
 from redbot.core import commands
@@ -17,6 +20,8 @@ from redbot.vendored.discord.ext import menus
 
 from .utils import ResultMenu, Source, get_card, get_query, nsfwcheck, s
 from .yandex import Yandex
+
+logger = logging.getLogger("red.google")
 
 # TODO Add optional way to use from google search api
 
@@ -40,8 +45,8 @@ class Google(Yandex, commands.Cog):
         )
         self.session = aiohttp.ClientSession()
 
-    def cog_unload(self):
-        asyncio.create_task(self.session.close())
+    async def cog_unload(self):
+        await self.session.close()
 
     def format_help_for_context(self, ctx: commands.Context) -> str:
         """Thanks Sinbad!"""
@@ -51,7 +56,7 @@ class Google(Yandex, commands.Cog):
 
     @commands.group(invoke_without_command=True)
     @commands.bot_has_permissions(embed_links=True, add_reactions=True)
-    async def google(self, ctx, *, query: str = None):
+    async def google(self, ctx, *, query: Optional[str] = None):
         """Google search your query from Discord channel."""
         if not query:
             return await ctx.send("Please enter something to search")
@@ -234,7 +239,7 @@ class Google(Yandex, commands.Cog):
                 await ResultMenu(source=Source(pages, per_page=1)).start(ctx)
 
     @google.command()
-    async def doodle(self, ctx, month: int = None, year: int = None):
+    async def doodle(self, ctx, month: Optional[int] = None, year: Optional[int] = None):
         """Responds with Google doodles of the current month.
 
         Or doodles of specific month/year if `month` and `year` values are provided.
@@ -275,7 +280,7 @@ class Google(Yandex, commands.Cog):
             await ResultMenu(source=Source(pages, per_page=1)).start(ctx)
 
     @google.command(aliases=["img"])
-    async def image(self, ctx, *, query: str = None):
+    async def image(self, ctx, *, query: Optional[str] = None):
         """Search google images from discord"""
         if not query:
             await ctx.send("Please enter some image name to search")
@@ -286,7 +291,7 @@ class Google(Yandex, commands.Cog):
                 size = len(response)
 
                 class ImgSource(menus.ListPageSource):
-                    async def format_page(self, menu, entry):
+                    async def format_page(self, menu, page):
                         return (
                             discord.Embed(
                                 title=f"Pages: {menu.current_page+1}/{size}",
@@ -294,7 +299,7 @@ class Google(Yandex, commands.Cog):
                                 description="Some images might not be visible.",
                                 url=kwargs["redir"],
                             )
-                            .set_image(url=entry)
+                            .set_image(url=page)
                             .set_footer(text=f"Safe Search: {not isnsfw}")
                         )
 
@@ -303,8 +308,8 @@ class Google(Yandex, commands.Cog):
             else:
                 await ctx.send("No result")
 
-    @google.command(aliases=["rev"], enabled=False)
-    async def reverse(self, ctx, *, url: str = None):
+    @google.command(aliases=["rev"], enabled=True)
+    async def reverse(self, ctx, *, url: Optional[str] = None):
         """Attach or paste the url of an image to reverse search, or reply to a message which has the image/embed with the image"""
         isnsfw = nsfwcheck(ctx)
         if query := get_query(ctx, url):
@@ -313,46 +318,35 @@ class Google(Yandex, commands.Cog):
             return await ctx.send_help()
 
         encoded = {
-            "image_url": query,
-            "encoded_image": None,
-            "image_content": None,
-            "filename": None,
-            "hl": "en",
+            "url": query,
         }
-
+        final_url = "http://lens.google.com/uploadbyurl?" + urlencode(encoded)
         async with ctx.typing():
             async with self.session.get(
-                "https://www.google.com/searchbyimage?" + urlencode(encoded),
+                final_url,
                 headers=self.options,
             ) as resp:
                 text = await resp.read()
                 redir_url = resp.url
             prep = functools.partial(self.reverse_search, text)
-            result, (response, kwargs) = await self.bot.loop.run_in_executor(None, prep)
+            results = await self.bot.loop.run_in_executor(None, prep)
             pages = []
-            if response:
-                groups = [response[n : n + 3] for n in range(0, len(response), 3)]
-                for num, group in enumerate(groups, 1):
+            if results:
+                for num, res in enumerate(results, 1):
                     emb = discord.Embed(
                         title="Google Reverse Image Search",
-                        description="[`"
-                        + (result or "Nothing significant found")
-                        + f"`]({redir_url})",
+                        description=f"[`{res['domain_name']}`]({res['orig_url']})",
                         color=await ctx.embed_color(),
                     )
-                    for i in group:
-                        desc = (f"[{i.url[:60]}]({i.url})\n" if i.url else "") + f"{i.desc}"[:1024]
-                        emb.add_field(
-                            name=f"{i.title}",
-                            value=desc or "Nothing",
-                            inline=False,
-                        )
-                    emb.set_footer(
-                        text=f"Safe Search: {not isnsfw} | "
-                        + kwargs["stats"].replace("\n", " ")
-                        + f"| Page: {num}/{len(groups)}"
+                    # TODO maybe constraint, clip this to 1024
+                    emb.add_field(
+                        name=res["title"],
+                        value=res["orig_url"],
+                        inline=False,
                     )
-                    emb.set_thumbnail(url=encoded["image_url"])
+                    emb.set_footer(text=f"Page: {num}/{len(results)}")
+                    emb.set_thumbnail(url=res["icon_url"])
+                    emb.set_image(url=res["image_url"])
                     pages.append(emb)
             if pages:
                 await ResultMenu(source=Source(pages, per_page=1)).start(ctx)
@@ -362,7 +356,7 @@ class Google(Yandex, commands.Cog):
                         title="Google Reverse Image Search",
                         description="[`" + ("Nothing significant found") + f"`]({redir_url})",
                         color=await ctx.embed_color(),
-                    ).set_thumbnail(url=encoded["image_url"])
+                    ).set_thumbnail(url=encoded["url"])
                 )
 
     @commands.is_owner()
@@ -381,7 +375,6 @@ class Google(Yandex, commands.Cog):
 
         async def get_html(url, encoded):
             async with self.session.get(url + encoded, headers=self.options) as resp:
-                self.cookies = resp.cookies
                 return await resp.text(), resp.url
 
         if not nsfw:
@@ -402,13 +395,35 @@ class Google(Yandex, commands.Cog):
 
     def reverse_search(self, text):
         soup = BeautifulSoup(text, features="html.parser")
-        if check := soup.find("div", class_="card-section"):
-            if "The URL doesn't refer" in check.text:
-                return check.text, (None, None)
-        if res := soup.find("input", class_="gLFyf gsfi"):
-            return res["value"], (self.parser_text(text, soup=soup, cards=False) or (None, None))
+        all_scripts = soup.findAll("script", {"nonce": True})
+        txts = []
+        for tag in all_scripts:
+            txt = tag.get_text()
+            if txt.startswith("AF_initDataCallback("):
+                txts.append(txt)
 
-        return None, (None, None)
+        fin_data = []
+        for txt in txts:
+            if "https://encrypted-tbn" in txt:
+                txt = txt.replace("AF_initDataCallback", "var result = JSON.stringify", 1)
+                context = js2py.EvalJs()
+                context.execute(txt)
+                data = json.loads(context.result)
+                for item in data["data"][1][0][1][8][8][0][12]:
+                    try:
+                        fin_data.append(
+                            {
+                                "title": item[3],
+                                "orig_url": item[5],
+                                "domain_name": item[14],
+                                "image_url": item[0][0],
+                                "icon_url": item[15][0],
+                            }
+                        )
+                    except IndexError as e:
+                        # Silently ignore this for now
+                        logger.debug(e)
+        return fin_data
 
     def parser_text(self, text, soup=None, cards: bool = True):
         """My bad logic for scraping"""
@@ -431,7 +446,7 @@ class Google(Yandex, commands.Cog):
             else:
                 url = None
                 title = None
-            if desc := res.select_one("div.Z26q7c>div.VwiC3b"):
+            if desc := res.select_one("div.kb0PBd>div.VwiC3b"):
                 desc = h2t(desc.text)[:500]
             else:
                 desc = "Not found"
