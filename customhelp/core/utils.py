@@ -1,6 +1,6 @@
 # This contains a bunch of utils
 
-
+import re
 from typing import Optional
 
 from redbot.core.utils.chat_formatting import humanize_timedelta
@@ -23,10 +23,20 @@ def emoji_converter(bot, emoji) -> Optional[str]:
 
 
 # Taken from the core help as well :)
-def shorten_line(a_line: str) -> str:
-    if len(a_line) < 70:  # embed max width needs to be lower
+def shorten_line(a_line: str, thbnail=False) -> str:
+    # TODO for now if thumbnail is present,
+    # we'll just return the line as is
+    accepted_len = 140 if thbnail else 70
+    if len(a_line) < accepted_len:  # embed max width needs to be lower
         return a_line
-    return a_line[:67] + "..."
+
+    final_word = ""
+    for word in re.split("(?<=\\S) ", a_line):
+        if len(final_word) + len(word) < accepted_len:
+            final_word += word + " "
+        else:
+            break
+    return final_word.rstrip() + " …"
 
 
 # Add permissions
@@ -81,7 +91,6 @@ def get_aliases(command, original):
 async def get_category_page_mapper_chunk(
     formatter, get_pages, ctx, cat, help_settings, page_mapping
 ):
-    # Make sure we're not getting the pages (eg: when home button is clicked) else gen category pages
     if not get_pages:
         if cat_page := await formatter.format_category_help(
             ctx, cat, help_settings=help_settings, get_pages=True

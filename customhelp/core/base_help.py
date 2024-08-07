@@ -193,7 +193,10 @@ class BaguetteHelp(commands.RedHelpFormatter):
             spacing = len(max(spacer_list, key=len))
             for cog_name, data in coms:
                 cog_text = "\n" + "\n".join(
-                    shorten_line(f"`{name:<{spacing}}:`{command.format_shortdoc_for_context(ctx)}")
+                    shorten_line(
+                        f"`{name:<{spacing}}:`{command.format_shortdoc_for_context(ctx)}",
+                        bool(obj.thumbnail),
+                    )
                     for name, command in sorted(data.items())
                 )
                 all_cog_text += cog_text
@@ -225,7 +228,10 @@ class BaguetteHelp(commands.RedHelpFormatter):
             if coms:
                 spacing = len(max(coms.keys(), key=len))
                 command_text = "\n".join(
-                    shorten_line(f"`{name:<{spacing}}:`{command.format_shortdoc_for_context(ctx)}")
+                    shorten_line(
+                        f"`{name:<{spacing}}:`{command.format_shortdoc_for_context(ctx)}",
+                        bool(self.settings["thumbnail"]),
+                    )
                     for name, command in sorted(coms.items())
                 )
                 for i, page in enumerate(pagify(command_text, page_length=500, shorten_by=0)):
@@ -306,7 +312,10 @@ class BaguetteHelp(commands.RedHelpFormatter):
             if subcommands:
                 spacing = len(max(subcommands.keys(), key=len))
                 subtext = "\n" + "\n".join(
-                    shorten_line(f"`{name:<{spacing}}:`{command.format_shortdoc_for_context(ctx)}")
+                    shorten_line(
+                        f"`{name:<{spacing}}:`{command.format_shortdoc_for_context(ctx)}",
+                        bool(self.settings["thumbnail"]),
+                    )
                     for name, command in sorted(subcommands.items())
                 )
                 for i, page in enumerate(pagify(subtext, page_length=500, shorten_by=0)):
@@ -333,7 +342,7 @@ class BaguetteHelp(commands.RedHelpFormatter):
             for cat in filtered_categories:
                 if cat.cogs:
                     if not await get_category_page_mapper_chunk(
-                        self, get_pages, ctx, cat, help_settings, page_mapping
+                        self, False, ctx, cat, help_settings, page_mapping
                     ):
                         continue
 
