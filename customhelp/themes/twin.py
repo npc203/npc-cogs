@@ -66,6 +66,7 @@ class TwinHelp(ThemesMeta):
             return
         if await ctx.embed_requested():
             emb = await self.embed_template(help_settings, ctx, obj.long_desc)
+            emb["thumbnail"] = obj.thumbnail
 
             for cog_name, data in coms:
                 title = f"__**{cog_name}**__" if cog_name else _("**No Category:**")

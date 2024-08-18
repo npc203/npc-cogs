@@ -43,6 +43,7 @@ class Blocks(ThemesMeta):
 
         if await ctx.embed_requested():
             emb = await self.embed_template(help_settings, ctx)
+            emb["thumbnail"] = obj.thumbnail
             emb["embed"]["title"] = (
                 (str(obj.reaction) if obj.reaction else "") + " " + obj.name.capitalize()
             )

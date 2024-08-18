@@ -70,6 +70,7 @@ class NadekoHelp(ThemesMeta):
 
         if await ctx.embed_requested():
             emb = await self.embed_template(help_settings, ctx)
+            emb["thumbnail"] = obj.thumbnail
             if description := obj.long_desc:
                 emb["embed"]["description"] = f"{description[:250]}"
 
