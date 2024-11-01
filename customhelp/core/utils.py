@@ -17,7 +17,8 @@ def emoji_converter(bot, emoji) -> Optional[str]:
     if not emoji:
         return
     if isinstance(emoji, int) or emoji.isdigit():
-        return bot.get_emoji(int(emoji))
+        emoji = bot.get_emoji(int(emoji))
+        return str(emoji) if emoji is not None else None
     emoji = emoji.strip()
     return emoji
 
